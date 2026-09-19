@@ -130,11 +130,11 @@ jobs:
             build/ios/iphoneos/Catchify-v${{ steps.extract_version.outputs.version }}-iOS.zip
           if-no-files-found: error
 
-      - name: Release iOS IPA to Catchify Website Releases (thamodharangm/catchify)
-        if: env.CATCHIFY_TOKEN != ''
+      - name: Release iOS IPA to Website Repository
+        if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
         uses: svenstaro/upload-release-action@v2
         with:
-          repo_name: thamodharangm/catchify
+          repo_name: catchify0/catchify0.github.io
           repo_token: ${{ secrets.CATCHIFY_WEBSITE_TOKEN }}
           file: build/ios/iphoneos/Catchify-v${{ steps.extract_version.outputs.version }}.ipa
           asset_name: Catchify-v${{ steps.extract_version.outputs.version }}.ipa
@@ -143,11 +143,11 @@ jobs:
           prerelease: false
           overwrite: true
 
-      - name: Release iOS ZIP to Catchify Website Releases (thamodharangm/catchify)
-        if: env.CATCHIFY_TOKEN != ''
+      - name: Release iOS ZIP to Website Repository
+        if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
         uses: svenstaro/upload-release-action@v2
         with:
-          repo_name: thamodharangm/catchify
+          repo_name: catchify0/catchify0.github.io
           repo_token: ${{ secrets.CATCHIFY_WEBSITE_TOKEN }}
           file: build/ios/iphoneos/Catchify-v${{ steps.extract_version.outputs.version }}-iOS.zip
           asset_name: Catchify-v${{ steps.extract_version.outputs.version }}-iOS.zip
@@ -156,14 +156,14 @@ jobs:
           prerelease: false
           overwrite: true
 
-      - name: Update check.json in Catchify Website
-        if: env.CATCHIFY_TOKEN != ''
+      - name: Update check.json in Website Repository
+        if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
         env:
           CATCHIFY_TOKEN: ${{ secrets.CATCHIFY_WEBSITE_TOKEN }}
           VERSION: ${{ steps.extract_version.outputs.version }}
         run: |
           # Fetch existing check.json to extract SHA and preserve existing fields
-          RESPONSE=$(curl -s -H "Authorization: Bearer $CATCHIFY_TOKEN" "https://api.github.com/repos/thamodharangm/catchify/contents/check.json")
+          RESPONSE=$(curl -s -H "Authorization: Bearer $CATCHIFY_TOKEN" "https://api.github.com/repos/catchify0/catchify0.github.io/contents/check.json")
           SHA=$(echo "$RESPONSE" | python3 -c "import sys,json; data=json.load(sys.stdin); print(data.get('sha', ''))" 2>/dev/null || true)
           
           if [ -n "$SHA" ]; then
@@ -171,15 +171,15 @@ jobs:
             NEW_JSON=$(python3 -c "
           import json
           data = json.loads('''$EXISTING''')
-          data['iosurl'] = 'https://github.com/thamodharangm/catchify/releases/download/v${VERSION}/Catchify-v${VERSION}.ipa'
-          data['ioszipurl'] = 'https://github.com/thamodharangm/catchify/releases/download/v${VERSION}/Catchify-v${VERSION}-iOS.zip'
+          data['iosurl'] = 'https://github.com/catchify0/catchify0.github.io/releases/download/v${VERSION}/Catchify-v${VERSION}.ipa'
+          data['ioszipurl'] = 'https://github.com/catchify0/catchify0.github.io/releases/download/v${VERSION}/Catchify-v${VERSION}-iOS.zip'
           print(json.dumps(data, indent=2))
           ")
             ENCODED=$(echo "$NEW_JSON" | base64 -w 0 2>/dev/null || echo "$NEW_JSON" | base64)
             curl -s -X PUT \
               -H "Authorization: Bearer $CATCHIFY_TOKEN" \
               -H "Content-Type: application/json" \
-              "https://api.github.com/repos/thamodharangm/catchify/contents/check.json" \
+              "https://api.github.com/repos/catchify0/catchify0.github.io/contents/check.json" \
               -d "{
                 \"message\": \"chore: update check.json with iOS v${VERSION}\",
                 \"content\": \"${ENCODED}\",
@@ -311,10 +311,10 @@ jobs:
           if-no-files-found: error
 
       - name: Release Android APKs to Catchify Website Releases
-        if: env.CATCHIFY_TOKEN != ''
+        if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
         uses: svenstaro/upload-release-action@v2
         with:
-          repo_name: thamodharangm/catchify
+          repo_name: catchify0/catchify0.github.io
           repo_token: ${{ secrets.CATCHIFY_WEBSITE_TOKEN }}
           file: build/android/catchify-v${{ steps.extract_version.outputs.version }}.apk
           asset_name: catchify-v${{ steps.extract_version.outputs.version }}.apk
@@ -324,10 +324,10 @@ jobs:
           overwrite: true
 
       - name: Release Android ARM64 APK to Catchify Website Releases
-        if: env.CATCHIFY_TOKEN != ''
+        if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
         uses: svenstaro/upload-release-action@v2
         with:
-          repo_name: thamodharangm/catchify
+          repo_name: catchify0/catchify0.github.io
           repo_token: ${{ secrets.CATCHIFY_WEBSITE_TOKEN }}
           file: build/android/catchify-v${{ steps.extract_version.outputs.version }}-arm64-v8a.apk
           asset_name: catchify-v${{ steps.extract_version.outputs.version }}-arm64-v8a.apk
@@ -337,7 +337,7 @@ jobs:
           overwrite: true
 
       - name: Update Android version in Catchify Website
-        if: env.CATCHIFY_TOKEN != ''
+        if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
         env:
           CATCHIFY_TOKEN: ${{ secrets.CATCHIFY_WEBSITE_TOKEN }}
           VERSION: ${{ steps.extract_version.outputs.version }}
@@ -346,7 +346,7 @@ jobs:
           RESPONSE=$(curl --fail-with-body -sS \
             -H "Authorization: Bearer ${CATCHIFY_TOKEN}" \
             -H "Accept: application/vnd.github+json" \
-            "https://api.github.com/repos/thamodharangm/catchify/contents/check.json")
+            "https://api.github.com/repos/catchify0/catchify0.github.io/contents/check.json")
           SHA=$(echo "$RESPONSE" | python3 -c "import json,sys; print(json.load(sys.stdin)['sha'])")
           EXISTING=$(echo "$RESPONSE" | python3 -c "import base64,json,sys; print(base64.b64decode(json.load(sys.stdin)['content']).decode())")
           NEW_JSON=$(EXISTING="$EXISTING" VERSION="$VERSION" python3 -c '
@@ -354,8 +354,8 @@ jobs:
           data = json.loads(os.environ["EXISTING"])
           version = os.environ["VERSION"]
           data["version"] = version
-          data["url"] = f"https://github.com/thamodharangm/catchify/releases/download/v{version}/catchify-v{version}.apk"
-          data["arm64url"] = f"https://github.com/thamodharangm/catchify/releases/download/v{version}/catchify-v{version}-arm64-v8a.apk"
+          data["url"] = f"https://github.com/catchify0/catchify0.github.io/releases/download/v{version}/catchify-v{version}.apk"
+          data["arm64url"] = f"https://github.com/catchify0/catchify0.github.io/releases/download/v{version}/catchify-v{version}-arm64-v8a.apk"
           print(json.dumps(data, indent=2))
           ')
           ENCODED=$(printf '%s' "$NEW_JSON" | base64 -w 0)
@@ -363,5 +363,5 @@ jobs:
             -H "Authorization: Bearer ${CATCHIFY_TOKEN}" \
             -H "Accept: application/vnd.github+json" \
             -H "Content-Type: application/json" \
-            "https://api.github.com/repos/thamodharangm/catchify/contents/check.json" \
+            "https://api.github.com/repos/catchify0/catchify0.github.io/contents/check.json" \
             -d "{\"message\":\"chore: update check.json with Android v${VERSION}\",\"content\":\"${ENCODED}\",\"sha\":\"${SHA}\"}"
