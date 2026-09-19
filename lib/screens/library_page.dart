@@ -504,23 +504,18 @@ class _LibraryPageState extends State<LibraryPage> {
     final colorScheme = Theme.of(context).colorScheme;
 
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            colorScheme.primary.withValues(alpha: 0.14),
-            colorScheme.surfaceContainerHighest.withValues(alpha: 0.34),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        color: colorScheme.surfaceContainerLow,
         borderRadius: AppTokens.borderRadiusLarge,
-        border: Border.all(color: colorScheme.primary.withValues(alpha: 0.18)),
+        border: Border.all(
+          color: colorScheme.outlineVariant.withValues(alpha: 0.7),
+        ),
         boxShadow: [
           BoxShadow(
-            color: colorScheme.primary.withValues(alpha: 0.12),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
+            color: colorScheme.shadow.withValues(alpha: 0.08),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
           ),
         ],
       ),
@@ -539,7 +534,7 @@ class _LibraryPageState extends State<LibraryPage> {
                   shuffle: true,
                 ),
                 backgroundColor: colorScheme.surfaceContainerHighest.withValues(
-                  alpha: 0.84,
+                  alpha: 0.9,
                 ),
                 foregroundColor: colorScheme.onSurfaceVariant,
               ),
@@ -564,26 +559,12 @@ class _LibraryPageState extends State<LibraryPage> {
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      colorScheme.primary,
-                      colorScheme.primary.withValues(alpha: 0.8),
-                    ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
+                  color: colorScheme.primaryContainer,
                   borderRadius: AppTokens.borderRadiusControl,
-                  boxShadow: [
-                    BoxShadow(
-                      color: colorScheme.primary.withValues(alpha: 0.35),
-                      blurRadius: 10,
-                      offset: const Offset(0, 3),
-                    ),
-                  ],
                 ),
                 child: Icon(
                   FluentIcons.heart_24_filled,
-                  color: colorScheme.onPrimary,
+                  color: colorScheme.onPrimaryContainer,
                   size: 20,
                 ),
               ),

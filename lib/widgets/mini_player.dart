@@ -359,11 +359,6 @@ class _ControlsWidget extends StatelessWidget {
         hasNext ||
         repeatNotifier.value != AudioServiceRepeatMode.none ||
         playNextSongAutomatically.value;
-    // Buffering is a normal playback state and should not replace the next
-    // action with a spinner. The audio service emits `loading` for an actual
-    // track transition.
-    final isLoading =
-        playbackState.processingState == AudioProcessingState.loading;
 
     return Row(
       mainAxisSize: MainAxisSize.min,
@@ -376,8 +371,7 @@ class _ControlsWidget extends StatelessWidget {
         const SizedBox(width: 4),
         MiniPlayerNextButton(
           colorScheme: colorScheme,
-          enabled: canGoNext && !isLoading,
-          loading: isLoading,
+          enabled: canGoNext,
           onPressed: audioHandler.skipToNext,
         ),
       ],
@@ -390,13 +384,11 @@ class MiniPlayerNextButton extends StatelessWidget {
     super.key,
     required this.colorScheme,
     required this.enabled,
-    required this.loading,
     required this.onPressed,
   });
 
   final ColorScheme colorScheme;
   final bool enabled;
-  final bool loading;
   final VoidCallback onPressed;
 
   @override
@@ -406,16 +398,7 @@ class MiniPlayerNextButton extends StatelessWidget {
       tooltip: 'Skip to next',
       splashColor: Colors.transparent,
       highlightColor: Colors.transparent,
-      icon: loading
-          ? SizedBox(
-              width: 16,
-              height: 16,
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                valueColor: AlwaysStoppedAnimation<Color>(colorScheme.primary),
-              ),
-            )
-          : const Icon(FluentIcons.next_24_filled, size: 18),
+      icon: const Icon(FluentIcons.next_24_filled, size: 18),
       style: IconButton.styleFrom(
         backgroundColor: colorScheme.surfaceContainerHighest.withValues(
           alpha: 0.72,

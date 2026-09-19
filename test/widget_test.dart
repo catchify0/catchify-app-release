@@ -78,7 +78,6 @@ void main() {
             body: MiniPlayerNextButton(
               colorScheme: theme.colorScheme,
               enabled: true,
-              loading: false,
               onPressed: () => pressed = true,
             ),
           ),
@@ -95,7 +94,6 @@ void main() {
             body: MiniPlayerNextButton(
               colorScheme: theme.colorScheme,
               enabled: false,
-              loading: false,
               onPressed: () => pressed = false,
             ),
           ),
@@ -107,28 +105,28 @@ void main() {
     },
   );
 
-  testWidgets('mini-player next button exposes loading feedback', (
-    WidgetTester tester,
-  ) async {
-    final theme = ThemeData(
-      colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-    );
+  testWidgets(
+    'mini-player next button keeps its action icon during playback loading',
+    (WidgetTester tester) async {
+      final theme = ThemeData(
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+      );
 
-    await tester.pumpWidget(
-      MaterialApp(
-        theme: theme,
-        home: Scaffold(
-          body: MiniPlayerNextButton(
-            colorScheme: theme.colorScheme,
-            enabled: false,
-            loading: true,
-            onPressed: () {},
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: theme,
+          home: Scaffold(
+            body: MiniPlayerNextButton(
+              colorScheme: theme.colorScheme,
+              enabled: true,
+              onPressed: () {},
+            ),
           ),
         ),
-      ),
-    );
+      );
 
-    expect(find.byType(CircularProgressIndicator), findsOneWidget);
-    expect(find.byIcon(FluentIcons.next_24_filled), findsNothing);
-  });
+      expect(find.byType(CircularProgressIndicator), findsNothing);
+      expect(find.byIcon(FluentIcons.next_24_filled), findsOneWidget);
+    },
+  );
 }
