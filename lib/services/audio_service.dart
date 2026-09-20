@@ -3054,6 +3054,7 @@ class CatchifyAudioHandler extends BaseAudioHandler {
         await _backgroundAddSongsToQueue(forcePlayIfEnd: true);
       } else {
         logger.log('[PLAYER] queue_exhausted: stopping at end of queue');
+        await stop();
       }
 
       _cleanupOldPreloadedSongs();
