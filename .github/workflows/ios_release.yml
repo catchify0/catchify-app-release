@@ -34,9 +34,23 @@ jobs:
       - name: Extract version from pubspec.yaml
         id: extract_version
         run: |
-          version=$(sed -n 's/^version: *\([0-9.]*\).*/\1/p' pubspec.yaml | head -n 1)
-          if [ -z "$version" ]; then version="1.0.0"; fi
+          version=$(sed -n 's/^version: *\([0-9.]*\)+\([0-9]*\).*/\1/p' pubspec.yaml | head -n 1)
+          build=$(sed -n 's/^version: *[0-9.]*+\([0-9]*\).*/\1/p' pubspec.yaml | head -n 1)
+          if [ -z "$version" ] || [ -z "$build" ]; then
+            echo "Unable to extract version and build number from pubspec.yaml"
+            exit 1
+          fi
           echo "version=${version}" >> $GITHUB_OUTPUT
+          echo "build=${build}" >> $GITHUB_OUTPUT
+
+      - name: Validate generated app version
+        run: |
+          bash update.sh
+          if ! git diff --quiet -- lib/constants/version.dart; then
+            echo "lib/constants/version.dart is out of sync with pubspec.yaml"
+            git diff -- lib/constants/version.dart
+            exit 1
+          fi
 
       - name: Setup Flutter environment
         uses: subosito/flutter-action@v2
@@ -166,8 +180,8 @@ jobs:
           VERSION: ${{ steps.extract_version.outputs.version }}
         run: |
           # Fetch existing check.json to extract SHA and preserve existing fields
-          RESPONSE=$(curl -s -H "Authorization: Bearer $CATCHIFY_TOKEN" "https://api.github.com/repos/catchify0/catchify0.github.io/contents/check.json")
-          SHA=$(echo "$RESPONSE" | python3 -c "import sys,json; data=json.load(sys.stdin); print(data.get('sha', ''))" 2>/dev/null || true)
+          RESPONSE=$(curl --fail-with-body --silent --show-error -H "Authorization: Bearer ${CATCHIFY_TOKEN}" -H "Accept: application/vnd.github+json" "https://api.github.com/repos/catchify0/catchify0.github.io/contents/check.json")
+          SHA=$(echo "$RESPONSE" | python3 -c "import sys,json; print(json.load(sys.stdin)['sha'])")
           
           if [ -n "$SHA" ]; then
             EXISTING=$(echo "$RESPONSE" | python3 -c "import sys,json,base64; print(base64.b64decode(json.load(sys.stdin)['content']).decode('utf-8'))")
@@ -179,7 +193,7 @@ jobs:
           print(json.dumps(data, indent=2))
           ")
             ENCODED=$(echo "$NEW_JSON" | base64 -w 0 2>/dev/null || echo "$NEW_JSON" | base64)
-            curl -s -X PUT \
+            curl --fail-with-body --silent --show-error -X PUT \
               -H "Authorization: Bearer $CATCHIFY_TOKEN" \
               -H "Content-Type: application/json" \
               "https://api.github.com/repos/catchify0/catchify0.github.io/contents/check.json" \
@@ -229,10 +243,16 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   build-android:
-    name: Build Android Debug APK
+    name: Build Android Release APK
     runs-on: ubuntu-latest
     permissions:
       contents: read
+    env:
+      CATCHIFY_TOKEN: ${{ secrets.CATCHIFY_WEBSITE_TOKEN }}
+      ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+      ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+      ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+      ANDROID_STORE_PASSWORD: ${{ secrets.ANDROID_STORE_PASSWORD }}
 
     steps:
       - name: Checkout repository
@@ -275,27 +295,51 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
+      - name: Validate generated app version
+        run: |
+          bash update.sh
+          if ! git diff --quiet -- lib/constants/version.dart; then
+            echo "lib/constants/version.dart is out of sync with pubspec.yaml"
+            git diff -- lib/constants/version.dart
+            exit 1
+          fi
+
+      - name: Configure Android release signing
+        if: ${{ env.ANDROID_KEYSTORE_BASE64 != '' && env.ANDROID_KEY_ALIAS != '' && env.ANDROID_KEY_PASSWORD != '' && env.ANDROID_STORE_PASSWORD != '' }}
+        run: |
+          printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > android/app/key.jks
+          cat > android/key.properties <<EOF
+          keyAlias=$ANDROID_KEY_ALIAS
+          keyPassword=$ANDROID_KEY_PASSWORD
+          storePassword=$ANDROID_STORE_PASSWORD
+          EOF
+
       - name: Analyze Dart sources
         run: flutter analyze --no-fatal-infos
 
       - name: Run Flutter tests
         run: flutter test
 
-      - name: Build Android Debug APKs
-        run: flutter build apk --debug --flavor github --split-per-abi
+      - name: Build Android Release APKs
+        if: ${{ env.ANDROID_KEYSTORE_BASE64 != '' && env.ANDROID_KEY_ALIAS != '' && env.ANDROID_KEY_PASSWORD != '' && env.ANDROID_STORE_PASSWORD != '' }}
+        run: flutter build apk --release --flavor github --split-per-abi
 
       - name: Collect Android artifacts
         shell: bash
         run: |
           set -euo pipefail
           mkdir -p build/android
-          find ../.. -path '*/build/app/outputs/flutter-apk/*.apk' \
-            -exec cp {} build/android/ \;
+          output_dir="build/app/outputs/flutter-apk"
+          for apk in "$output_dir"/app-github-*-release.apk; do
+            [ -f "$apk" ] || continue
+            abi=$(basename "$apk" | sed -E 's/^app-github-(.*)-release\.apk$/\1/')
+            cp "$apk" "build/android/catchify-v${{ steps.extract_version.outputs.version }}-${abi}.apk"
+          done
           if ! compgen -G "build/android/*.apk" > /dev/null; then
-            echo "No Android APK artifact was found"
+            echo "No signed Android release APK artifact was found"
             exit 1
           fi
-          sha256sum build/android/* > "build/android/Catchify-v${{ steps.extract_version.outputs.version }}-Android-SHA256SUMS.txt"
+          sha256sum build/android/*.apk > "build/android/catchify-v${{ steps.extract_version.outputs.version }}-Android-SHA256SUMS.txt"
           ls -lh build/android
 
       - name: Upload Android artifacts
@@ -304,3 +348,46 @@ jobs:
           name: Catchify-v${{ steps.extract_version.outputs.version }}-Android
           path: build/android/*
           if-no-files-found: error
+
+      - name: Publish Android artifacts to Catchify Website Releases
+        if: ${{ env.ANDROID_KEYSTORE_BASE64 != '' && env.ANDROID_KEY_ALIAS != '' && env.ANDROID_KEY_PASSWORD != '' && env.ANDROID_STORE_PASSWORD != '' }}
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_name: catchify0/catchify0.github.io
+          repo_token: ${{ secrets.CATCHIFY_WEBSITE_TOKEN }}
+          file: build/android/*.apk
+          file_glob: true
+          tag: v${{ steps.extract_version.outputs.version }}
+          release_name: v${{ steps.extract_version.outputs.version }}
+          prerelease: false
+          overwrite: true
+
+      - name: Update check.json with Android release URLs
+        if: ${{ env.ANDROID_KEYSTORE_BASE64 != '' && env.ANDROID_KEY_ALIAS != '' && env.ANDROID_KEY_PASSWORD != '' && env.ANDROID_STORE_PASSWORD != '' }}
+        env:
+          VERSION: ${{ steps.extract_version.outputs.version }}
+        run: |
+          set -euo pipefail
+          response=$(curl --fail-with-body --silent --show-error \
+            -H "Authorization: Bearer $CATCHIFY_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/catchify0/catchify0.github.io/contents/check.json")
+          sha=$(echo "$response" | python3 -c "import json,sys; print(json.load(sys.stdin)['sha'])")
+          existing=$(echo "$response" | python3 -c "import base64,json,sys; print(base64.b64decode(json.load(sys.stdin)['content']).decode())")
+          updated=$(EXISTING="$existing" VERSION="$VERSION" python3 -c '
+          import json, os
+          data = json.loads(os.environ["EXISTING"])
+          version = os.environ["VERSION"]
+          base = f"https://github.com/catchify0/catchify0.github.io/releases/download/v{version}/"
+          data["version"] = version
+          data["url"] = base + f"catchify-v{version}-arm64-v8a.apk"
+          data["arm64url"] = data["url"]
+          print(json.dumps(data, indent=2))
+          ')
+          encoded=$(printf "%s" "$updated" | base64 -w 0)
+          curl --fail-with-body --silent --show-error -X PUT \
+            -H "Authorization: Bearer $CATCHIFY_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            -H "Content-Type: application/json" \
+            "https://api.github.com/repos/catchify0/catchify0.github.io/contents/check.json" \
+            -d "{\"message\":\"chore: update check.json with Android v${VERSION}\",\"content\":\"${encoded}\",\"sha\":\"${sha}\"}"

@@ -52,6 +52,7 @@ app.*.map.json
 
 # Android related
 android/app/.cxx/
+**/local.properties
 
 # Generated localization dart files
 lib/localization/app_*.dart
