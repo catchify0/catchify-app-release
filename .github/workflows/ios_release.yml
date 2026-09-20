@@ -22,6 +22,15 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Validate website release token
+        env:
+          CATCHIFY_WEBSITE_TOKEN: ${{ secrets.CATCHIFY_WEBSITE_TOKEN }}
+        run: |
+          if [ -z "$CATCHIFY_WEBSITE_TOKEN" ]; then
+            echo "CATCHIFY_WEBSITE_TOKEN is required to publish assets to catchify0/catchify0.github.io"
+            exit 1
+          fi
+
       - name: Extract version from pubspec.yaml
         id: extract_version
         run: |
@@ -121,11 +130,10 @@ jobs:
             build/ios/iphoneos/Catchify-v${{ steps.extract_version.outputs.version }}-iOS.zip
           if-no-files-found: error
 
-      - name: Release iOS IPA to Catchify Website Releases (thamodharangm/catchify)
-        if: env.CATCHIFY_TOKEN != ''
+      - name: Release iOS IPA to Catchify Website Releases (catchify0/catchify0.github.io)
         uses: svenstaro/upload-release-action@v2
         with:
-          repo_name: thamodharangm/catchify
+          repo_name: catchify0/catchify0.github.io
           repo_token: ${{ secrets.CATCHIFY_WEBSITE_TOKEN }}
           file: build/ios/iphoneos/Catchify-v${{ steps.extract_version.outputs.version }}.ipa
           asset_name: Catchify-v${{ steps.extract_version.outputs.version }}.ipa
@@ -134,11 +142,10 @@ jobs:
           prerelease: false
           overwrite: true
 
-      - name: Release iOS ZIP to Catchify Website Releases (thamodharangm/catchify)
-        if: env.CATCHIFY_TOKEN != ''
+      - name: Release iOS ZIP to Catchify Website Releases (catchify0/catchify0.github.io)
         uses: svenstaro/upload-release-action@v2
         with:
-          repo_name: thamodharangm/catchify
+          repo_name: catchify0/catchify0.github.io
           repo_token: ${{ secrets.CATCHIFY_WEBSITE_TOKEN }}
           file: build/ios/iphoneos/Catchify-v${{ steps.extract_version.outputs.version }}-iOS.zip
           asset_name: Catchify-v${{ steps.extract_version.outputs.version }}-iOS.zip
@@ -148,13 +155,12 @@ jobs:
           overwrite: true
 
       - name: Update check.json in Catchify Website
-        if: env.CATCHIFY_TOKEN != ''
         env:
           CATCHIFY_TOKEN: ${{ secrets.CATCHIFY_WEBSITE_TOKEN }}
           VERSION: ${{ steps.extract_version.outputs.version }}
         run: |
           # Fetch existing check.json to extract SHA and preserve existing fields
-          RESPONSE=$(curl -s -H "Authorization: Bearer $CATCHIFY_TOKEN" "https://api.github.com/repos/thamodharangm/catchify/contents/check.json")
+          RESPONSE=$(curl -s -H "Authorization: Bearer $CATCHIFY_TOKEN" "https://api.github.com/repos/catchify0/catchify0.github.io/contents/check.json")
           SHA=$(echo "$RESPONSE" | python3 -c "import sys,json; data=json.load(sys.stdin); print(data.get('sha', ''))" 2>/dev/null || true)
           
           if [ -n "$SHA" ]; then
@@ -162,15 +168,15 @@ jobs:
             NEW_JSON=$(python3 -c "
           import json
           data = json.loads('''$EXISTING''')
-          data['iosurl'] = 'https://github.com/thamodharangm/catchify/releases/download/v${VERSION}/Catchify-v${VERSION}.ipa'
-          data['ioszipurl'] = 'https://github.com/thamodharangm/catchify/releases/download/v${VERSION}/Catchify-v${VERSION}-iOS.zip'
+          data['iosurl'] = 'https://github.com/catchify0/catchify0.github.io/releases/download/v${VERSION}/Catchify-v${VERSION}.ipa'
+          data['ioszipurl'] = 'https://github.com/catchify0/catchify0.github.io/releases/download/v${VERSION}/Catchify-v${VERSION}-iOS.zip'
           print(json.dumps(data, indent=2))
           ")
             ENCODED=$(echo "$NEW_JSON" | base64 -w 0 2>/dev/null || echo "$NEW_JSON" | base64)
             curl -s -X PUT \
               -H "Authorization: Bearer $CATCHIFY_TOKEN" \
               -H "Content-Type: application/json" \
-              "https://api.github.com/repos/thamodharangm/catchify/contents/check.json" \
+              "https://api.github.com/repos/catchify0/catchify0.github.io/contents/check.json" \
               -d "{
                 \"message\": \"chore: update check.json with iOS v${VERSION}\",
                 \"content\": \"${ENCODED}\",

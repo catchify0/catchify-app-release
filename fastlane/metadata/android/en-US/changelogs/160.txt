@@ -1,4 +1,4 @@
 Bug fixes
 - Fixed streaming and caching issues
 - Fixed blank screen issue when reopening the app
-- Full changelog: https://github.com/thamodharangm/catchify/releases
+- Full changelog: https://github.com/catchify0/catchify0.github.io/releases

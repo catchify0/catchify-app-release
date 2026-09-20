@@ -2,4 +2,4 @@ Bug fixes
 - Fixed playlist download button
 - Fixed playlist sorting in queue
 - Fixed tracking offline songs in recently played list
-- Full changelog: https://github.com/thamodharangm/catchify/releases
+- Full changelog: https://github.com/catchify0/catchify0.github.io/releases

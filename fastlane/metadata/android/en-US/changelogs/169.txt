@@ -6,4 +6,4 @@ Bug fixes
 - Fixed queue and shuffle bugs
 - Fixed original recommendations
 - Fixed automatic song picker
-- Full changelog: https://github.com/thamodharangm/catchify/releases
+- Full changelog: https://github.com/catchify0/catchify0.github.io/releases

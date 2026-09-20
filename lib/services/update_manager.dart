@@ -16,7 +16,7 @@
  *
  *
  *     For more information about Catchify, including how to contribute,
- *     please visit: https://github.com/thamodharangm/catchify
+ *     please visit: https://github.com/catchify0/catchify0.github.io
  */
 
 import 'dart:convert';
@@ -38,9 +38,9 @@ import 'package:catchify/utilities/url_launcher.dart';
 import 'package:catchify/widgets/auto_format_text.dart';
 
 const String checkUrl =
-    'https://raw.githubusercontent.com/thamodharangm/catchify/main/check.json';
+    'https://raw.githubusercontent.com/catchify0/catchify0.github.io/main/check.json';
 const String releasesUrl =
-    'https://api.github.com/repos/thamodharangm/catchify/releases/latest';
+    'https://api.github.com/repos/catchify0/catchify0.github.io/releases/latest';
 const String downloadUrlKey = 'url';
 const String downloadUrlArm64Key = 'arm64url';
 
@@ -188,7 +188,7 @@ Future<void> checkAppUpdates({bool manual = false}) async {
                   if (Platform.isIOS) {
                     final releaseHtmlUrl =
                         releasesResponse['html_url']?.toString() ??
-                            'https://github.com/thamodharangm/catchify/releases/latest';
+                            'https://github.com/catchify0/catchify0.github.io/releases/latest';
                     await launchURL(Uri.parse(releaseHtmlUrl));
                     return;
                   }

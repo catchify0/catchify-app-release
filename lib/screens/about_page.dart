@@ -16,7 +16,7 @@
  *
  *
  *     For more information about Catchify, including how to contribute,
- *     please visit: https://github.com/thamodharangm/catchify
+ *     please visit: https://github.com/catchify0/catchify0.github.io
  */
 
 import 'package:fluentui_system_icons/fluentui_system_icons.dart';
@@ -288,7 +288,7 @@ class AboutPage extends StatelessWidget {
                             icon: FluentIcons.code_24_regular,
                             label: 'GitHub',
                             onPressed: () => launchURL(
-                              Uri.parse('https://github.com/thamodharangm'),
+                              Uri.parse('https://github.com/catchify0'),
                             ),
                           ),
                         ),

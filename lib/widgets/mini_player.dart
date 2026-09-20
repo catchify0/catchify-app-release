@@ -15,7 +15,7 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  *     For more information about Catchify, including how to contribute,
- *     please visit: https://github.com/thamodharangm/catchify
+ *     please visit: https://github.com/catchify0/catchify0.github.io
  */
 
 import 'dart:math' as math;

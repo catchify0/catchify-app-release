@@ -4,4 +4,4 @@ Enhancements
 
 Bug fixes
 - Fixed queue and shuffle bugs
-- Full changelog: https://github.com/thamodharangm/catchify/releases
+- Full changelog: https://github.com/catchify0/catchify0.github.io/releases

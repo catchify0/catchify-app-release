@@ -16,7 +16,7 @@
  *
  *
  *     For more information about Catchify, including how to contribute,
- *     please visit: https://github.com/thamodharangm/catchify
+ *     please visit: https://github.com/catchify0/catchify0.github.io
  */
 
 import 'dart:convert';
@@ -66,7 +66,7 @@ class LrcLibService {
 
   /// Standard User-Agent compliant with LRCLIB API guidelines
   static const Map<String, String> _headers = {
-    'User-Agent': 'Catchify/1.0 (https://github.com/thamodharangm/catchify)',
+    'User-Agent': 'Catchify/1.0 (https://github.com/catchify0/catchify0.github.io)',
   };
 
   // Channel and label patterns that shouldn't be used as the artist name

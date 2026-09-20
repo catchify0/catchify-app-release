@@ -28,6 +28,7 @@ scratch/
 
 # Flutter/Dart/Pub related
 **/doc/api/
+tools/flutter/
 .dart_tool/
 .flutter-plugins
 .flutter-plugins-dependencies
