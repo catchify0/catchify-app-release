@@ -100,7 +100,7 @@ android {
         getByName("release") {
             if (keystorePropertiesFile.exists() && file("key.jks").exists()) {
                 signingConfig = signingConfigs.getByName("release")
-            } else {
+            } else if (gradle.startParameter.taskNames.any { it.contains("Release") }) {
                 throw GradleException(
                     "Release signing is not configured. Provide key.properties and key.jks; " +
                         "refusing to produce a debug-signed release artifact.",
