@@ -45,6 +45,9 @@ const supportedContentLanguageCodes = <String>{
   'kok',
 };
 
+/// YouTube Music region used for home-feed recommendations.
+const homeFeedRegion = 'IN';
+
 /// Resolves a UI language code to a supported music content language code.
 ///
 /// If [uiLanguageCode] is supported for music content recommendations, returns that code.

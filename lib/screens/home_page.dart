@@ -79,8 +79,10 @@ class _HomePageState extends State<HomePage> {
 
   /// Tracks current content language code to log language transitions.
   String? _currentContentLanguageCode;
+  int _feedGeneration = 0;
 
   void _initFutures({bool forceRefresh = false}) {
+    _feedGeneration++;
     _homeFeedFuture = getUnifiedHomeFeed(
       forceRefresh: forceRefresh,
       mood: _selectedMood,
@@ -91,7 +93,7 @@ class _HomePageState extends State<HomePage> {
     if (_selectedMood == mood) return;
     setState(() {
       _selectedMood = mood;
-      _initFutures();
+      _initFutures(forceRefresh: true);
     });
   }
 
@@ -173,17 +175,28 @@ class _HomePageState extends State<HomePage> {
   Future<void> _onRefresh() async {
     if (_isRefreshing) return;
     _isRefreshing = true;
+    final refreshGeneration = ++_feedGeneration;
     try {
-      final nextFeed = getUnifiedHomeFeed(
+      final refreshedSections = await getUnifiedHomeFeed(
         forceRefresh: true,
         mood: _selectedMood,
       );
-      await nextFeed.catchError((_) => <HomeSection>[]);
 
-      if (mounted) {
+      if (mounted && refreshGeneration == _feedGeneration) {
         setState(() {
-          _homeFeedFuture = nextFeed;
+          _homeFeedFuture = Future.value(refreshedSections);
         });
+      }
+    } catch (error, stackTrace) {
+      logger.log(
+        'Home feed pull-to-refresh failed',
+        error: error,
+        stackTrace: stackTrace,
+      );
+      if (mounted && refreshGeneration == _feedGeneration) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Unable to refresh home feed')),
+        );
       }
     } finally {
       _isRefreshing = false;

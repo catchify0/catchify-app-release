@@ -27,13 +27,11 @@ import 'package:flutter/widgets.dart';
 import 'package:hive/hive.dart';
 import 'package:http/http.dart' as http;
 import 'package:catchify/constants/clients.dart';
-import 'package:catchify/main.dart' show audioHandler, logger;
+import 'package:catchify/main.dart' show logger;
 import 'package:catchify/models/lyric_line.dart';
 import 'package:catchify/services/artist_service.dart' show ytMusicClient;
-import 'package:catchify/services/artwork_service.dart';
 import 'package:catchify/services/data_manager.dart';
 import 'package:catchify/services/download_manager.dart';
-import 'package:catchify/services/io_service.dart';
 import 'package:catchify/services/lyrics_manager.dart';
 import 'package:catchify/services/playlists_manager.dart';
 import 'package:catchify/services/proxy_manager.dart';
@@ -1177,39 +1175,6 @@ Future<bool> makeSongOffline(dynamic song) async {
 Future<bool> removeSongFromOffline(dynamic songId) async {
   if (songId == null) return false;
   return DownloadManager.instance.deleteSongDownload(songId.toString());
-}
-
-Future<File?> _downloadAndSaveArtworkFile(String url, String filePath) async {
-  try {
-    final response = await ProxyManager().getProxiedResponse(Uri.parse(url));
-
-    if (response.statusCode == 200) {
-      final file = File(filePath);
-      await file.parent.create(recursive: true);
-      final squareBytes = await ArtworkService.cropCenterSquare(response.bodyBytes);
-      await file.writeAsBytes(squareBytes);
-
-      // Validate that the file was actually written
-      if (await file.exists() && await file.length() > 0) {
-        return file;
-      } else {
-        logger.log('Artwork file was not written properly: $filePath');
-        return null;
-      }
-    } else {
-      logger.log(
-        'Failed to download file. Status code: ${response.statusCode}',
-      );
-    }
-  } catch (e, stackTrace) {
-    logger.log(
-      'Error downloading and saving file',
-      error: e,
-      stackTrace: stackTrace,
-    );
-  }
-
-  return null;
 }
 
 const recentlyPlayedSongsLimit = 100;

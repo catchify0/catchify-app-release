@@ -2,7 +2,7 @@
 set -e
 
 # Auto-bumps the patch version + build number in pubspec.yaml, syncs
-# lib/constants/version.dart, builds the debug APK, and renames the
+# lib/constants/version.dart, builds the release APK, and renames the
 # output to catchify-v<version>.apk.
 #
 # Usage: bash scripts/build_apk.sh [flavor]
@@ -14,6 +14,10 @@ PUBSPEC="pubspec.yaml"
 FLAVOR="${1:-github}"
 
 current=$(grep -oE '^version: [0-9]+\.[0-9]+\.[0-9]+\+[0-9]+' "$PUBSPEC" | sed 's/^version: //')
+if [ -z "$current" ]; then
+  echo "Unable to read a semantic version from $PUBSPEC"
+  exit 1
+fi
 version="${current%+*}"
 build="${current##*+}"
 
@@ -24,6 +28,17 @@ patch=$(echo "$version" | cut -d. -f3)
 new_patch=$((patch + 1))
 new_build=$((build + 1))
 new_version="${major}.${minor}.${new_patch}"
+
+original_pubspec=$(mktemp)
+cp "$PUBSPEC" "$original_pubspec"
+cleanup() {
+  if [ "${1:-0}" -ne 0 ]; then
+    cp "$original_pubspec" "$PUBSPEC"
+    bash update.sh
+  fi
+  rm -f "$original_pubspec"
+}
+trap 'cleanup $?' EXIT
 
 sed -i "s/^version: .*/version: ${new_version}+${new_build} # run update.sh after changing the version/" "$PUBSPEC"
 

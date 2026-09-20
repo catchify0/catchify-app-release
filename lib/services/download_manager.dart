@@ -27,7 +27,6 @@ import 'package:catchify/services/common_services.dart';
 import 'package:catchify/services/data_manager.dart';
 import 'package:catchify/services/io_service.dart';
 import 'package:catchify/services/playlist_download_service.dart';
-import 'package:catchify/services/playlists_manager.dart';
 import 'package:catchify/services/proxy_manager.dart';
 
 /// Canonical download states for tracks and playlists.
@@ -301,10 +300,7 @@ class DownloadManager {
 
   /// Retries a failed download for a song.
   Future<bool> retryDownload(String ytid, {Map? songFallback}) async {
-    final existingProgress = activeDownloads.value[ytid];
-    final song = songFallback ??
-        getOfflineSongByYtid(ytid) ??
-        {'ytid': ytid, 'title': existingProgress?.title ?? ytid};
+    final song = songFallback ?? getOfflineSongByYtid(ytid);
 
     await cancelSongDownload(ytid);
     return downloadSong(song);

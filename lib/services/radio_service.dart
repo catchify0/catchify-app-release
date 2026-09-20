@@ -344,7 +344,7 @@ class RadioService {
               )
               .timeout(const Duration(seconds: 8));
 
-          session.continuationToken = result?.continuation;
+          session.continuationToken = result.continuation;
         } catch (e) {
           logger.log(
             '[AUTOPLAY] Continuation fetch failed, attempting seed fallback',
@@ -365,8 +365,8 @@ class RadioService {
               )
               .timeout(const Duration(seconds: 8));
 
-          if (result?.continuation != null) {
-            session.continuationToken = result?.continuation;
+          if (result.continuation != null) {
+            session.continuationToken = result.continuation;
           }
         } catch (e) {
           logger.log(

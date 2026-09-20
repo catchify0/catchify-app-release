@@ -27,7 +27,6 @@ import 'package:catchify/utilities/formatter.dart' show returnSongLayout;
 import 'package:catchify/services/common_services.dart';
 import 'package:catchify/services/data_manager.dart';
 import 'package:catchify/services/playlists_manager.dart';
-import 'package:youtube_music_explode_dart/youtube_music_explode_dart.dart';
 
 /// Available search category filters.
 enum SearchFilter {

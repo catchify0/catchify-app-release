@@ -375,15 +375,15 @@ class _ControlsWidget extends StatelessWidget {
             highlightColor: Colors.transparent,
             icon: Icon(
               FluentIcons.next_24_filled,
-              color: colorScheme.onSurfaceVariant,
-              size: 22,
+              color: colorScheme.primary,
+              size: 20,
             ),
             style: IconButton.styleFrom(
-              backgroundColor: colorScheme.surfaceContainerLow,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              padding: const EdgeInsets.all(8),
+              foregroundColor: colorScheme.primary,
+              padding: const EdgeInsets.all(4),
+              minimumSize: const Size(32, 32),
+              maximumSize: const Size(32, 32),
+              shape: const CircleBorder(),
             ),
             visualDensity: VisualDensity.compact,
           ),

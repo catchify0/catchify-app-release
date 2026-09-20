@@ -19,6 +19,7 @@
  *     please visit: https://github.com/catchify0/catchify0.github.io
  */
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:catchify/extensions/l10n.dart';
@@ -59,7 +60,9 @@ class Logger {
         ? '[$timestamp] $cleanLocation:$errorMessage\n$stackTraceMessage'
         : '[$timestamp] $cleanLocation$errorMessage';
 
-    debugPrint(logMessage);
+    if (kDebugMode) {
+      debugPrint(logMessage);
+    }
     _logEntries.add(logMessage);
     if (_logEntries.length > _maxLogEntries) {
       _logEntries.removeAt(0);

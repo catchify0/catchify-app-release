@@ -561,6 +561,12 @@ class _LibraryPageState extends State<LibraryPage> {
             icon: const Icon(FluentIcons.play_20_filled),
             iconSize: 20,
             tooltip: context.l10n?.play ?? 'Play',
+            style: IconButton.styleFrom(
+              backgroundColor: colorScheme.primary,
+              foregroundColor: colorScheme.onPrimary,
+              disabledBackgroundColor: colorScheme.surfaceContainerHighest,
+              disabledForegroundColor: colorScheme.onSurfaceVariant,
+            ),
             onPressed: () => LibraryService.instance.playAll(
               songs,
               title: context.l10n?.likedSongs ?? 'Liked Songs',
@@ -581,13 +587,6 @@ class _LibraryPageState extends State<LibraryPage> {
   }) {
     final colorScheme = Theme.of(context).colorScheme;
     final isOff = offlineMode.value;
-
-    final allItems = [
-      ...folders,
-      ...customPlaylists,
-      if (!isOff) ...likedPlaylists,
-      ...offlinePlaylists,
-    ];
 
     return [
       SliverToBoxAdapter(

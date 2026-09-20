@@ -23,11 +23,9 @@ import 'package:fluentui_system_icons/fluentui_system_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:catchify/extensions/l10n.dart';
-import 'package:catchify/main.dart';
 import 'package:catchify/services/router_service.dart';
 import 'package:catchify/services/settings_manager.dart';
 import 'package:catchify/theme/app_text_styles.dart';
-import 'package:catchify/utilities/language_utils.dart';
 
 class _LanguageOption {
   const _LanguageOption(this.code, this.native, this.english);

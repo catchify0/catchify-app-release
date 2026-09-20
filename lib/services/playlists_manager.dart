@@ -3434,7 +3434,7 @@ String getHomeFeedCacheKey({
   final contentLang = contentLanguage ?? contentLanguagePreference ?? 'en';
   final resolvedTransport =
       transportHl ?? resolveHomeFeedTransportLanguage(contentLang);
-  final reg = region ?? 'IN';
+  final reg = (region ?? homeFeedRegion).trim().toUpperCase();
   final m = (mood == null || mood.trim().isEmpty) ? 'All' : mood.trim();
   return 'ytm_home_feed_v9_${contentLang}_${resolvedTransport}_${reg}_$m';
 }
@@ -3459,7 +3459,7 @@ Future<List<HomeSection>> getUnifiedHomeFeed({
 
   final contentLang = contentLanguagePreference ?? 'en';
   final transportHl = resolveHomeFeedTransportLanguage(contentLang);
-  const reg = 'IN';
+  const reg = homeFeedRegion;
 
   logger.log(
     '[HOME_LANGUAGE] requested=$contentLang transport_hl=$transportHl region=$reg',

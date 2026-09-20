@@ -23,7 +23,6 @@ import 'dart:math' as math;
 
 import 'package:fluentui_system_icons/fluentui_system_icons.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:catchify/extensions/l10n.dart';
@@ -542,41 +541,49 @@ class _SearchPageState extends State<SearchPage> {
         final categories = [
           (
             '$languageName Hits',
+            '$languageName hits songs',
             [const Color(0xFFE52D27), const Color(0xFFB31217)],
             FluentIcons.music_note_2_24_filled,
           ),
           (
             'Trending Now',
+            '$languageName trending songs',
             [const Color(0xFF8A2387), const Color(0xFFE94057)],
             FluentIcons.arrow_trending_24_filled,
           ),
           (
             'Romance',
+            '$languageName romance songs',
             [const Color(0xFFFF512F), const Color(0xFFDD2476)],
             FluentIcons.heart_24_filled,
           ),
           (
             'Workout',
+            '$languageName workout songs',
             [const Color(0xFF11998E), const Color(0xFF38EF7D)],
             FluentIcons.run_24_filled,
           ),
           (
             'Chill Vibes',
+            '$languageName chill songs',
             [const Color(0xFF2193B0), const Color(0xFF6DD5ED)],
             FluentIcons.weather_sunny_24_filled,
           ),
           (
             'Party Beats',
+            '$languageName party songs',
             [const Color(0xFF8E2DE2), const Color(0xFF4A00E0)],
             FluentIcons.speaker_2_24_filled,
           ),
           (
             'Devotional',
+            '$languageName devotional songs',
             [const Color(0xFFFF8008), const Color(0xFFFFC837)],
             FluentIcons.sparkle_24_filled,
           ),
           (
             'Indie & Acoustic',
+            '$languageName indie acoustic songs',
             [const Color(0xFF3A6073), const Color(0xFF3A7BD5)],
             FluentIcons.guitar_24_filled,
           ),
@@ -612,13 +619,14 @@ class _SearchPageState extends State<SearchPage> {
                 itemBuilder: (context, index) {
                   final item = categories[index];
                   final title = item.$1;
-                  final colors = item.$2;
-                  final icon = item.$3;
+                  final query = item.$2;
+                  final colors = item.$3;
+                  final icon = item.$4;
                   return Material(
                     color: Colors.transparent,
                     child: InkWell(
                       borderRadius: BorderRadius.circular(16),
-                      onTap: () => _submitSearch(title),
+                      onTap: () => _submitSearch(query),
                       child: Container(
                         padding: const EdgeInsets.all(14),
                         decoration: BoxDecoration(

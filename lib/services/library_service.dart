@@ -104,8 +104,7 @@ class LibraryService {
 
     // 1. Liked playlists that are tagged as albums
     for (final playlist in userLikedPlaylists.value) {
-      if (playlist is Map &&
-          (playlist['isAlbum'] == true || playlist['type'] == 'album')) {
+      if (playlist['isAlbum'] == true || playlist['type'] == 'album') {
         final title = playlist['title']?.toString().trim() ?? '';
         final id = playlist['ytid']?.toString().trim() ??
             playlist['id']?.toString().trim() ??

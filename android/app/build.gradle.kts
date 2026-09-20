@@ -42,8 +42,8 @@ android {
     }
 
     lint {
-        checkReleaseBuilds = false
-        abortOnError = false
+        checkReleaseBuilds = true
+        abortOnError = true
     }
 
     packaging {
@@ -101,7 +101,10 @@ android {
             if (keystorePropertiesFile.exists() && file("key.jks").exists()) {
                 signingConfig = signingConfigs.getByName("release")
             } else {
-                signingConfig = signingConfigs.getByName("debug")
+                throw GradleException(
+                    "Release signing is not configured. Provide key.properties and key.jks; " +
+                        "refusing to produce a debug-signed release artifact.",
+                )
             }
             isShrinkResources = false
             proguardFiles(
