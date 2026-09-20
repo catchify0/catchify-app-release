@@ -59,3 +59,5 @@ lib/localization/app_*.dart
 
 # Generated untranslated messages file
 lib/localization/untranslated.json
+android/key.properties
+android/app/key.jks
