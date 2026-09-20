@@ -229,7 +229,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   build-android:
-    name: Build Android APK
+    name: Build Android Debug APK
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -281,8 +281,8 @@ jobs:
       - name: Run Flutter tests
         run: flutter test
 
-      - name: Build Android APKs
-        run: flutter build apk --release --flavor github --split-per-abi
+      - name: Build Android Debug APKs
+        run: flutter build apk --debug --flavor github --split-per-abi
 
       - name: Collect Android artifacts
         shell: bash
