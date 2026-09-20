@@ -99,6 +99,7 @@ class CatchifyAudioHandler extends BaseAudioHandler {
   bool _completionEventPending = false;
   bool _completionHandlerLoadStarted = false;
   String? _lastCompletedSongId;
+  String? _playerInferredDurationSongId;
   bool _interruptedPlayingState = false;
   bool _isFetchingAutoplay = false;
   static const int _autoplayPrefetchThreshold = 3;
@@ -362,6 +363,8 @@ class CatchifyAudioHandler extends BaseAudioHandler {
       );
 
       final activeItem = isMatchingCurrentItem ? currentItem : currentMediaItem;
+      final durationWasMissing =
+          currentSong['duration'] == null || currentSong['duration'] <= 0;
       final knownDuration = activeItem?.duration ??
           (currentSong['duration'] != null && currentSong['duration'] > 0
               ? Duration(seconds: currentSong['duration'])
@@ -380,7 +383,8 @@ class CatchifyAudioHandler extends BaseAudioHandler {
       }
 
       // Persist duration into queue item if it was missing
-      if (currentSong['duration'] == null || currentSong['duration'] <= 0) {
+      if (durationWasMissing) {
+        _playerInferredDurationSongId = _songYtid(currentSong);
         currentSong['duration'] = effectiveDuration.inSeconds;
       }
 
@@ -1060,6 +1064,9 @@ class CatchifyAudioHandler extends BaseAudioHandler {
             audioPlayer.processingState == ProcessingState.completed);
 
     if (isNearEnd || isNearHalfEnd) {
+      if (isNearHalfEnd) {
+        _correctInflatedDuration(position, effectiveDuration);
+      }
       logger.log(
         'End of song detected (isNearEnd: $isNearEnd, isNearHalfEnd: $isNearHalfEnd, pos: ${position.inSeconds}s, dur: ${effectiveDuration.inSeconds}s)',
       );
@@ -1077,6 +1084,52 @@ class CatchifyAudioHandler extends BaseAudioHandler {
         }
       });
     }
+  }
+
+  void _correctInflatedDuration(
+    Duration physicalEnd,
+    Duration reportedDuration,
+  ) {
+    if (physicalEnd <= const Duration(seconds: 2) ||
+        reportedDuration <= physicalEnd) {
+      return;
+    }
+
+    final queueIndex = _currentQueueIndex;
+    if (queueIndex < 0 || queueIndex >= _queueList.length) return;
+
+    final song = _queueList[queueIndex];
+    final metadataDuration = song['duration'];
+    final isPlayerInferred =
+        _playerInferredDurationSongId == _songYtid(song);
+    if (metadataDuration is num && metadataDuration > 0 && !isPlayerInferred) {
+      return;
+    }
+
+    final currentItem = mediaItem.valueOrNull;
+    if (currentItem != null &&
+        _isCurrentMediaItemMatchingSong(
+          currentItem,
+          _getMediaItemForQueue(song),
+          _songYtid(song),
+        )) {
+      mediaItem.add(currentItem.copyWith(duration: physicalEnd));
+    }
+
+    song['duration'] = physicalEnd.inSeconds;
+    _playerInferredDurationSongId = null;
+    final existingQueue = queue.valueOrNull;
+    if (existingQueue != null && queueIndex < existingQueue.length) {
+      final updatedQueue = List<MediaItem>.from(existingQueue);
+      updatedQueue[queueIndex] =
+          updatedQueue[queueIndex].copyWith(duration: physicalEnd);
+      queue.add(updatedQueue);
+    }
+
+    logger.log(
+      '[PLAYER] corrected inflated duration: '
+      'reported=${reportedDuration.inSeconds}s actual=${physicalEnd.inSeconds}s',
+    );
   }
 
   /// Public/internal trigger for autoplay background prefetch.
