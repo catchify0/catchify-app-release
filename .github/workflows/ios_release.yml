@@ -325,6 +325,7 @@ jobs:
         run: flutter build apk --release --flavor github --split-per-abi
 
       - name: Collect Android artifacts
+        if: ${{ env.ANDROID_KEYSTORE_BASE64 != '' && env.ANDROID_KEY_ALIAS != '' && env.ANDROID_KEY_PASSWORD != '' && env.ANDROID_STORE_PASSWORD != '' }}
         shell: bash
         run: |
           set -euo pipefail
@@ -344,6 +345,7 @@ jobs:
           ls -lh build/android
 
       - name: Upload Android artifacts
+        if: ${{ env.ANDROID_KEYSTORE_BASE64 != '' && env.ANDROID_KEY_ALIAS != '' && env.ANDROID_KEY_PASSWORD != '' && env.ANDROID_STORE_PASSWORD != '' }}
         uses: actions/upload-artifact@v4
         with:
           name: Catchify-v${{ steps.extract_version.outputs.version }}-Android
