@@ -47,8 +47,13 @@ bash update.sh
 echo "Building catchify v${new_version}+${new_build} (flavor: ${FLAVOR})..."
 flutter build apk --release --flavor "$FLAVOR"
 
-apk_src="build/app/outputs/flutter-apk/app-${FLAVOR}-release.apk"
+apk_src=$(find "build/app/outputs" -type f -name "app-${FLAVOR}-release.apk" -print -quit)
+if [ -z "$apk_src" ]; then
+  echo "Unable to find the ${FLAVOR} release APK under build/app/outputs"
+  exit 1
+fi
 apk_dest="build/app/outputs/flutter-apk/catchify-v${new_version}.apk"
+mkdir -p "$(dirname "$apk_dest")"
 cp "$apk_src" "$apk_dest"
 
 echo "Built ${apk_dest}"

@@ -329,9 +329,10 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p build/android
-          output_dir="build/app/outputs/flutter-apk"
-          for apk in "$output_dir"/app-github-*-release.apk; do
-            [ -f "$apk" ] || continue
+          mapfile -t apks < <(
+            find build/app/outputs -type f -name 'app-github-*-release.apk' -print
+          )
+          for apk in "${apks[@]}"; do
             abi=$(basename "$apk" | sed -E 's/^app-github-(.*)-release\.apk$/\1/')
             cp "$apk" "build/android/catchify-v${{ steps.extract_version.outputs.version }}-${abi}.apk"
           done
