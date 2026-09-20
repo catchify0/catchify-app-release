@@ -292,8 +292,6 @@ class MusicClient {
 
     final isValidating = expectedArtist != null || expectedTitle != null;
     Video? fallback;
-    Video? artistTitleFallback;
-
     for (final item in _findRenderers(
       root,
       'musicResponsiveListItemRenderer',
@@ -323,18 +321,19 @@ class MusicClient {
           expectedTitle == null || _looselyMatch(title, expectedTitle);
 
       if (artistMatches && titleMatches) {
-        if (expectedDuration != null && video.duration != null) {
-          if (_matchesDuration(video.duration!, expectedDuration)) {
-            return video;
-          }
-          artistTitleFallback ??= video;
-        } else {
+        if (expectedDuration == null) {
+          return video;
+        }
+        // A known duration is part of the recording identity. Do not return a
+        // title/artist match when its duration disproves that identity.
+        if (video.duration != null &&
+            _matchesDuration(video.duration!, expectedDuration)) {
           return video;
         }
       }
     }
 
-    return artistTitleFallback ?? (isValidating ? null : fallback);
+    return isValidating ? null : fallback;
   }
 
   /// Fetches an official track from YouTube Music by its [videoId].
@@ -824,9 +823,10 @@ class MusicClient {
     final a = _wordsForMatch(candidate);
     final b = _wordsForMatch(expected);
     if (a.isEmpty || b.isEmpty) return true;
-    final shorter = a.length <= b.length ? a : b;
-    final longer = identical(shorter, a) ? b : a;
-    return shorter.every(longer.contains);
+    // Expected words must all be present in the candidate. This permits
+    // featured-artist/remix suffixes but rejects partial matches such as
+    // "Taylor" for the expected artist "Taylor Swift".
+    return b.every(a.contains);
   }
 
   Set<String> _wordsForMatch(String input) =>
@@ -3045,4 +3045,3 @@ class _ParsedRuns {
     this.duration,
   });
 }
-

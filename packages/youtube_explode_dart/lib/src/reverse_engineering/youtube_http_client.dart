@@ -307,7 +307,12 @@ class YoutubeHttpClient extends http.BaseClient {
     Map<String, String>? headers,
     bool validate = false,
   }) {
-    assert(action == 'next' || action == 'browse' || action == 'search');
+    assert(
+      action == 'next' ||
+          action == 'browse' ||
+          action == 'search' ||
+          action == 'music/get_search_suggestions',
+    );
 
     final url = Uri.parse(
       'https://www.youtube.com/youtubei/v1/$action?key=AIzaSyAO_FJ2SlqU8Q4STEHLGCilw_Y9_11qcW8',

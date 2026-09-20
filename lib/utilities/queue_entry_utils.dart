@@ -48,4 +48,13 @@ class QueueEntryIdManager {
       ensureId(song);
     }
   }
+
+}
+
+/// Returns the stable YouTube video identifier used across queue and radio
+/// state. The legacy `id` field is accepted for restored/older entries.
+String? canonicalSongId(Map song) {
+  final value = song['ytid'] ?? song['id'];
+  final id = value?.toString().trim();
+  return id == null || id.isEmpty ? null : id;
 }

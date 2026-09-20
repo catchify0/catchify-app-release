@@ -909,7 +909,9 @@ Future<String> resolveOfficialAudioYtId(
   if (ytid.isEmpty) return ytid;
 
   // 1. Check persistent cache
-  final cacheKey = 'official_audio_ytid_$ytid';
+  // Version the mapping because older releases accepted the first search
+  // result, which could point a common title at the wrong recording.
+  final cacheKey = 'official_audio_ytid_v2_$ytid';
   if (Hive.isBoxOpen('cache')) {
     try {
       final cached = await getData('cache', cacheKey);
@@ -961,12 +963,16 @@ Future<String> resolveOfficialAudioYtId(
         : cleanTitle;
 
     if (query.isNotEmpty) {
-      final officialSongs = await ytMusicClient.music
-          .searchSongs(query, limit: 3)
+      final officialSong = await ytMusicClient.music
+          .searchSong(
+            query,
+            expectedArtist: cleanArtist.isNotEmpty ? cleanArtist : null,
+            expectedTitle: cleanTitle.isNotEmpty ? cleanTitle : null,
+          )
           .timeout(const Duration(seconds: 5));
 
-      if (officialSongs.isNotEmpty) {
-        final officialId = officialSongs.first.id.value;
+      if (officialSong != null) {
+        final officialId = officialSong.id.value;
         if (Hive.isBoxOpen('cache')) {
           unawaited(addOrUpdateData<String>('cache', cacheKey, officialId));
         }

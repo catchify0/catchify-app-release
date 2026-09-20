@@ -24,6 +24,8 @@ import 'dart:async';
 import 'package:catchify/main.dart' show logger;
 import 'package:catchify/services/artist_service.dart' show ytMusicClient;
 import 'package:catchify/utilities/formatter.dart' show returnSongLayout;
+import 'package:catchify/utilities/queue_entry_utils.dart'
+    show canonicalSongId;
 import 'package:youtube_music_explode_dart/youtube_music_explode_dart.dart';
 
 enum RadioType { song, artist, album }
@@ -76,8 +78,7 @@ class RadioService {
   /// The seed song is always returned as the first track of the resulting list.
   Future<List<Map>> getRadioForSong(Map seedSong, {int limit = 25}) async {
     try {
-      final ytid =
-          seedSong['ytid']?.toString() ?? seedSong['id']?.toString() ?? '';
+      final ytid = canonicalSongId(seedSong) ?? '';
       if (ytid.isEmpty) {
         logger.log('[RADIO_ERROR] Cannot start song radio: missing song ID');
         return const [];
@@ -98,7 +99,7 @@ class RadioService {
       for (var i = 0; i < result.tracks.length; i++) {
         final v = result.tracks[i];
         final songMap = returnSongLayout(i + 1, v);
-        final id = songMap['ytid']?.toString() ?? songMap['id']?.toString();
+        final id = canonicalSongId(songMap);
         if (id != null && id.isNotEmpty && seen.add(id)) {
           convertedSongs.add(songMap);
         }
@@ -143,8 +144,7 @@ class RadioService {
     try {
       final artistName =
           artist['title']?.toString() ?? artist['name']?.toString() ?? '';
-      final artistId =
-          artist['ytid']?.toString() ?? artist['id']?.toString() ?? '';
+      final artistId = canonicalSongId(artist) ?? '';
       final explicitRadioId = artist['radioId']?.toString();
 
       String? targetPlaylistId;
@@ -156,8 +156,7 @@ class RadioService {
         targetPlaylistId = 'RDEM$artistId';
       } else if (fallbackSongs != null && fallbackSongs.isNotEmpty) {
         final firstSong = fallbackSongs.first;
-        seedVideoId =
-            firstSong['ytid']?.toString() ?? firstSong['id']?.toString();
+        seedVideoId = canonicalSongId(firstSong);
       }
 
       MusicRadioResult? result;
@@ -208,8 +207,8 @@ class RadioService {
             seedTitle: artistName,
             type: RadioType.artist,
             seenTrackIds: fallbackSongs
-                .map((s) => s['ytid']?.toString() ?? s['id']?.toString() ?? '')
-                .where((id) => id.isNotEmpty)
+                .map(canonicalSongId)
+                .whereType<String>()
                 .toSet(),
           );
           return List<Map>.from(fallbackSongs);
@@ -224,7 +223,7 @@ class RadioService {
       for (var i = 0; i < result.tracks.length; i++) {
         final v = result.tracks[i];
         final songMap = returnSongLayout(i + 1, v);
-        final id = songMap['ytid']?.toString() ?? songMap['id']?.toString();
+        final id = canonicalSongId(songMap);
         if (id != null && id.isNotEmpty && seen.add(id)) {
           convertedSongs.add(songMap);
         }
@@ -380,7 +379,7 @@ class RadioService {
         for (var i = 0; i < result.tracks.length; i++) {
           final v = result.tracks[i];
           final sMap = returnSongLayout(i + 1, v);
-          final sid = sMap['ytid']?.toString() ?? sMap['id']?.toString();
+          final sid = canonicalSongId(sMap);
 
           if (sid == null || sid.isEmpty) continue;
 

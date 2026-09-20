@@ -352,7 +352,7 @@ class CatchifyAudioHandler extends BaseAudioHandler {
 
       final currentSong = _queueList[queueIndex];
       final currentMediaItem = _getMediaItemForQueue(currentSong);
-      final currentSongYtid = currentSong['ytid']?.toString();
+      final currentSongYtid = _songYtid(currentSong);
       final currentItem = mediaItem.valueOrNull;
       final isMatchingCurrentItem = _isCurrentMediaItemMatchingSong(
         currentItem,
@@ -1130,9 +1130,7 @@ class CatchifyAudioHandler extends BaseAudioHandler {
           if (radioService.currentSession == null) {
             final baseSong = _getCurrentSongForRecommendations();
             if (baseSong != null) {
-              final ytid = baseSong['ytid']?.toString() ??
-                  baseSong['id']?.toString() ??
-                  '';
+              final ytid = canonicalSongId(baseSong) ?? '';
               if (ytid.isNotEmpty) {
                 radioService.setSession(
                   RadioSession(
@@ -1141,7 +1139,8 @@ class CatchifyAudioHandler extends BaseAudioHandler {
                     type: RadioType.song,
                     playlistId: 'RDAMVM$ytid',
                     seenTrackIds: _queueList
-                        .map((s) => s['ytid']?.toString() ?? s['id']?.toString() ?? '')
+                        .map(canonicalSongId)
+                        .whereType<String>()
                         .where((id) => id.isNotEmpty)
                         .toSet(),
                   ),
@@ -1151,33 +1150,28 @@ class CatchifyAudioHandler extends BaseAudioHandler {
           }
 
           final existingIds = _queueList
-              .map((s) => s['ytid']?.toString() ?? s['id']?.toString() ?? '')
-              .where((id) => id.isNotEmpty)
+              .map(canonicalSongId)
+              .whereType<String>()
               .toSet();
 
           final songsToAdd = await radioService.getMoreRadioSongs(
             existingQueueIds: existingIds,
-            limit: 15,
           );
 
           // Secondary fallback if RadioService returned empty
           if (songsToAdd.isEmpty) {
             final baseSong = _getCurrentSongForRecommendations();
-            final ytid = baseSong?['ytid']?.toString() ??
-                baseSong?['id']?.toString() ??
-                '';
+            final ytid = baseSong == null ? '' : canonicalSongId(baseSong) ?? '';
             if (ytid.isNotEmpty) {
               try {
                 await getSimilarSong(ytid).timeout(
                   const Duration(seconds: 8),
                   onTimeout: () {},
                 );
-                if (nextRecommendedSong != null) {
-                  final songToAdd = nextRecommendedSong!;
+                final songToAdd = nextRecommendedSong;
+                if (songToAdd != null) {
                   nextRecommendedSong = null;
-                  final sid = songToAdd['ytid']?.toString() ??
-                      songToAdd['id']?.toString() ??
-                      '';
+                  final sid = canonicalSongId(songToAdd) ?? '';
                   if (sid.isNotEmpty && !existingIds.contains(sid)) {
                     songsToAdd.add(songToAdd);
                   }
@@ -1239,12 +1233,13 @@ class CatchifyAudioHandler extends BaseAudioHandler {
   Future<void> addToQueue(Map song, {bool playNext = false}) async {
     try {
       final songData = cloneMap(song);
-      final rawId = songData['ytid'] ?? songData['id'];
-      if (rawId == null || rawId.toString().isEmpty) {
+      final rawId = canonicalSongId(songData);
+      if (rawId == null) {
         logger.log('[PLAYER] Invalid song data for queue: missing id');
         return;
       }
-      songData['ytid'] = rawId.toString();
+      songData['id'] = rawId;
+      songData['ytid'] = rawId;
 
       logger.log(
         '[PLAYER] queue_add: ytid=$rawId, title=${songData['title'] ?? ''}, playNext=$playNext',
@@ -1390,15 +1385,13 @@ class CatchifyAudioHandler extends BaseAudioHandler {
       int? targetQueueIndex;
 
       final playableSongs = songs.where((s) {
-        final id = s['ytid'] ?? s['id'];
-        return id != null && id.toString().isNotEmpty;
+        return canonicalSongId(s) != null;
       }).map((s) {
-        if (s['ytid'] == null || s['ytid'].toString().isEmpty) {
-          final copy = Map<String, dynamic>.from(s);
-          copy['ytid'] = s['id'];
-          return copy;
-        }
-        return s;
+        final id = canonicalSongId(s)!;
+        final copy = Map<String, dynamic>.from(s);
+        copy['id'] = id;
+        copy['ytid'] = id;
+        return copy;
       }).toList();
 
       if (replace && shuffle) {
@@ -1424,12 +1417,11 @@ class CatchifyAudioHandler extends BaseAudioHandler {
       } else {
         for (var i = 0; i < songs.length; i++) {
           final rawSong = songs[i];
-          final id = rawSong['ytid'] ?? rawSong['id'];
-          if (id != null && id.toString().isNotEmpty) {
-            final song =
-                (rawSong['ytid'] == null || rawSong['ytid'].toString().isEmpty)
-                    ? (Map<String, dynamic>.from(rawSong)..['ytid'] = id)
-                    : rawSong;
+          final id = canonicalSongId(rawSong);
+          if (id != null) {
+            final song = Map<String, dynamic>.from(rawSong)
+              ..['id'] = id
+              ..['ytid'] = id;
             _queueList.add(_queueEntryIds.createSong(song));
 
             if (replace && startIndex == i) {
@@ -1918,8 +1910,7 @@ class CatchifyAudioHandler extends BaseAudioHandler {
   }
 
   String? _songYtid(Map song) {
-    final ytid = song['ytid']?.toString();
-    return ytid == null || ytid.isEmpty ? null : ytid;
+    return canonicalSongId(song);
   }
 
   Map? _firstPlayableSong(Iterable songs) {
@@ -1944,7 +1935,7 @@ class CatchifyAudioHandler extends BaseAudioHandler {
     if (ytid == null || ytid.isEmpty) return null;
 
     final activeSong = currentSong;
-    if (activeSong?['ytid']?.toString() == ytid) {
+    if (_songYtid(activeSong ?? const {}) == ytid) {
       return activeSong;
     }
 
@@ -2263,8 +2254,8 @@ class CatchifyAudioHandler extends BaseAudioHandler {
 
   Future<bool> _resolveOfflineAndSetPaths(Map songData) async {
     try {
-      final ytid = songData['ytid']?.toString() ?? songData['id']?.toString();
-      if (ytid != null && ytid.isNotEmpty) {
+        final ytid = canonicalSongId(songData);
+        if (ytid != null) {
         final offlineSong = getOfflineSongByYtid(ytid);
         if (offlineSong.isNotEmpty) {
           final audioPath = offlineSong['audioPath']?.toString();
@@ -2315,14 +2306,13 @@ class CatchifyAudioHandler extends BaseAudioHandler {
     try {
       final songData = cloneMap(song);
 
-      if (songData['ytid'] == null || songData['ytid'].toString().isEmpty) {
-        if (songData['id'] != null && songData['id'].toString().isNotEmpty) {
-          songData['ytid'] = songData['id'];
-        } else {
-          logger.log('[PLAYER] Invalid song data: missing ytid');
-          return false;
-        }
+      final canonicalId = canonicalSongId(songData);
+      if (canonicalId == null) {
+        logger.log('[PLAYER] Invalid song data: missing ytid');
+        return false;
       }
+      songData['id'] = canonicalId;
+      songData['ytid'] = canonicalId;
 
       logger.log(
         '[PLAYER] play: ytid=${songData['ytid']}, title=${songData['title'] ?? ''}',
@@ -2508,7 +2498,7 @@ class CatchifyAudioHandler extends BaseAudioHandler {
       }
     }
 
-    final songId = song['ytid'] ?? song['id'];
+    final songId = canonicalSongId(song);
     final offlineSong = userOfflineSongs.value.firstWhere(
       (s) => s['ytid'] == songId || s['id'] == songId,
       orElse: () => userLocalSongs.value.firstWhere(

@@ -22,12 +22,16 @@
 import 'package:audio_service/audio_service.dart';
 import 'package:catchify/services/artwork_service.dart';
 import 'package:catchify/services/common_services.dart';
+import 'package:catchify/utilities/queue_entry_utils.dart';
 
 Map mediaItemToMap(MediaItem mediaItem) {
   final extras = mediaItem.extras;
+  final ytid = extras?['ytid']?.toString().trim();
+  final canonicalId =
+      ytid != null && ytid.isNotEmpty ? ytid : mediaItem.id;
   return {
-    'id': mediaItem.id,
-    'ytid': extras?['ytid'] ?? mediaItem.id,
+    'id': canonicalId,
+    'ytid': canonicalId,
     'album': mediaItem.album.toString(),
     'artist': mediaItem.artist.toString(),
     'title': mediaItem.title,
@@ -47,7 +51,7 @@ MediaItem mapToMediaItem(
   Map song, {
   void Function(Uri squareUri)? onSquareArtworkReady,
 }) {
-  final ytid = song['ytid']?.toString();
+  final ytid = canonicalSongId(song);
   final offlineSong = ytid != null
       ? getOfflineSongByYtid(ytid)
       : <String, dynamic>{};
@@ -74,7 +78,7 @@ MediaItem mapToMediaItem(
   }
 
   return MediaItem(
-    id: (song['id'] ?? song['ytid'] ?? '').toString(),
+    id: ytid ?? '',
     artist: (song['artist'] ?? '').toString().trim(),
     title: (song['title'] ?? '').toString(),
     artUri: artUri,
@@ -82,7 +86,7 @@ MediaItem mapToMediaItem(
     extras: {
       'image': song['image'],
       'lowResImage': song['lowResImage'],
-      'ytid': song['ytid'] ?? song['id'],
+      'ytid': ytid,
       'artistId': song['artistId'],
       'videoAuthor': song['videoAuthor'],
       'isLive': song['isLive'],
