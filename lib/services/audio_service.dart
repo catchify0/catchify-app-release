@@ -98,6 +98,7 @@ class CatchifyAudioHandler extends BaseAudioHandler {
 
   bool _completionEventPending = false;
   bool _completionHandlerLoadStarted = false;
+  String? _lastCompletedSongId;
   bool _interruptedPlayingState = false;
   bool _isFetchingAutoplay = false;
   static const int _autoplayPrefetchThreshold = 3;
@@ -1016,6 +1017,7 @@ class CatchifyAudioHandler extends BaseAudioHandler {
     try {
       if (_currentQueueIndex >= 0 && _currentQueueIndex < _queueList.length) {
         final finishedSong = _queueList[_currentQueueIndex];
+        _lastCompletedSongId = canonicalSongId(finishedSong);
         logger.log('[PLAYER] track_complete: ytid=${finishedSong['ytid'] ?? finishedSong['id']}');
         _addToHistory(finishedSong);
       }
@@ -1040,6 +1042,11 @@ class CatchifyAudioHandler extends BaseAudioHandler {
   void _checkNearEndCompletion(Duration position, Duration effectiveDuration) {
     if (effectiveDuration <= const Duration(seconds: 2)) return;
     if (_completionEventPending || _currentLoadingIndex != -1) return;
+    final currentSongId =
+        currentSong == null ? null : canonicalSongId(currentSong!);
+    if (currentSongId != null && currentSongId == _lastCompletedSongId) {
+      return;
+    }
 
     final diffMs = (effectiveDuration - position).inMilliseconds;
     final isNearEnd = diffMs <= 350 && diffMs >= -2000;
@@ -2311,6 +2318,7 @@ class CatchifyAudioHandler extends BaseAudioHandler {
         logger.log('[PLAYER] Invalid song data: missing ytid');
         return false;
       }
+      _lastCompletedSongId = null;
       songData['id'] = canonicalId;
       songData['ytid'] = canonicalId;
 

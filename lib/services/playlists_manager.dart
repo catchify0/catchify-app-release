@@ -3446,7 +3446,45 @@ String getHomeFeedCacheKey({
 /// feed even during network degradation.
 int _activeHomeFeedRequestId = 0;
 
+final Map<String, Future<List<HomeSection>>> _homeFeedInFlight = {};
+
 Future<List<HomeSection>> getUnifiedHomeFeed({
+  bool forceRefresh = false,
+  String? mood,
+}) {
+  final contentLang = contentLanguagePreference ?? 'en';
+  final transportHl = resolveHomeFeedTransportLanguage(contentLang);
+  final normalizedMood =
+      mood == null || mood.trim().isEmpty ? 'All' : mood.trim();
+  final requestKey = [
+    forceRefresh ? 'refresh' : 'cached',
+    contentLang,
+    transportHl,
+    homeFeedRegion,
+    normalizedMood,
+  ].join('|');
+
+  final existing = _homeFeedInFlight[requestKey];
+  if (existing != null) {
+    logger.log('[HOME_IN_FLIGHT] reusing key=$requestKey');
+    return existing;
+  }
+
+  final future = _loadUnifiedHomeFeed(
+    forceRefresh: forceRefresh,
+    mood: mood,
+  );
+  late Future<List<HomeSection>> tracked;
+  tracked = future.whenComplete(() {
+    if (identical(_homeFeedInFlight[requestKey], tracked)) {
+      _homeFeedInFlight.remove(requestKey);
+    }
+  });
+  _homeFeedInFlight[requestKey] = tracked;
+  return tracked;
+}
+
+Future<List<HomeSection>> _loadUnifiedHomeFeed({
   bool forceRefresh = false,
   String? mood,
 }) async {
