@@ -68,9 +68,8 @@ class _HomePageState extends State<HomePage> {
     'Focus',
   ];
 
-  /// Guard flag: ensures we only launch futures once on first mount.
-  /// Prevents double-loading when GoRouter re-mounts HomePage after
-  /// navigating from the language onboarding screen.
+  /// Guard flag: ensures the initial load is launched once after route
+  /// dependencies are available.
   bool _loadStarted = false;
 
   /// Guard flag: ensures the freshLoad from language onboarding is only
@@ -101,10 +100,6 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
     _currentContentLanguageCode = contentLanguagePreferenceNotifier.value;
-    if (!_loadStarted) {
-      _loadStarted = true;
-      _initFutures();
-    }
     externalRecommendations.addListener(_refreshHomeFeed);
     contentLanguagePreferenceNotifier.addListener(_onLanguagePreferenceChanged);
   }
@@ -112,6 +107,17 @@ class _HomePageState extends State<HomePage> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    if (!_loadStarted) {
+      _loadStarted = true;
+      final extra = GoRouterState.of(context).extra;
+      if (extra is Map && extra['freshLoad'] == true) {
+        _freshLoadConsumed = true;
+        _initFutures(forceRefresh: true);
+        return;
+      }
+      _initFutures();
+    }
+
     // When navigating here from language onboarding, GoRouter passes
     // extra: {'freshLoad': true}. Detect it and do one clean reload so
     // the correct language's content is shown — without a second spinner.

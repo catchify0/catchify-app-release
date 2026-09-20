@@ -74,6 +74,7 @@ final lyrics = ValueNotifier<String?>(null);
 String? lastFetchedLyrics;
 String? _latestLyricsRequest;
 int _latestLyricsRequestId = 0;
+final Map<String, Future<String?>> _lyricsInFlight = {};
 
 void reloadSongLibraryStateFromStorage() {
   final userBox = Hive.box('user');
@@ -1093,6 +1094,20 @@ Future<Map<String, dynamic>> getSongDetails(
   }
 }
 
+Future<String?> _fetchLyricsFromManager(
+  String artist,
+  String title, {
+  int? duration,
+  String? ytid,
+}) {
+  return LyricsManager().fetchLyrics(
+    artist,
+    title,
+    duration: duration,
+    ytid: ytid,
+  );
+}
+
 Future<String?> getSongLyrics(
   String? artist,
   String title, {
@@ -1135,12 +1150,29 @@ Future<String?> getSongLyrics(
   if (lastFetchedLyrics != requestKey) {
     _latestLyricsRequest = requestKey;
     lyrics.value = plainFallback;
-    var _lyrics = await LyricsManager().fetchLyrics(
-      safeArtist,
-      title,
-      duration: effectiveDuration,
-      ytid: effectiveYtid,
-    );
+    final inFlight = _lyricsInFlight[requestKey];
+    late final Future<String?> lyricsFuture;
+    if (inFlight != null) {
+      lyricsFuture = inFlight;
+    } else {
+      lyricsFuture = _fetchLyricsFromManager(
+        safeArtist,
+        title,
+        duration: effectiveDuration,
+        ytid: effectiveYtid,
+      );
+      // The pending future is intentionally retained for request coalescing.
+      // ignore: unawaited_futures
+      _lyricsInFlight[requestKey] = lyricsFuture;
+    }
+    String? _lyrics;
+    try {
+      _lyrics = await lyricsFuture;
+    } finally {
+      if (identical(_lyricsInFlight[requestKey], lyricsFuture)) {
+        _lyricsInFlight.remove(requestKey);
+      }
+    }
 
     // A newer lyrics request superseded this one (e.g. user skipped
     // tracks while this fetch was in flight) - discard the stale result.
