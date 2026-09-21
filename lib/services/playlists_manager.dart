@@ -27,6 +27,7 @@ import 'package:catchify/extensions/l10n.dart';
 import 'package:catchify/main.dart'
     show appStartupStopwatch, checkAndLogColdStartPerf, homeCacheMs, logger;
 import 'package:catchify/services/artist_service.dart';
+import 'package:catchify/services/backend_home_feed_service.dart';
 import 'package:catchify/services/data_manager.dart';
 import 'package:catchify/services/home_feed_composer.dart';
 import 'package:catchify/services/personalization_service.dart';
@@ -3470,6 +3471,7 @@ String getHomeFeedCacheKey({
 int _activeHomeFeedRequestId = 0;
 
 final Map<String, Future<List<HomeSection>>> _homeFeedInFlight = {};
+final _backendHomeFeedService = BackendHomeFeedService();
 final Map<String, DateTime> _recentHomeFeedRefreshes = {};
 final Map<String, List<HomeSection>> _recentHomeFeedResults = {};
 const _homeFeedRefreshDeduplicationWindow = Duration(seconds: 60);
@@ -3673,6 +3675,9 @@ Future<List<HomeSection>> _loadUnifiedHomeFeed({
 
     try {
       final isRegionalLanguage = !shouldUseNativeHomeFeed(contentLang);
+      final backendFuture = !isRegionalLanguage
+          ? _backendHomeFeedService.fetchHomeFeed()
+          : Future.value(<HomeSection>[]);
       final remoteFuture = isRegionalLanguage
           ? Future.value(<HomeSection>[])
           : (() {
@@ -3715,9 +3720,14 @@ Future<List<HomeSection>> _loadUnifiedHomeFeed({
                 })
           : Future.value(<HomeSection>[]);
 
-      final results = await Future.wait([remoteFuture, langFuture]);
+      final results = await Future.wait([
+        remoteFuture,
+        langFuture,
+        backendFuture,
+      ]);
       final remoteShelves = results[0];
       final curatedShelves = results[1];
+      final backendShelves = results[2];
 
       logger.log('[HOME_FEED] shelves=${remoteShelves.length}');
 
@@ -3734,6 +3744,12 @@ Future<List<HomeSection>> _loadUnifiedHomeFeed({
         if (shelf.isNotEmpty) {
           languageSections.add(shelf);
         }
+      }
+      if (remoteShelves.isEmpty && backendShelves.isNotEmpty) {
+        logger.log(
+          '[HOME_BACKEND] using backend fallback sections=${backendShelves.length}',
+        );
+        sections.addAll(backendShelves);
       }
     } catch (e, st) {
       logger.log(
