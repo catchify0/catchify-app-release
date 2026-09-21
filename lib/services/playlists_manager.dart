@@ -3471,6 +3471,7 @@ int _activeHomeFeedRequestId = 0;
 
 final Map<String, Future<List<HomeSection>>> _homeFeedInFlight = {};
 final Map<String, DateTime> _recentHomeFeedRefreshes = {};
+final Map<String, List<HomeSection>> _recentHomeFeedResults = {};
 const _homeFeedRefreshDeduplicationWindow = Duration(seconds: 10);
 
 Future<List<HomeSection>> getUnifiedHomeFeed({
@@ -3498,6 +3499,10 @@ Future<List<HomeSection>> getUnifiedHomeFeed({
       logger.log(
         '[HOME_REFRESH] coalescing repeated force refresh key=$cacheRequestKey',
       );
+      final recentResult = _recentHomeFeedResults[cacheRequestKey];
+      if (recentResult != null && recentResult.isNotEmpty) {
+        return Future.value(recentResult);
+      }
     }
   }
   final requestKey = [
@@ -3511,10 +3516,16 @@ Future<List<HomeSection>> getUnifiedHomeFeed({
     return existing;
   }
 
-  final future = _loadUnifiedHomeFeed(
-    forceRefresh: effectiveForceRefresh,
-    mood: mood,
-  );
+  final future =
+      _loadUnifiedHomeFeed(
+        forceRefresh: effectiveForceRefresh,
+        mood: mood,
+      ).then((result) {
+        if (effectiveForceRefresh && result.isNotEmpty) {
+          _recentHomeFeedResults[cacheRequestKey] = result;
+        }
+        return result;
+      });
   late Future<List<HomeSection>> tracked;
   tracked = future.whenComplete(() {
     if (effectiveForceRefresh) {
