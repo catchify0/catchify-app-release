@@ -35,6 +35,7 @@ class LyricsManager {
     String? ytid,
   }) async {
     final cleanYtid = ytid ?? 'unknown';
+    final stopwatch = Stopwatch()..start();
     logger.log(
       '[LYRICS] ytid=$cleanYtid title="$title" artist="$artistName" status=loading',
     );
@@ -58,7 +59,7 @@ class LyricsManager {
           ? LrcParser.parse(lyricsFromLrcLib).length
           : lyricsFromLrcLib.split('\n').length;
       logger.log(
-        '[LYRICS] ytid=$cleanYtid source=lrclib status=success synced=$isSynced lines=$lines',
+        '[LYRICS] ytid=$cleanYtid source=lrclib status=success synced=$isSynced lines=$lines duration_ms=${stopwatch.elapsedMilliseconds}',
       );
       return lyricsFromLrcLib;
     }
@@ -69,7 +70,9 @@ class LyricsManager {
 
     // Validate title and artist are not empty after sanitization
     if (title.isEmpty || effectiveArtist.isEmpty) {
-      logger.log('[LYRICS] ytid=$cleanYtid status=not_found');
+      logger.log(
+        '[LYRICS] ytid=$cleanYtid status=not_found duration_ms=${stopwatch.elapsedMilliseconds}',
+      );
       return null;
     }
 
@@ -79,7 +82,7 @@ class LyricsManager {
     );
     if (lyricsFromLyricsOvh != null && lyricsFromLyricsOvh.trim().isNotEmpty) {
       logger.log(
-        '[LYRICS] ytid=$cleanYtid source=lyrics.ovh status=fallback synced=false lines=${lyricsFromLyricsOvh.split('\n').length}',
+        '[LYRICS] ytid=$cleanYtid source=lyrics.ovh status=fallback synced=false lines=${lyricsFromLyricsOvh.split('\n').length} duration_ms=${stopwatch.elapsedMilliseconds}',
       );
       return lyricsFromLyricsOvh;
     }
@@ -88,9 +91,10 @@ class LyricsManager {
       effectiveArtist.split(',')[0],
       title,
     );
-    if (lyricsFromParolesNet != null && lyricsFromParolesNet.trim().isNotEmpty) {
+    if (lyricsFromParolesNet != null &&
+        lyricsFromParolesNet.trim().isNotEmpty) {
       logger.log(
-        '[LYRICS] ytid=$cleanYtid source=paroles.net status=fallback synced=false lines=${lyricsFromParolesNet.split('\n').length}',
+        '[LYRICS] ytid=$cleanYtid source=paroles.net status=fallback synced=false lines=${lyricsFromParolesNet.split('\n').length} duration_ms=${stopwatch.elapsedMilliseconds}',
       );
       return lyricsFromParolesNet;
     }
@@ -99,14 +103,17 @@ class LyricsManager {
       effectiveArtist,
       title,
     );
-    if (lyricsFromLyricsMania1 != null && lyricsFromLyricsMania1.trim().isNotEmpty) {
+    if (lyricsFromLyricsMania1 != null &&
+        lyricsFromLyricsMania1.trim().isNotEmpty) {
       logger.log(
-        '[LYRICS] ytid=$cleanYtid source=lyricsmania status=fallback synced=false lines=${lyricsFromLyricsMania1.split('\n').length}',
+        '[LYRICS] ytid=$cleanYtid source=lyricsmania status=fallback synced=false lines=${lyricsFromLyricsMania1.split('\n').length} duration_ms=${stopwatch.elapsedMilliseconds}',
       );
       return lyricsFromLyricsMania1;
     }
 
-    logger.log('[LYRICS] ytid=$cleanYtid status=not_found');
+    logger.log(
+      '[LYRICS] ytid=$cleanYtid status=not_found duration_ms=${stopwatch.elapsedMilliseconds}',
+    );
     return null;
   }
 

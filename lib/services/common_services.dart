@@ -1022,6 +1022,7 @@ Future<String?> fetchSongStreamUrl(
   String? title,
   String? artist,
 }) async {
+  final stopwatch = Stopwatch()..start();
   try {
     if (songId.isEmpty) {
       logger.log('fetchSongStreamUrl: songId is empty');
@@ -1031,10 +1032,14 @@ Future<String?> fetchSongStreamUrl(
     final targetSongId = isLive
         ? songId
         : await resolveOfficialAudioYtId(songId, title: title, artist: artist);
+    final officialResolveMs = stopwatch.elapsedMilliseconds;
 
     if (isLive) {
       final streamInfo = await ytClient.videos.streamsClient
           .getHttpLiveStreamUrl(VideoId(targetSongId));
+      logger.log(
+        '[PLAYER_STREAM] ytid=$songId mode=live resolve_ms=$officialResolveMs total_ms=${stopwatch.elapsedMilliseconds}',
+      );
       return streamInfo;
     }
 
@@ -1044,6 +1049,9 @@ Future<String?> fetchSongStreamUrl(
     // Try to get from cache
     final cachedUrl = await _getCachedSongUrl(cacheKey, _cacheDuration);
     if (cachedUrl != null) {
+      logger.log(
+        '[PLAYER_STREAM] ytid=$songId mode=audio cache_hit=true resolve_ms=$officialResolveMs total_ms=${stopwatch.elapsedMilliseconds}',
+      );
       return cachedUrl;
     }
 
@@ -1062,6 +1070,9 @@ Future<String?> fetchSongStreamUrl(
 
     unawaited(addOrUpdateData<String>('cache', cacheKey, url));
 
+    logger.log(
+      '[PLAYER_STREAM] ytid=$songId mode=audio cache_hit=false resolve_ms=$officialResolveMs manifest_ms=${stopwatch.elapsedMilliseconds - officialResolveMs} total_ms=${stopwatch.elapsedMilliseconds}',
+    );
     return url;
   } on TimeoutException catch (_) {
     logger.log('fetchSongStreamUrl request timed out for $songId');

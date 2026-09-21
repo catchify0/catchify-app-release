@@ -135,6 +135,7 @@ class _PlaylistPageState extends State<PlaylistPage> {
   }
 
   Future<void> _initializePlaylist() async {
+    final stopwatch = Stopwatch()..start();
     try {
       final initialPlaylist = widget.playlistData;
       final resolvedId =
@@ -175,6 +176,9 @@ class _PlaylistPageState extends State<PlaylistPage> {
         _sortPlaylist(_sortType);
         _syncPlaylistLikeStatus();
       }
+      logger.log(
+        '[CUSTOM_PLAYLIST] init duration_ms=${stopwatch.elapsedMilliseconds} items=${(_playlist?['list'] as List?)?.length ?? 0} loaded=${_playlist != null}',
+      );
     } catch (e, stackTrace) {
       logger.log(
         'Error initializing playlist:',
@@ -351,10 +355,14 @@ class _PlaylistPageState extends State<PlaylistPage> {
                           color: colorScheme.onSurface.withValues(alpha: 0.08),
                         ),
                       ),
-                      backgroundColor: colorScheme.surfaceContainerHighest.withValues(alpha: 0.7),
+                      backgroundColor: colorScheme.surfaceContainerHighest
+                          .withValues(alpha: 0.7),
                       foregroundColor: colorScheme.onSurface,
                     ),
-                    icon: const Icon(FluentIcons.arrow_shuffle_24_filled, size: 22),
+                    icon: const Icon(
+                      FluentIcons.arrow_shuffle_24_filled,
+                      size: 22,
+                    ),
                     label: Text(
                       context.l10n!.shuffle,
                       style: const TextStyle(fontWeight: FontWeight.w700),
