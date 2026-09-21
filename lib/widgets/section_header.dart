@@ -104,7 +104,7 @@ class SectionHeader extends StatelessWidget {
                   minWidth: AppTokens.minInteractiveSize,
                   minHeight: AppTokens.minInteractiveSize,
                 ),
-                child: actionButton!,
+                child: actionButton,
               ),
             ),
           ] else if (onTap != null) ...[
@@ -120,7 +120,18 @@ class SectionHeader extends StatelessWidget {
     );
 
     if (onTap != null && actionButton == null) {
-      return InkWell(onTap: onTap, child: headerContent);
+      return Semantics(
+        button: true,
+        label: title,
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: AppTokens.borderRadiusMedium,
+            child: headerContent,
+          ),
+        ),
+      );
     }
 
     return headerContent;

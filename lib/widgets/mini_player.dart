@@ -173,81 +173,93 @@ class _MiniPlayerBodyState extends State<_MiniPlayerBody>
     final metadata = widget.metadata;
     final state = widget.state;
 
-    return AnimatedBuilder(
-      animation: _scaleAnimation,
-      builder: (context, child) {
-        return Transform.scale(
-          scale: _scaleAnimation.value,
-          child: GestureDetector(
-            onTapDown: (_) => _animationController.forward(),
-            onTapUp: (_) => _animationController.reverse(),
-            onTapCancel: () => _animationController.reverse(),
-            onVerticalDragUpdate: _handleVerticalDrag,
-            onTap: _navigateToNowPlaying,
-            child: SizedBox(
-              height: MiniPlayer.playerHeight,
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(MiniPlayer._borderRadius),
-                  boxShadow: [
-                    BoxShadow(
-                      color: colorScheme.shadow.withValues(alpha: 0.12),
-                      blurRadius: 18,
-                      offset: const Offset(0, 8),
+    return Semantics(
+      button: true,
+      label: metadata.artist == null || metadata.artist!.isEmpty
+          ? metadata.title
+          : '${metadata.title}, by ${metadata.artist}',
+      child: AnimatedBuilder(
+        animation: _scaleAnimation,
+        builder: (context, child) {
+          return Transform.scale(
+            scale: _scaleAnimation.value,
+            child: GestureDetector(
+              onTapDown: (_) => _animationController.forward(),
+              onTapUp: (_) => _animationController.reverse(),
+              onTapCancel: () => _animationController.reverse(),
+              onVerticalDragUpdate: _handleVerticalDrag,
+              onTap: _navigateToNowPlaying,
+              child: SizedBox(
+                height: MiniPlayer.playerHeight,
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(
+                      MiniPlayer._borderRadius,
                     ),
-                  ],
-                ),
-                child: GlassSurface(
-                  borderRadius: BorderRadius.circular(MiniPlayer._borderRadius),
-                  padding: const EdgeInsets.symmetric(horizontal: 10),
-                  surfaceColor: colorScheme.surfaceContainerHighest.withValues(
-                    alpha: 0.76,
+                    boxShadow: [
+                      BoxShadow(
+                        color: colorScheme.shadow.withValues(alpha: 0.12),
+                        blurRadius: 18,
+                        offset: const Offset(0, 8),
+                      ),
+                    ],
                   ),
-                  borderColor: colorScheme.outlineVariant.withValues(
-                    alpha: 0.46,
-                  ),
-                  child: Row(
-                    children: [
-                      _ArtworkWidget(metadata: metadata),
-                      Expanded(
-                        child: AnimatedSwitcher(
-                          duration: AppTokens.motionStandard,
-                          switchInCurve: Curves.easeIn,
-                          switchOutCurve: Curves.easeOut,
-                          layoutBuilder: (currentChild, previousChildren) =>
-                              Stack(
-                                alignment: Alignment.centerLeft,
-                                children: [
-                                  ...previousChildren,
-                                  if (currentChild != null) currentChild,
-                                ],
+                  child: GlassSurface(
+                    borderRadius: BorderRadius.circular(
+                      MiniPlayer._borderRadius,
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 10),
+                    surfaceColor: colorScheme.surfaceContainerHighest
+                        .withValues(alpha: 0.76),
+                    borderColor: colorScheme.outlineVariant.withValues(
+                      alpha: 0.46,
+                    ),
+                    child: Row(
+                      children: [
+                        _ArtworkWidget(metadata: metadata),
+                        Expanded(
+                          child: AnimatedSwitcher(
+                            duration: AppTokens.motionStandard,
+                            switchInCurve: Curves.easeIn,
+                            switchOutCurve: Curves.easeOut,
+                            layoutBuilder: (currentChild, previousChildren) =>
+                                Stack(
+                                  alignment: Alignment.centerLeft,
+                                  children: [
+                                    ...previousChildren,
+                                    if (currentChild != null) currentChild,
+                                  ],
+                                ),
+                            transitionBuilder: (child, animation) =>
+                                FadeTransition(
+                                  opacity: animation,
+                                  child: child,
+                                ),
+                            child: KeyedSubtree(
+                              key: ValueKey(metadata.id),
+                              child: _MetadataWidget(
+                                title: metadata.title,
+                                artist: metadata.artist,
+                                colorScheme: colorScheme,
                               ),
-                          transitionBuilder: (child, animation) =>
-                              FadeTransition(opacity: animation, child: child),
-                          child: KeyedSubtree(
-                            key: ValueKey(metadata.id),
-                            child: _MetadataWidget(
-                              title: metadata.title,
-                              artist: metadata.artist,
-                              colorScheme: colorScheme,
                             ),
                           ),
                         ),
-                      ),
-                      _ControlsWidget(
-                        colorScheme: colorScheme,
-                        playbackState: state.playbackState,
-                        metadata: metadata,
-                        hasNext: widget.hasNext,
-                      ),
-                    ],
+                        _ControlsWidget(
+                          colorScheme: colorScheme,
+                          playbackState: state.playbackState,
+                          metadata: metadata,
+                          hasNext: widget.hasNext,
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
             ),
-          ),
-        );
-      },
+          );
+        },
+      ),
     );
   }
 }

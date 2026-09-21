@@ -73,21 +73,28 @@ class ErrorState extends StatelessWidget {
               ),
             ),
             SizedBox(height: compact ? 12 : 16),
-            Text(
-              title,
-              textAlign: TextAlign.center,
-              style: AppTextStyles.rowTitle.copyWith(
-                color: colorScheme.onSurface,
-                fontSize: compact ? 15 : 17,
+            Semantics(
+              header: true,
+              child: Text(
+                title,
+                textAlign: TextAlign.center,
+                style: AppTextStyles.rowTitle.copyWith(
+                  color: colorScheme.onSurface,
+                  fontSize: compact ? 15 : 17,
+                ),
               ),
             ),
             if (message != null && message!.isNotEmpty) ...[
               const SizedBox(height: 6),
-              Text(
-                message!,
-                textAlign: TextAlign.center,
-                style: AppTextStyles.secondary.copyWith(
-                  color: colorScheme.onSurfaceVariant,
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 420),
+                child: Text(
+                  message!,
+                  textAlign: TextAlign.center,
+                  softWrap: true,
+                  style: AppTextStyles.secondary.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                  ),
                 ),
               ),
             ],
@@ -95,7 +102,10 @@ class ErrorState extends StatelessWidget {
               SizedBox(height: compact ? 14 : 20),
               FilledButton.tonalIcon(
                 onPressed: onRetry,
-                icon: const Icon(FluentIcons.arrow_clockwise_24_regular, size: 18),
+                icon: const Icon(
+                  FluentIcons.arrow_clockwise_24_regular,
+                  size: 18,
+                ),
                 label: Text(retryLabel),
                 style: FilledButton.styleFrom(
                   minimumSize: const Size(120, AppTokens.buttonHeightSmall),

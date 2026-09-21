@@ -61,82 +61,105 @@ class CustomBar extends StatelessWidget {
         backgroundColor ??
         colorScheme.surfaceContainerLow.withValues(alpha: 0.92);
 
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: effectiveBackground,
-        borderRadius: borderRadius,
-        border: Border.all(
-          color: colorScheme.outlineVariant.withValues(alpha: 0.45),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: colorScheme.shadow.withValues(alpha: 0.06),
-            blurRadius: 14,
-            offset: const Offset(0, 4),
+    return Semantics(
+      container: true,
+      button: onTap != null || onLongPress != null,
+      enabled: enabled,
+      label: description == null ? tileName : '$tileName, $description',
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: effectiveBackground,
+          borderRadius: borderRadius,
+          border: Border.all(
+            color: colorScheme.outlineVariant.withValues(alpha: 0.45),
           ),
-        ],
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: enabled ? onTap : null,
-          onLongPress: enabled ? onLongPress : null,
-          splashColor: colorScheme.primary.withValues(alpha: 0.12),
-          highlightColor: colorScheme.primary.withValues(alpha: 0.08),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
-            child: Row(
-              children: [
-                Container(
-                  width: AppTokens.settingIconContainerSize,
-                  height: AppTokens.settingIconContainerSize,
-                  decoration: BoxDecoration(
-                    color: colorScheme.surfaceContainerHighest.withValues(
-                      alpha: 0.72,
-                    ),
-                    borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
-                    border: Border.all(
-                      color: colorScheme.outlineVariant.withValues(alpha: 0.4),
-                    ),
-                  ),
-                  child: Icon(
-                    tileIcon,
-                    size: AppTokens.iconInline,
-                    color: enabled ? effectiveIconColor : disabledContentColor,
-                  ),
+          boxShadow: [
+            BoxShadow(
+              color: colorScheme.shadow.withValues(alpha: 0.06),
+              blurRadius: 14,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: enabled ? onTap : null,
+            onLongPress: enabled ? onLongPress : null,
+            splashColor: colorScheme.primary.withValues(alpha: 0.12),
+            highlightColor: colorScheme.primary.withValues(alpha: 0.08),
+            borderRadius: borderRadius,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(
+                minHeight: AppTokens.minInteractiveSize,
+              ),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  vertical: 10,
+                  horizontal: 12,
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        tileName,
-                        style: AppTextStyles.rowTitle.copyWith(
-                          fontSize: 14.5,
-                          color: enabled
-                              ? (textColor ?? colorScheme.onSurface)
-                              : disabledContentColor,
+                child: Row(
+                  children: [
+                    Container(
+                      width: AppTokens.settingIconContainerSize,
+                      height: AppTokens.settingIconContainerSize,
+                      decoration: BoxDecoration(
+                        color: colorScheme.surfaceContainerHighest.withValues(
+                          alpha: 0.72,
                         ),
-                      ),
-                      if (description != null) ...[
-                        const SizedBox(height: 2),
-                        Text(
-                          description!,
-                          style: AppTextStyles.caption.copyWith(
-                            color: enabled
-                                ? (textColor?.withValues(alpha: 0.75) ??
-                                      colorScheme.onSurfaceVariant)
-                                : disabledContentColor,
+                        borderRadius: BorderRadius.circular(
+                          AppTokens.radiusSmall,
+                        ),
+                        border: Border.all(
+                          color: colorScheme.outlineVariant.withValues(
+                            alpha: 0.4,
                           ),
                         ),
-                      ],
+                      ),
+                      child: Icon(
+                        tileIcon,
+                        size: AppTokens.iconInline,
+                        color: enabled
+                            ? effectiveIconColor
+                            : disabledContentColor,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            tileName,
+                            style: AppTextStyles.rowTitle.copyWith(
+                              color: enabled
+                                  ? (textColor ?? colorScheme.onSurface)
+                                  : disabledContentColor,
+                            ),
+                          ),
+                          if (description != null) ...[
+                            const SizedBox(height: 2),
+                            Text(
+                              description!,
+                              style: AppTextStyles.caption.copyWith(
+                                color: enabled
+                                    ? (textColor?.withValues(alpha: 0.75) ??
+                                          colorScheme.onSurfaceVariant)
+                                    : disabledContentColor,
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                    if (trailing != null) ...[
+                      const SizedBox(width: 8),
+                      trailing!,
                     ],
-                  ),
+                  ],
                 ),
-                if (trailing != null) ...[const SizedBox(width: 8), trailing!],
-              ],
+              ),
             ),
           ),
         ),

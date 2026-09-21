@@ -67,30 +67,40 @@ class EmptyState extends StatelessWidget {
                 shape: BoxShape.circle,
               ),
               child: Center(
-                child: iconWidget ??
+                child:
+                    iconWidget ??
                     Icon(
                       icon,
                       size: compact ? 28 : 36,
-                      color: colorScheme.onSurfaceVariant.withValues(alpha: 0.8),
+                      color: colorScheme.onSurfaceVariant.withValues(
+                        alpha: 0.8,
+                      ),
                     ),
               ),
             ),
             SizedBox(height: compact ? 12 : 16),
-            Text(
-              title,
-              textAlign: TextAlign.center,
-              style: AppTextStyles.rowTitle.copyWith(
-                color: colorScheme.onSurface,
-                fontSize: compact ? 15 : 17,
+            Semantics(
+              header: true,
+              child: Text(
+                title,
+                textAlign: TextAlign.center,
+                style: AppTextStyles.rowTitle.copyWith(
+                  color: colorScheme.onSurface,
+                  fontSize: compact ? 15 : 17,
+                ),
               ),
             ),
             if (description != null && description!.isNotEmpty) ...[
               const SizedBox(height: 6),
-              Text(
-                description!,
-                textAlign: TextAlign.center,
-                style: AppTextStyles.secondary.copyWith(
-                  color: colorScheme.onSurfaceVariant,
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 420),
+                child: Text(
+                  description!,
+                  textAlign: TextAlign.center,
+                  softWrap: true,
+                  style: AppTextStyles.secondary.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                  ),
                 ),
               ),
             ],

@@ -78,7 +78,8 @@ class _BottomNavigationPageState extends State<BottomNavigationPage> {
 
           return LayoutBuilder(
             builder: (context, constraints) {
-              final isLargeScreen = MediaQuery.of(context).size.width >= 600;
+              final isLargeScreen =
+                  constraints.maxWidth >= AppTokens.railBreakpoint;
               final items = _getNavigationItems(isOfflineMode);
 
               return Scaffold(
@@ -99,45 +100,56 @@ class _BottomNavigationPageState extends State<BottomNavigationPage> {
                                   ),
                                 )
                                 .toList(),
-                            selectedIndex: _getCurrentIndex(items, isOfflineMode),
+                            selectedIndex: _getCurrentIndex(
+                              items,
+                              isOfflineMode,
+                            ),
                             onDestinationSelected: (index) =>
                                 _onTabTapped(index, items),
                           ),
                         ),
                       Expanded(
-                        child: StreamBuilder<bool>(
-                          initialData: audioHandler.mediaItem.value != null,
-                          stream: _miniPlayerVisibilityStream,
-                          builder: (context, snapshot) {
-                            final mediaQuery = MediaQuery.of(context);
-                            final isMiniPlayerVisible = snapshot.data ?? false;
-                            final bottomPadding = !isMiniPlayerVisible
-                                ? mediaQuery.padding.bottom
-                                : mediaQuery.padding.bottom +
-                                      AppTokens.miniPlayerTotalHeight;
+                        child: Align(
+                          alignment: Alignment.topCenter,
+                          child: ConstrainedBox(
+                            constraints: const BoxConstraints(
+                              maxWidth: AppTokens.wideContentMaxWidth,
+                            ),
+                            child: StreamBuilder<bool>(
+                              initialData: audioHandler.mediaItem.value != null,
+                              stream: _miniPlayerVisibilityStream,
+                              builder: (context, snapshot) {
+                                final mediaQuery = MediaQuery.of(context);
+                                final isMiniPlayerVisible =
+                                    snapshot.data ?? false;
+                                final bottomPadding = !isMiniPlayerVisible
+                                    ? mediaQuery.padding.bottom
+                                    : mediaQuery.padding.bottom +
+                                          AppTokens.miniPlayerTotalHeight;
 
-                            return Stack(
-                              alignment: Alignment.bottomCenter,
-                              children: [
-                                MediaQuery(
-                                  data: mediaQuery.copyWith(
-                                    padding: mediaQuery.padding.copyWith(
-                                      bottom: bottomPadding,
+                                return Stack(
+                                  alignment: Alignment.bottomCenter,
+                                  children: [
+                                    MediaQuery(
+                                      data: mediaQuery.copyWith(
+                                        padding: mediaQuery.padding.copyWith(
+                                          bottom: bottomPadding,
+                                        ),
+                                      ),
+                                      child: widget.child,
                                     ),
-                                  ),
-                                  child: widget.child,
-                                ),
-                                const Padding(
-                                  padding: EdgeInsets.symmetric(
-                                    horizontal: AppTokens.pagePadding,
-                                    vertical: 8,
-                                  ),
-                                  child: MiniPlayer(),
-                                ),
-
-                              ],
-                            );
-                          },
+                                    const Padding(
+                                      padding: EdgeInsets.symmetric(
+                                        horizontal: AppTokens.pagePadding,
+                                        vertical: 8,
+                                      ),
+                                      child: MiniPlayer(),
+                                    ),
+                                  ],
+                                );
+                              },
+                            ),
+                          ),
                         ),
                       ),
                     ],

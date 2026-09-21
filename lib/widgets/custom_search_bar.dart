@@ -21,6 +21,8 @@
 
 import 'package:fluentui_system_icons/fluentui_system_icons.dart';
 import 'package:flutter/material.dart';
+import 'package:catchify/constants/app_tokens.dart';
+import 'package:catchify/theme/app_text_styles.dart';
 
 class CustomSearchBar extends StatefulWidget {
   const CustomSearchBar({
@@ -45,13 +47,48 @@ class CustomSearchBar extends StatefulWidget {
 
 class _CustomSearchBarState extends State<CustomSearchBar> {
   @override
+  void initState() {
+    super.initState();
+    widget.focusNode.addListener(_handleFocusChanged);
+    widget.controller.addListener(_handleTextChanged);
+  }
+
+  @override
+  void didUpdateWidget(covariant CustomSearchBar oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.focusNode != widget.focusNode) {
+      oldWidget.focusNode.removeListener(_handleFocusChanged);
+      widget.focusNode.addListener(_handleFocusChanged);
+    }
+    if (oldWidget.controller != widget.controller) {
+      oldWidget.controller.removeListener(_handleTextChanged);
+      widget.controller.addListener(_handleTextChanged);
+    }
+  }
+
+  @override
+  void dispose() {
+    widget.focusNode.removeListener(_handleFocusChanged);
+    widget.controller.removeListener(_handleTextChanged);
+    super.dispose();
+  }
+
+  void _handleFocusChanged() {
+    if (mounted) setState(() {});
+  }
+
+  void _handleTextChanged() {
+    if (mounted) setState(() {});
+  }
+
+  @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final isFocused = widget.focusNode.hasFocus;
     final hasText = widget.controller.text.isNotEmpty;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 14),
+      padding: const EdgeInsets.symmetric(vertical: 12),
       child: SearchBar(
         elevation: WidgetStateProperty.all(0),
         shadowColor: WidgetStateProperty.all(Colors.transparent),
@@ -79,33 +116,31 @@ class _CustomSearchBarState extends State<CustomSearchBar> {
                   : colorScheme.outlineVariant.withValues(alpha: 0.75),
               width: focused ? 1.5 : 1,
             ),
-            borderRadius: BorderRadius.circular(18),
+            borderRadius: AppTokens.borderRadiusLarge,
           );
         }),
-        constraints: const BoxConstraints(minHeight: 52),
+        constraints: const BoxConstraints(
+          minHeight: AppTokens.minInteractiveSize + 8,
+        ),
         padding: WidgetStateProperty.all(
           const EdgeInsets.symmetric(horizontal: 14),
         ),
         hintText: widget.labelText,
         hintStyle: WidgetStateProperty.all(
-          TextStyle(
+          AppTextStyles.body.copyWith(
             color: colorScheme.onSurfaceVariant,
-            fontSize: 16,
             fontWeight: FontWeight.w500,
           ),
         ),
         textStyle: WidgetStateProperty.all(
-          TextStyle(
+          AppTextStyles.body.copyWith(
             color: colorScheme.onSurface,
-            fontSize: 16,
             fontWeight: FontWeight.w500,
           ),
         ),
         leading: Icon(
           FluentIcons.search_24_regular,
-          color: isFocused
-              ? colorScheme.primary
-              : colorScheme.onSurfaceVariant,
+          color: isFocused ? colorScheme.primary : colorScheme.onSurfaceVariant,
           size: 22,
         ),
         onSubmitted: (String value) {
@@ -126,8 +161,9 @@ class _CustomSearchBarState extends State<CustomSearchBar> {
             IconButton(
               tooltip: 'Clear search',
               style: IconButton.styleFrom(
+                minimumSize: const Size.square(AppTokens.minInteractiveSize),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: AppTokens.borderRadiusControl,
                 ),
               ),
               icon: Icon(

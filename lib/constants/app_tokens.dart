@@ -25,6 +25,9 @@ import 'package:flutter/material.dart';
 abstract final class AppTokens {
   // ── Spacing ──
   static const double pagePadding = 16.0;
+  static const double wideContentMaxWidth = 1180.0;
+  static const double railBreakpoint = 720.0;
+  static const double spaciousBreakpoint = 960.0;
   static const double cardGap = 12.0;
   static const double sectionGap = 28.0;
   static const double chipGap = 8.0;
@@ -92,6 +95,7 @@ abstract final class AppTokens {
   static const double iconSmall = 16.0;
   static const double iconLarge = 28.0;
   static const double minInteractiveSize = 44.0;
+  static const double focusRingWidth = 2.0;
 
   // ── Edge Insets ──
   static const EdgeInsets screenPadding = EdgeInsets.symmetric(
