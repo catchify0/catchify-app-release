@@ -112,7 +112,9 @@ class _HomePageState extends State<HomePage> {
       final extra = GoRouterState.of(context).extra;
       if (extra is Map && extra['freshLoad'] == true) {
         _freshLoadConsumed = true;
-        _initFutures(forceRefresh: true);
+        // A language change already namespaces the cache key. Let the normal
+        // cache lookup serve an existing feed when the page is recreated.
+        _initFutures();
         return;
       }
       _initFutures();
@@ -131,7 +133,7 @@ class _HomePageState extends State<HomePage> {
         if (!mounted) return;
         setState(() {
           _selectedMood = 'All';
-          _initFutures(forceRefresh: true);
+          _initFutures();
         });
       });
     }
@@ -165,7 +167,8 @@ class _HomePageState extends State<HomePage> {
   void _refreshHomeFeed() {
     if (!mounted) return;
     setState(() {
-      _initFutures(forceRefresh: true);
+      // This setting only changes local personalization sections.
+      _initFutures();
     });
   }
 
