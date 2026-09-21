@@ -3530,7 +3530,9 @@ Future<List<HomeSection>> getUnifiedHomeFeed({
         if (result.isNotEmpty &&
             _latestHomeFeedRequestTokens[cacheRequestKey] == requestToken) {
           _recentHomeFeedResults[cacheRequestKey] = result;
-          _recentHomeFeedRefreshes[cacheRequestKey] = DateTime.now();
+          if (effectiveForceRefresh) {
+            _recentHomeFeedRefreshes[cacheRequestKey] = DateTime.now();
+          }
         }
         return result;
       });
