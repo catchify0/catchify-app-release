@@ -115,22 +115,13 @@ void reloadPlaylistLibraryStateFromStorage() {
       ? rawPlaylists.whereType<String>().toList()
       : [];
   userCustomPlaylists.value = rawCustomPlaylists is List
-      ? rawCustomPlaylists
-          .whereType<Map>()
-          .map(_normalizeStoredMap)
-          .toList()
+      ? rawCustomPlaylists.whereType<Map>().map(_normalizeStoredMap).toList()
       : [];
   userLikedPlaylists.value = rawLikedPlaylists is List
-      ? rawLikedPlaylists
-          .whereType<Map>()
-          .map(_normalizeStoredMap)
-          .toList()
+      ? rawLikedPlaylists.whereType<Map>().map(_normalizeStoredMap).toList()
       : [];
   userPlaylistFolders.value = rawPlaylistFolders is List
-      ? rawPlaylistFolders
-          .whereType<Map>()
-          .map(_normalizeStoredMap)
-          .toList()
+      ? rawPlaylistFolders.whereType<Map>().map(_normalizeStoredMap).toList()
       : [];
   pinnedPlaylistIds.value = rawPinnedPlaylistIds is List
       ? rawPinnedPlaylistIds.whereType<String>().toList()
@@ -1362,7 +1353,9 @@ Future<List<Map<String, dynamic>>> getSuggestedArtists({
         liveArtists = cached
             .whereType<Map>()
             .map(Map<String, dynamic>.from)
-            .where((a) => _isLegitimateMusicArtist(a['title']?.toString() ?? ''))
+            .where(
+              (a) => _isLegitimateMusicArtist(a['title']?.toString() ?? ''),
+            )
             .toList();
       }
     } catch (_) {}
@@ -1372,7 +1365,8 @@ Future<List<Map<String, dynamic>>> getSuggestedArtists({
     try {
       // 1. Fetch language-specific verified music artists
       final cleanLang = prefLang.toLowerCase();
-      final curatedNames = _curatedMusicArtistsPerLanguage[cleanLang] ?? const [];
+      final curatedNames =
+          _curatedMusicArtistsPerLanguage[cleanLang] ?? const [];
 
       if (curatedNames.isNotEmpty) {
         // Search top music artists for this language
@@ -1476,7 +1470,9 @@ Future<List<Map<String, dynamic>>> getSuggestedArtists({
   }
 
   final combined = [
-    ...likedArtists.where((a) => _isLegitimateMusicArtist(a['title']?.toString() ?? '')),
+    ...likedArtists.where(
+      (a) => _isLegitimateMusicArtist(a['title']?.toString() ?? ''),
+    ),
     ...liveArtists,
   ];
 
@@ -2454,9 +2450,11 @@ Future<List<Map<String, dynamic>>> getFeaturedPlaylists({
 
           final targetLang = prefLang.toLowerCase();
           for (final entry in chartPlaylists.entries) {
-            if (entry.key.contains(targetLang) || targetLang.contains(entry.key)) {
+            if (entry.key.contains(targetLang) ||
+                targetLang.contains(entry.key)) {
               final plId = entry.value;
-              if (plId.isNotEmpty && !livePlaylists.any((p) => p['ytid'] == plId)) {
+              if (plId.isNotEmpty &&
+                  !livePlaylists.any((p) => p['ytid'] == plId)) {
                 livePlaylists.add({
                   'ytid': plId,
                   'title': 'Top Weekly Videos $prefLang',
@@ -3472,6 +3470,8 @@ String getHomeFeedCacheKey({
 int _activeHomeFeedRequestId = 0;
 
 final Map<String, Future<List<HomeSection>>> _homeFeedInFlight = {};
+final Map<String, DateTime> _recentHomeFeedRefreshes = {};
+const _homeFeedRefreshDeduplicationWindow = Duration(seconds: 10);
 
 Future<List<HomeSection>> getUnifiedHomeFeed({
   bool forceRefresh = false,
@@ -3479,14 +3479,30 @@ Future<List<HomeSection>> getUnifiedHomeFeed({
 }) {
   final contentLang = contentLanguagePreference ?? 'en';
   final transportHl = resolveHomeFeedTransportLanguage(contentLang);
-  final normalizedMood =
-      mood == null || mood.trim().isEmpty ? 'All' : mood.trim();
-  final requestKey = [
-    forceRefresh ? 'refresh' : 'cached',
+  final normalizedMood = mood == null || mood.trim().isEmpty
+      ? 'All'
+      : mood.trim();
+  final cacheRequestKey = [
     contentLang,
     transportHl,
     homeFeedRegion,
     normalizedMood,
+  ].join('|');
+  var effectiveForceRefresh = forceRefresh;
+  if (forceRefresh) {
+    final lastRefresh = _recentHomeFeedRefreshes[cacheRequestKey];
+    if (lastRefresh != null &&
+        DateTime.now().difference(lastRefresh) <
+            _homeFeedRefreshDeduplicationWindow) {
+      effectiveForceRefresh = false;
+      logger.log(
+        '[HOME_REFRESH] coalescing repeated force refresh key=$cacheRequestKey',
+      );
+    }
+  }
+  final requestKey = [
+    effectiveForceRefresh ? 'refresh' : 'cached',
+    cacheRequestKey,
   ].join('|');
 
   final existing = _homeFeedInFlight[requestKey];
@@ -3496,11 +3512,14 @@ Future<List<HomeSection>> getUnifiedHomeFeed({
   }
 
   final future = _loadUnifiedHomeFeed(
-    forceRefresh: forceRefresh,
+    forceRefresh: effectiveForceRefresh,
     mood: mood,
   );
   late Future<List<HomeSection>> tracked;
   tracked = future.whenComplete(() {
+    if (effectiveForceRefresh) {
+      _recentHomeFeedRefreshes[cacheRequestKey] = DateTime.now();
+    }
     if (identical(_homeFeedInFlight[requestKey], tracked)) {
       _homeFeedInFlight.remove(requestKey);
     }
@@ -3587,8 +3606,10 @@ Future<List<HomeSection>> _loadUnifiedHomeFeed({
 
           final distinctItems = composedSections
               .expand((s) => s.contents)
-              .map((item) =>
-                  item['ytid']?.toString() ?? item['id']?.toString() ?? '')
+              .map(
+                (item) =>
+                    item['ytid']?.toString() ?? item['id']?.toString() ?? '',
+              )
               .where((id) => id.isNotEmpty)
               .toSet()
               .length;
@@ -3667,18 +3688,19 @@ Future<List<HomeSection>> _loadUnifiedHomeFeed({
                   contentLang: contentLang,
                   forceRefresh: forceRefresh,
                 )
-              .then((res) {
-              languageMs = langWatch.elapsedMilliseconds;
-              return res;
-            }).catchError((e, st) {
-              languageMs = langWatch.elapsedMilliseconds;
-              logger.log(
-                'Error fetching language curated sections:',
-                error: e,
-                stackTrace: st,
-              );
-              return <HomeSection>[];
-            })
+                .then((res) {
+                  languageMs = langWatch.elapsedMilliseconds;
+                  return res;
+                })
+                .catchError((e, st) {
+                  languageMs = langWatch.elapsedMilliseconds;
+                  logger.log(
+                    'Error fetching language curated sections:',
+                    error: e,
+                    stackTrace: st,
+                  );
+                  return <HomeSection>[];
+                })
           : Future.value(<HomeSection>[]);
 
       final results = await Future.wait([remoteFuture, langFuture]);
@@ -3755,9 +3777,7 @@ Future<List<HomeSection>> _loadUnifiedHomeFeed({
 
       // Add Featured Playlists if not present
       if (!sections.any((s) => s.title.toLowerCase().contains('featured'))) {
-        final featured = await getFeaturedPlaylists(
-          forceRefresh: forceRefresh,
-        );
+        final featured = await getFeaturedPlaylists(forceRefresh: forceRefresh);
         if (featured.isNotEmpty) {
           sections.add(
             HomeSection(
@@ -3888,8 +3908,7 @@ Future<List<HomeSection>> _loadUnifiedHomeFeed({
 
   final distinctItems = composedSections
       .expand((s) => s.contents)
-      .map((item) =>
-          item['ytid']?.toString() ?? item['id']?.toString() ?? '')
+      .map((item) => item['ytid']?.toString() ?? item['id']?.toString() ?? '')
       .where((id) => id.isNotEmpty)
       .toSet()
       .length;
@@ -3908,12 +3927,8 @@ Future<List<HomeSection>> _fetchLanguageCuratedSections({
 }) async {
   final curated = <HomeSection>[];
   try {
-    final quickPicksFuture = getQuickPicksSongs(
-      forceRefresh: forceRefresh,
-    );
-    final trendingFuture = getTrendingSongsForYou(
-      forceRefresh: forceRefresh,
-    );
+    final quickPicksFuture = getQuickPicksSongs(forceRefresh: forceRefresh);
+    final trendingFuture = getTrendingSongsForYou(forceRefresh: forceRefresh);
     final featuredPlaylistsFuture = getFeaturedPlaylists(
       forceRefresh: forceRefresh,
     );
@@ -3923,9 +3938,7 @@ Future<List<HomeSection>> _fetchLanguageCuratedSections({
     final newReleasesFuture = getSuggestedNewReleases(
       forceRefresh: forceRefresh,
     );
-    final artistsFuture = getSuggestedArtists(
-      forceRefresh: forceRefresh,
-    );
+    final artistsFuture = getSuggestedArtists(forceRefresh: forceRefresh);
 
     final results = await Future.wait([
       quickPicksFuture.catchError((_) => <Map<String, dynamic>>[]),
