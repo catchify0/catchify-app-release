@@ -37,11 +37,17 @@ jobs:
             echo "CATCHIFY_WEBSITE_TOKEN was rejected by GitHub. Rotate/update the repository secret before running a release."
             exit 1
           fi
-          if ! curl --fail-with-body --silent --show-error \
+          repo_info=$(curl --fail-with-body --silent --show-error \
             -H "Authorization: Bearer $CATCHIFY_WEBSITE_TOKEN" \
             -H "Accept: application/vnd.github+json" \
-            https://api.github.com/repos/catchify0/catchify0.github.io > /dev/null; then
+            https://api.github.com/repos/catchify0/catchify0.github.io)
+          if [ -z "$repo_info" ]; then
             echo "CATCHIFY_WEBSITE_TOKEN cannot access catchify0/catchify0.github.io. Use a token with the required repository release permissions."
+            exit 1
+          fi
+          can_push=$(printf '%s' "$repo_info" | python3 -c 'import json,sys; print(str(json.load(sys.stdin).get("permissions", {}).get("push", False)).lower())')
+          if [ "$can_push" != "true" ]; then
+            echo "CATCHIFY_WEBSITE_TOKEN can read catchify0/catchify0.github.io but cannot write releases. Grant Contents: Read and write on the fine-grained token."
             exit 1
           fi
 
