@@ -46,7 +46,6 @@ import 'package:catchify/widgets/song_bar.dart';
 import 'package:catchify/widgets/spinner.dart';
 import 'package:catchify/widgets/top_result_card.dart';
 
-
 class SearchPage extends StatefulWidget {
   const SearchPage({super.key});
 
@@ -146,24 +145,21 @@ class _SearchPageState extends State<SearchPage> {
       return;
     }
 
-    _debounce = Timer(
-      const Duration(milliseconds: 280),
-      () async {
-        try {
-          final suggestions = await SearchService.instance.getSuggestions(query);
+    _debounce = Timer(const Duration(milliseconds: 280), () async {
+      try {
+        final suggestions = await SearchService.instance.getSuggestions(query);
 
-          if (!mounted ||
-              requestId != _latestSuggestionRequest ||
-              _searchBar.text != query) {
-            return;
-          }
+        if (!mounted ||
+            requestId != _latestSuggestionRequest ||
+            _searchBar.text != query) {
+          return;
+        }
 
-          _suggestionsList = suggestions;
-          _hasSearched = false;
-          if (mounted) setState(() {});
-        } catch (_) {}
-      },
-    );
+        _suggestionsList = suggestions;
+        _hasSearched = false;
+        if (mounted) setState(() {});
+      } catch (_) {}
+    });
   }
 
   void _onFilterSelected(SearchFilter filter) {
@@ -219,7 +215,11 @@ class _SearchPageState extends State<SearchPage> {
 
       _searchResult = payload;
     } catch (e, st) {
-      logger.log('Error executing search for "$query":', error: e, stackTrace: st);
+      logger.log(
+        'Error executing search for "$query":',
+        error: e,
+        stackTrace: st,
+      );
     } finally {
       if (mounted && currentSession == _searchSessionId) {
         _fetchingResults.value = false;
@@ -309,7 +309,7 @@ class _SearchPageState extends State<SearchPage> {
     return Padding(
       padding: const EdgeInsets.only(top: 8, bottom: 8),
       child: SizedBox(
-        height: 40,
+        height: AppTokens.minInteractiveSize,
         child: ListView.separated(
           scrollDirection: Axis.horizontal,
           physics: const BouncingScrollPhysics(),
@@ -457,7 +457,7 @@ class _SearchPageState extends State<SearchPage> {
                     onPressed: () async {
                       final confirm =
                           await _showClearAllConfirmationDialog(context) ??
-                              false;
+                          false;
                       if (confirm) {
                         searchHistoryNotifier.value = [];
                         unawaited(
@@ -709,10 +709,9 @@ class _SearchPageState extends State<SearchPage> {
                     icon: Icon(
                       FluentIcons.arrow_up_left_24_regular,
                       size: 18,
-                      color: Theme.of(context)
-                          .colorScheme
-                          .onSurfaceVariant
-                          .withValues(alpha: 0.6),
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
                     ),
                     onPressed: () {
                       _searchBar.text = query;
@@ -736,16 +735,13 @@ class _SearchPageState extends State<SearchPage> {
       child: EmptyState(
         icon: FluentIcons.search_24_regular,
         title: 'No results found',
-        description: 'No matches found for "${_searchBar.text.trim()}". Try different keywords or filters.',
+        description:
+            'No matches found for "${_searchBar.text.trim()}". Try different keywords or filters.',
       ),
     );
   }
 
-
-  Widget _buildSearchResults(
-    BuildContext context,
-    SearchResultPayload result,
-  ) {
+  Widget _buildSearchResults(BuildContext context, SearchResultPayload result) {
     final widgets = <Widget>[];
 
     // 1. Top Result (only if 'all' filter and topResult exists)
@@ -754,7 +750,8 @@ class _SearchPageState extends State<SearchPage> {
         TopResultCard(
           item: result.topResult!,
           onTap: () => _openTopResult(context, result.topResult!),
-          onPlay: (result.topResult!['topResultType'] == 'song' ||
+          onPlay:
+              (result.topResult!['topResultType'] == 'song' ||
                   result.topResult!['topResultType'] == 'video')
               ? () => _playTopResult(result.topResult!)
               : null,
@@ -802,8 +799,9 @@ class _SearchPageState extends State<SearchPage> {
   ) {
     final songsTitle = context.l10n?.songs ?? 'Songs';
     final screenWidth = MediaQuery.sizeOf(context).width;
-    final columnWidth =
-        (screenWidth > 600) ? 380.0 : (screenWidth - 44).clamp(280.0, 390.0);
+    final columnWidth = (screenWidth > 600)
+        ? 380.0
+        : (screenWidth - 44).clamp(280.0, 390.0);
 
     final chunkedSongs = <List<Map<String, dynamic>>>[];
     for (var i = 0; i < songs.length; i += 4) {
@@ -838,10 +836,8 @@ class _SearchPageState extends State<SearchPage> {
           ),
         ),
         SizedBox(
-          height: chunkedSongs
-                  .map((c) => c.length)
-                  .fold<int>(0, math.max) *
-              68.0,
+          height:
+              chunkedSongs.map((c) => c.length).fold<int>(0, math.max) * 68.0,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             physics: const BouncingScrollPhysics(),
@@ -901,8 +897,9 @@ class _SearchPageState extends State<SearchPage> {
   ) {
     final albumsTitle = context.l10n?.albums ?? 'Albums';
     final screenWidth = MediaQuery.sizeOf(context).width;
-    final columnWidth =
-        (screenWidth > 600) ? 380.0 : (screenWidth - 44).clamp(280.0, 390.0);
+    final columnWidth = (screenWidth > 600)
+        ? 380.0
+        : (screenWidth - 44).clamp(280.0, 390.0);
 
     final chunkedAlbums = <List<Map<String, dynamic>>>[];
     for (var i = 0; i < albums.length; i += 4) {
@@ -917,10 +914,8 @@ class _SearchPageState extends State<SearchPage> {
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
         ),
         SizedBox(
-          height: chunkedAlbums
-                  .map((c) => c.length)
-                  .fold<int>(0, math.max) *
-              72.0,
+          height:
+              chunkedAlbums.map((c) => c.length).fold<int>(0, math.max) * 72.0,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             physics: const BouncingScrollPhysics(),
@@ -986,7 +981,8 @@ class _SearchPageState extends State<SearchPage> {
                 Builder(
                   builder: (context) {
                     final artist = artists[index];
-                    final artistId = artist['ytid']?.toString() ??
+                    final artistId =
+                        artist['ytid']?.toString() ??
                         artist['id']?.toString() ??
                         artist['title']?.toString() ??
                         '';
@@ -1024,13 +1020,15 @@ class _SearchPageState extends State<SearchPage> {
   ) {
     final playlistsTitle = context.l10n?.playlists ?? 'Playlists';
     final screenWidth = MediaQuery.sizeOf(context).width;
-    final columnWidth =
-        (screenWidth > 600) ? 380.0 : (screenWidth - 44).clamp(280.0, 390.0);
+    final columnWidth = (screenWidth > 600)
+        ? 380.0
+        : (screenWidth - 44).clamp(280.0, 390.0);
 
     final chunkedPlaylists = <List<Map<String, dynamic>>>[];
     for (var i = 0; i < playlists.length; i += 4) {
-      chunkedPlaylists
-          .add(playlists.sublist(i, math.min(i + 4, playlists.length)));
+      chunkedPlaylists.add(
+        playlists.sublist(i, math.min(i + 4, playlists.length)),
+      );
     }
 
     return Column(
@@ -1041,9 +1039,8 @@ class _SearchPageState extends State<SearchPage> {
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
         ),
         SizedBox(
-          height: chunkedPlaylists
-                  .map((c) => c.length)
-                  .fold<int>(0, math.max) *
+          height:
+              chunkedPlaylists.map((c) => c.length).fold<int>(0, math.max) *
               72.0,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
@@ -1070,8 +1067,8 @@ class _SearchPageState extends State<SearchPage> {
                         playlist['title'],
                         playlistData: playlist,
                         playlistId: playlist['ytid'],
-                        playlistArtwork: playlist['highResImage'] ??
-                            playlist['image'],
+                        playlistArtwork:
+                            playlist['highResImage'] ?? playlist['image'],
                         cubeIcon: FluentIcons.apps_list_24_filled,
                         backgroundColor: Colors.transparent,
                         barPadding: const EdgeInsetsDirectional.symmetric(
@@ -1097,8 +1094,9 @@ class _SearchPageState extends State<SearchPage> {
     List<Map<String, dynamic>> videos,
   ) {
     final screenWidth = MediaQuery.sizeOf(context).width;
-    final columnWidth =
-        (screenWidth > 600) ? 380.0 : (screenWidth - 44).clamp(280.0, 390.0);
+    final columnWidth = (screenWidth > 600)
+        ? 380.0
+        : (screenWidth - 44).clamp(280.0, 390.0);
 
     final chunkedVideos = <List<Map<String, dynamic>>>[];
     for (var i = 0; i < videos.length; i += 4) {
@@ -1113,10 +1111,8 @@ class _SearchPageState extends State<SearchPage> {
           padding: EdgeInsets.fromLTRB(16, 12, 16, 8),
         ),
         SizedBox(
-          height: chunkedVideos
-                  .map((c) => c.length)
-                  .fold<int>(0, math.max) *
-              68.0,
+          height:
+              chunkedVideos.map((c) => c.length).fold<int>(0, math.max) * 68.0,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             physics: const BouncingScrollPhysics(),

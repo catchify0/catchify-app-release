@@ -265,7 +265,7 @@ class _LibraryPageState extends State<LibraryPage> {
     return Padding(
       padding: const EdgeInsets.only(top: 12, bottom: 12),
       child: SizedBox(
-        height: 40,
+        height: AppTokens.minInteractiveSize,
         child: ListView.separated(
           scrollDirection: Axis.horizontal,
           physics: const BouncingScrollPhysics(),

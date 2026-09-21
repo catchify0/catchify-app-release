@@ -25,6 +25,7 @@ import 'package:audio_service/audio_service.dart';
 import 'package:fluentui_system_icons/fluentui_system_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_flip_card/flutter_flip_card.dart';
+import 'package:catchify/constants/app_tokens.dart';
 import 'package:catchify/extensions/l10n.dart';
 import 'package:catchify/main.dart';
 import 'package:catchify/utilities/flutter_toast.dart';
@@ -133,15 +134,20 @@ class _NowPlayingPageState extends State<NowPlayingPage> {
             iconSize: 24,
             icon: const Icon(FluentIcons.chevron_down_24_regular),
             style: IconButton.styleFrom(
-            backgroundColor: colorScheme.surfaceContainerHigh.withValues(alpha: 0.8),
-            foregroundColor: colorScheme.onSurfaceVariant,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(14),
+              backgroundColor: colorScheme.surfaceContainerHigh.withValues(
+                alpha: 0.8,
+              ),
+              foregroundColor: colorScheme.onSurfaceVariant,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14),
+              ),
+              padding: const EdgeInsets.all(10),
+              minimumSize: const Size(
+                AppTokens.minInteractiveSize,
+                AppTokens.minInteractiveSize,
+              ),
             ),
-            padding: const EdgeInsets.all(10),
-            minimumSize: const Size(42, 42),
-          ),
-          onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(context),
           ),
           Column(
             mainAxisSize: MainAxisSize.min,
@@ -162,13 +168,18 @@ class _NowPlayingPageState extends State<NowPlayingPage> {
             icon: const Icon(Icons.radio),
             tooltip: context.l10n?.startRadio ?? 'Start Radio',
             style: IconButton.styleFrom(
-              backgroundColor: colorScheme.surfaceContainerHigh.withValues(alpha: 0.8),
+              backgroundColor: colorScheme.surfaceContainerHigh.withValues(
+                alpha: 0.8,
+              ),
               foregroundColor: colorScheme.onSurfaceVariant,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(14),
               ),
               padding: const EdgeInsets.all(10),
-              minimumSize: const Size(42, 42),
+              minimumSize: const Size(
+                AppTokens.minInteractiveSize,
+                AppTokens.minInteractiveSize,
+              ),
             ),
             onPressed: () {
               final song = mediaItemToMap(metadata);
