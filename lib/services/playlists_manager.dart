@@ -3522,7 +3522,7 @@ Future<List<HomeSection>> getUnifiedHomeFeed({
         forceRefresh: effectiveForceRefresh,
         mood: mood,
       ).then((result) {
-        if (effectiveForceRefresh && result.isNotEmpty) {
+        if (result.isNotEmpty) {
           _recentHomeFeedResults[cacheRequestKey] = result;
         }
         return result;
