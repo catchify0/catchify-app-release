@@ -79,6 +79,7 @@ class _HomePageState extends State<HomePage> {
   /// Tracks current content language code to log language transitions.
   String? _currentContentLanguageCode;
   int _feedGeneration = 0;
+  Timer? _languageRefreshDebounce;
 
   void _initFutures({
     bool forceRefresh = false,
@@ -155,6 +156,7 @@ class _HomePageState extends State<HomePage> {
     contentLanguagePreferenceNotifier.removeListener(
       _onLanguagePreferenceChanged,
     );
+    _languageRefreshDebounce?.cancel();
     super.dispose();
   }
 
@@ -167,10 +169,15 @@ class _HomePageState extends State<HomePage> {
       '[HOME_LANGUAGE_REFRESH] old=$oldLang new=$newLang forceRefresh=true',
     );
 
-    if (!mounted) return;
-    setState(() {
-      _selectedMood = 'All';
-      _initFutures(forceRefresh: true, source: 'language_change');
+    _languageRefreshDebounce?.cancel();
+    _languageRefreshDebounce = Timer(const Duration(milliseconds: 300), () {
+      if (!mounted || contentLanguagePreferenceNotifier.value != newLang) {
+        return;
+      }
+      setState(() {
+        _selectedMood = 'All';
+        _initFutures(forceRefresh: true, source: 'language_change');
+      });
     });
   }
 
