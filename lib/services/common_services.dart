@@ -61,8 +61,10 @@ ValueNotifier<List> userLocalSongs = ValueNotifier<List>(
   _readStoredList(Hive.box('userNoBackup'), 'localSongs'),
 );
 List<String> localMusicFolders = List<String>.from(
-  _readStoredList(Hive.box('userNoBackup'), 'localMusicFolders')
-      .whereType<String>(),
+  _readStoredList(
+    Hive.box('userNoBackup'),
+    'localMusicFolders',
+  ).whereType<String>(),
 );
 
 dynamic nextRecommendedSong;
@@ -181,8 +183,9 @@ String _cleanTitleForDedup(String title) {
 }
 
 String _cleanArtistForDedup(String artist) {
-  final first =
-      artist.split(RegExp(r'[,&]|\bfeat\b|\bft\b', caseSensitive: false)).first;
+  final first = artist
+      .split(RegExp(r'[,&]|\bfeat\b|\bft\b', caseSensitive: false))
+      .first;
   return first
       .replaceAll(RegExp(r'[^\p{L}\p{N}\s]', unicode: true), '')
       .replaceAll(RegExp(r'\s+'), ' ')
@@ -263,7 +266,9 @@ Future<List> getRecommendedSongs({bool forceRefresh = false}) async {
       );
       if (recs.isNotEmpty) return recs;
     }
-    return await _getRecommendationsFromMixedSources(forceRefresh: forceRefresh);
+    return await _getRecommendationsFromMixedSources(
+      forceRefresh: forceRefresh,
+    );
   } catch (e, stackTrace) {
     logger.log(
       'Error in getRecommendedSongs',
@@ -431,9 +436,12 @@ Future<List> _getRecommendationsFromMixedSources({
               'artist': s['artist']?.toString() ?? '',
               'artistId': s['artistId']?.toString() ?? '',
               'videoAuthor': s['artist']?.toString() ?? '',
-              'image': highRes ?? 'https://i.ytimg.com/vi/$ytid/maxresdefault.jpg',
-              'lowResImage': lowRes ?? 'https://i.ytimg.com/vi/$ytid/mqdefault.jpg',
-              'highResImage': highRes ?? 'https://i.ytimg.com/vi/$ytid/maxresdefault.jpg',
+              'image':
+                  highRes ?? 'https://i.ytimg.com/vi/$ytid/maxresdefault.jpg',
+              'lowResImage':
+                  lowRes ?? 'https://i.ytimg.com/vi/$ytid/mqdefault.jpg',
+              'highResImage':
+                  highRes ?? 'https://i.ytimg.com/vi/$ytid/maxresdefault.jpg',
               'duration': s['duration'],
               'isLive': false,
             });
@@ -486,7 +494,8 @@ Future<List> _getRecommendationsFromMixedSources({
     }
     if (userCustomPlaylists.value.isNotEmpty) {
       for (final userPlaylist in userCustomPlaylists.value) {
-        final list = List.from(userPlaylist['list'] as List? ?? const [])..shuffle();
+        final list = List.from(userPlaylist['list'] as List? ?? const [])
+          ..shuffle();
         recommendedSongs.addAll(list.take(5).whereType<Map>());
       }
     }
@@ -759,32 +768,40 @@ Future<List<String>> getSearchSuggestions(String query) async {
         .timeout(const Duration(seconds: 4));
     return ytmSuggestions;
   } catch (e, stackTrace) {
-    logger.log('Error in getSearchSuggestions', error: e, stackTrace: stackTrace);
+    logger.log(
+      'Error in getSearchSuggestions',
+      error: e,
+      stackTrace: stackTrace,
+    );
     return <String>[];
   }
 }
 
 Future<List<Map<String, int>>> getSkipSegments(String id) async {
   try {
-    final res = await ProxyManager().getProxiedResponse(
-      Uri(
-        scheme: 'https',
-        host: 'sponsor.ajay.app',
-        path: '/api/skipSegments',
-        queryParameters: {
-          'videoID': id,
-          'category': [
-            'sponsor',
-            'selfpromo',
-            'interaction',
-            'intro',
-            'outro',
-            'music_offtopic',
-          ],
-          'actionType': 'skip',
-        },
-      ),
-    ).timeout(const Duration(seconds: 5));
+    final res = await ProxyManager()
+        .getProxiedResponse(
+          Uri(
+            scheme: 'https',
+            host: 'sponsor.ajay.app',
+            path: '/api/skipSegments',
+            queryParameters: {
+              'videoID': id,
+              'category': [
+                'sponsor',
+                'selfpromo',
+                'interaction',
+                'intro',
+                'outro',
+                'music_offtopic',
+              ],
+              'actionType': 'skip',
+            },
+          ),
+          // SponsorBlock is optional metadata and must not delay playback startup.
+          // Fall back to the unmodified source when the service is slow or unavailable.
+        )
+        .timeout(const Duration(seconds: 2));
     if (res.statusCode == 200 && res.body != 'Not Found') {
       final data = jsonDecode(res.body);
       final segments = data.map((obj) {
@@ -797,6 +814,11 @@ Future<List<Map<String, int>>> getSkipSegments(String id) async {
     } else {
       return [];
     }
+  } on TimeoutException {
+    logger.log(
+      '[SPONSORBLOCK] skip segment request timed out; continuing without skips',
+    );
+    return <Map<String, int>>[];
   } catch (e, stackTrace) {
     logger.log('Error in getSkipSegments', error: e, stackTrace: stackTrace);
     return [];
@@ -954,11 +976,15 @@ Future<String> resolveOfficialAudioYtId(
         .replaceAll(RegExp('[,&|/].*'), '')
         .replaceAll(RegExp('vevo', caseSensitive: false), '')
         .replaceAll(
-          RegExp(r'\b(channel|music|records|audio|official)\b', caseSensitive: false),
+          RegExp(
+            r'\b(channel|music|records|audio|official)\b',
+            caseSensitive: false,
+          ),
           '',
         )
         .trim();
-    final query = cleanArtist.isNotEmpty &&
+    final query =
+        cleanArtist.isNotEmpty &&
             !cleanTitle.toLowerCase().contains(cleanArtist.toLowerCase())
         ? '$cleanTitle $cleanArtist'
         : cleanTitle;
@@ -1116,7 +1142,9 @@ Future<String?> getSongLyrics(
 }) async {
   final currentRequestId = ++_latestLyricsRequestId;
   final safeArtist = artist ?? '';
-  final effectiveDuration = (duration != null && duration > 0) ? duration : null;
+  final effectiveDuration = (duration != null && duration > 0)
+      ? duration
+      : null;
   final effectiveYtid = (ytid != null && ytid.isNotEmpty) ? ytid : null;
   final requestKey = effectiveYtid != null
       ? 'ytid_$effectiveYtid'
@@ -1124,9 +1152,14 @@ Future<String?> getSongLyrics(
 
   // --- Hive persistent cache ---
   // Prefer canonical ytid key when available, fallback to artist|title|duration
-  final ytidCacheKey = effectiveYtid != null ? 'lyrics_ytid_$effectiveYtid' : null;
-  final fallbackCacheKey = 'lyricsData_${safeArtist}_${title}_${effectiveDuration ?? 0}'
-      .replaceAll(RegExp(r'[^\w]'), '_');
+  final ytidCacheKey = effectiveYtid != null
+      ? 'lyrics_ytid_$effectiveYtid'
+      : null;
+  final fallbackCacheKey =
+      'lyricsData_${safeArtist}_${title}_${effectiveDuration ?? 0}'.replaceAll(
+        RegExp(r'[^\w]'),
+        '_',
+      );
   final lyricsBox = Hive.isBoxOpen('lyricsCache')
       ? Hive.box('lyricsCache')
       : await Hive.openBox('lyricsCache');
@@ -1176,7 +1209,8 @@ Future<String?> getSongLyrics(
 
     // A newer lyrics request superseded this one (e.g. user skipped
     // tracks while this fetch was in flight) - discard the stale result.
-    if (_latestLyricsRequestId != currentRequestId || _latestLyricsRequest != requestKey) {
+    if (_latestLyricsRequestId != currentRequestId ||
+        _latestLyricsRequest != requestKey) {
       return null;
     }
 
@@ -1408,7 +1442,11 @@ Future<LocalScanReport> scanLocalMusicFolders(List<String> folders) async {
       }
     } catch (e, stackTrace) {
       errorFolders++;
-      logger.log('Error scanning local folder $folder', error: e, stackTrace: stackTrace);
+      logger.log(
+        'Error scanning local folder $folder',
+        error: e,
+        stackTrace: stackTrace,
+      );
     }
   }
 
