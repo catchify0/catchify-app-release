@@ -53,73 +53,97 @@ class PlaylistCard extends StatelessWidget {
       button: true,
       child: SizedBox(
         width: size,
-        child: GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          onTap: onTap,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              DecoratedBox(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(AppTokens.radiusCard),
-                  boxShadow: [
-                    BoxShadow(
-                      color: colorScheme.shadow.withValues(alpha: 0.14),
-                      blurRadius: 14,
-                      offset: const Offset(0, 5),
-                    ),
-                  ],
-                ),
-                child: Stack(
-                  children: [
-                    ClipRRect(
+        child: Material(
+          color: Colors.transparent,
+          borderRadius: BorderRadius.circular(AppTokens.radiusCard),
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(AppTokens.radiusCard),
+            overlayColor: WidgetStateProperty.resolveWith((states) {
+              if (states.contains(WidgetState.pressed)) {
+                return colorScheme.primary.withValues(alpha: 0.08);
+              }
+              if (states.contains(WidgetState.hovered) ||
+                  states.contains(WidgetState.focused)) {
+                return colorScheme.primary.withValues(alpha: 0.05);
+              }
+              return null;
+            }),
+            onTap: onTap,
+            child: Padding(
+              padding: const EdgeInsets.all(2),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  DecoratedBox(
+                    decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(AppTokens.radiusCard),
-                      child: PlaylistArtwork(
-                        playlistArtwork: playlist['highResImage'] ?? playlist['image'],
-                        playlistTitle: title,
-                        songs: playlist['list'] as List<dynamic>?,
-                        size: size,
-                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: colorScheme.shadow.withValues(alpha: 0.14),
+                          blurRadius: 14,
+                          offset: const Offset(0, 5),
+                        ),
+                      ],
                     ),
-                    Positioned.fill(
-                      child: DecoratedBox(
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(AppTokens.radiusCard),
-                          border: Border.all(
-                            color: colorScheme.primary.withValues(alpha: 0.12),
+                    child: Stack(
+                      children: [
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(
+                            AppTokens.radiusCard,
+                          ),
+                          child: PlaylistArtwork(
+                            playlistArtwork:
+                                playlist['highResImage'] ?? playlist['image'],
+                            playlistTitle: title,
+                            songs: playlist['list'] as List<dynamic>?,
+                            size: size,
                           ),
                         ),
+                        Positioned.fill(
+                          child: DecoratedBox(
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(
+                                AppTokens.radiusCard,
+                              ),
+                              border: Border.all(
+                                color: colorScheme.primary.withValues(
+                                  alpha: 0.12,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    title,
+                    style: AppTextStyles.cardTitle.copyWith(
+                      color: colorScheme.onSurface,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  if (creator.isNotEmpty) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      creator,
+                      style: AppTextStyles.cardSubtitle.copyWith(
+                        color: colorScheme.onSurfaceVariant,
                       ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ],
-                ),
+                ],
               ),
-              const SizedBox(height: 8),
-              Text(
-                title,
-                style: AppTextStyles.cardTitle.copyWith(
-                  color: colorScheme.onSurface,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-              if (creator.isNotEmpty) ...[
-                const SizedBox(height: 2),
-                Text(
-                  creator,
-                  style: AppTextStyles.cardSubtitle.copyWith(
-                    color: colorScheme.onSurfaceVariant,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-            ],
+            ),
           ),
         ),
       ),
     );
-
   }
 }
