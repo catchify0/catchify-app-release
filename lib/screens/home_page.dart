@@ -435,7 +435,7 @@ class _HomePageState extends State<HomePage> {
     return Padding(
       padding: const EdgeInsets.only(top: 4, bottom: AppTokens.itemSpacing),
       child: SizedBox(
-        height: 36,
+        height: AppTokens.minInteractiveSize,
         child: ListView.separated(
           scrollDirection: Axis.horizontal,
           physics: const BouncingScrollPhysics(),
@@ -457,11 +457,11 @@ class _HomePageState extends State<HomePage> {
                   onTap: () => _onMoodSelected(mood),
                   borderRadius: BorderRadius.circular(AppTokens.radiusPill),
                   child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 220),
+                    duration: AppTokens.motionStandard,
                     curve: Curves.easeOutCubic,
                     padding: const EdgeInsets.symmetric(
                       horizontal: 16,
-                      vertical: 8,
+                      vertical: 10,
                     ),
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(AppTokens.radiusPill),
@@ -501,12 +501,10 @@ class _HomePageState extends State<HomePage> {
                     child: Center(
                       child: Text(
                         mood,
-                        style: TextStyle(
-                          fontSize: 13,
+                        style: AppTextStyles.chip.copyWith(
                           fontWeight: isSelected
                               ? FontWeight.w600
                               : FontWeight.w500,
-                          letterSpacing: -0.2,
                           color: isSelected
                               ? colorScheme.onPrimary
                               : colorScheme.onSurface.withValues(alpha: 0.9),
