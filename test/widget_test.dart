@@ -4,6 +4,7 @@ import 'package:catchify/widgets/section_header.dart';
 import 'package:catchify/widgets/no_artwork_cube.dart';
 import 'package:catchify/widgets/custom_search_bar.dart';
 import 'package:catchify/widgets/empty_state.dart';
+import 'package:catchify/widgets/loading_skeleton.dart';
 
 void main() {
   testWidgets('SectionHeader renders title correctly', (
@@ -86,6 +87,41 @@ void main() {
       find.text('Add music to build a personal collection and listen offline.'),
       findsOneWidget,
     );
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('SkeletonShimmer disables animation for reduced motion', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(
+      MediaQuery(
+        data: const MediaQueryData(disableAnimations: true),
+        child: const MaterialApp(
+          home: Scaffold(
+            body: SkeletonShimmer(child: SkeletonBox(width: 120, height: 48)),
+          ),
+        ),
+      ),
+    );
+
+    expect(find.byType(ShaderMask), findsNothing);
+    expect(find.byType(SkeletonBox), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('SkeletonShimmer animates one fixture when motion is enabled', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(
+          body: SkeletonShimmer(child: SkeletonBox(width: 120, height: 48)),
+        ),
+      ),
+    );
+
+    expect(find.byType(ShaderMask), findsOneWidget);
+    await tester.pump(const Duration(milliseconds: 300));
     expect(tester.takeException(), isNull);
   });
 }

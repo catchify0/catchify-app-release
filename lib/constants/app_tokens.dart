@@ -38,6 +38,7 @@ abstract final class AppTokens {
   // ── Motion ──
   static const Duration motionFast = Duration(milliseconds: 160);
   static const Duration motionStandard = Duration(milliseconds: 240);
+  static const Duration shimmerCycle = Duration(milliseconds: 1450);
 
   // ── Radii ──
   static const double radiusSmall = 8.0;
