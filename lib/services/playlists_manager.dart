@@ -3530,15 +3530,12 @@ Future<List<HomeSection>> getUnifiedHomeFeed({
         if (result.isNotEmpty &&
             _latestHomeFeedRequestTokens[cacheRequestKey] == requestToken) {
           _recentHomeFeedResults[cacheRequestKey] = result;
+          _recentHomeFeedRefreshes[cacheRequestKey] = DateTime.now();
         }
         return result;
       });
   late Future<List<HomeSection>> tracked;
   tracked = future.whenComplete(() {
-    if (effectiveForceRefresh &&
-        _latestHomeFeedRequestTokens[cacheRequestKey] == requestToken) {
-      _recentHomeFeedRefreshes[cacheRequestKey] = DateTime.now();
-    }
     if (identical(_homeFeedInFlight[requestKey], tracked)) {
       _homeFeedInFlight.remove(requestKey);
     }
@@ -3990,6 +3987,27 @@ Future<List<HomeSection>> _loadUnifiedHomeFeed({
   return composedSections;
 }
 
+Future<List<Map<String, dynamic>>> _timedHomeCategory(
+  String category,
+  Future<List<Map<String, dynamic>>> future,
+) async {
+  final stopwatch = Stopwatch()..start();
+  try {
+    final result = await future;
+    logger.log(
+      '[HOME_LANGUAGE_CATEGORY] category=$category duration_ms=${stopwatch.elapsedMilliseconds} items=${result.length}',
+    );
+    return result;
+  } catch (e, st) {
+    logger.log(
+      '[HOME_LANGUAGE_CATEGORY_ERROR] category=$category duration_ms=${stopwatch.elapsedMilliseconds}',
+      error: e,
+      stackTrace: st,
+    );
+    return const [];
+  }
+}
+
 /// Concurrently fetches language-curated sections for the user's selected music language.
 Future<List<HomeSection>> _fetchLanguageCuratedSections({
   required String contentLang,
@@ -3997,26 +4015,38 @@ Future<List<HomeSection>> _fetchLanguageCuratedSections({
 }) async {
   final curated = <HomeSection>[];
   try {
-    final quickPicksFuture = getQuickPicksSongs(forceRefresh: forceRefresh);
-    final trendingFuture = getTrendingSongsForYou(forceRefresh: forceRefresh);
-    final featuredPlaylistsFuture = getFeaturedPlaylists(
-      forceRefresh: forceRefresh,
+    final quickPicksFuture = _timedHomeCategory(
+      'quick_picks',
+      getQuickPicksSongs(forceRefresh: forceRefresh),
     );
-    final communityPlaylistsFuture = getTrendingCommunityPlaylists(
-      forceRefresh: forceRefresh,
+    final trendingFuture = _timedHomeCategory(
+      'trending_songs',
+      getTrendingSongsForYou(forceRefresh: forceRefresh),
     );
-    final newReleasesFuture = getSuggestedNewReleases(
-      forceRefresh: forceRefresh,
+    final featuredPlaylistsFuture = _timedHomeCategory(
+      'featured_playlists',
+      getFeaturedPlaylists(forceRefresh: forceRefresh),
     );
-    final artistsFuture = getSuggestedArtists(forceRefresh: forceRefresh);
+    final communityPlaylistsFuture = _timedHomeCategory(
+      'community_playlists',
+      getTrendingCommunityPlaylists(forceRefresh: forceRefresh),
+    );
+    final newReleasesFuture = _timedHomeCategory(
+      'new_releases',
+      getSuggestedNewReleases(forceRefresh: forceRefresh),
+    );
+    final artistsFuture = _timedHomeCategory(
+      'artists',
+      getSuggestedArtists(forceRefresh: forceRefresh),
+    );
 
     final results = await Future.wait([
-      quickPicksFuture.catchError((_) => <Map<String, dynamic>>[]),
-      trendingFuture.catchError((_) => <Map<String, dynamic>>[]),
-      featuredPlaylistsFuture.catchError((_) => <Map<String, dynamic>>[]),
-      communityPlaylistsFuture.catchError((_) => <Map<String, dynamic>>[]),
-      newReleasesFuture.catchError((_) => <Map<String, dynamic>>[]),
-      artistsFuture.catchError((_) => <Map<String, dynamic>>[]),
+      quickPicksFuture,
+      trendingFuture,
+      featuredPlaylistsFuture,
+      communityPlaylistsFuture,
+      newReleasesFuture,
+      artistsFuture,
     ]);
 
     final quickPicks = results[0];
