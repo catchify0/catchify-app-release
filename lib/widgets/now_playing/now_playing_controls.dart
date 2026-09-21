@@ -24,6 +24,7 @@ import 'dart:async';
 import 'package:audio_service/audio_service.dart';
 import 'package:fluentui_system_icons/fluentui_system_icons.dart';
 import 'package:flutter/material.dart';
+import 'package:catchify/constants/app_tokens.dart';
 import 'package:go_router/go_router.dart';
 import 'package:catchify/extensions/l10n.dart';
 import 'package:catchify/main.dart';
@@ -98,16 +99,31 @@ class NowPlayingControls extends StatelessWidget {
                   ),
                   SizedBox(height: spacing),
                   if (metadata.artist != null)
-                    GestureDetector(
-                      behavior: HitTestBehavior.opaque,
-                      onTap: canOpenArtist
-                          ? () => _openArtistPage(context, metadata)
-                          : null,
-                      child: MarqueeTextWidget(
-                        text: metadata.artist!,
-                        fontColor: colorScheme.onSurfaceVariant,
-                        fontSize: artistFontSize * fontScale,
-                        fontWeight: FontWeight.w500,
+                    Semantics(
+                      link: canOpenArtist,
+                      label: canOpenArtist
+                          ? '${metadata.artist}, artist'
+                          : metadata.artist,
+                      child: Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          onTap: canOpenArtist
+                              ? () => _openArtistPage(context, metadata)
+                              : null,
+                          borderRadius: AppTokens.borderRadiusSmall,
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
+                            child: MarqueeTextWidget(
+                              text: metadata.artist!,
+                              fontColor: colorScheme.onSurfaceVariant,
+                              fontSize: artistFontSize * fontScale,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
                       ),
                     ),
                 ],
@@ -229,11 +245,7 @@ class PlayerControlButtons extends StatelessWidget {
             : screenWidth < 360
             ? 8.0
             : 16.0;
-        final minButtonSize = isUltraTight
-            ? 38.0
-            : isTight
-            ? 42.0
-            : 46.0;
+        const minButtonSize = AppTokens.minInteractiveSize;
         final buttonPadding = EdgeInsets.all(
           isUltraTight
               ? 6.0
@@ -329,8 +341,10 @@ class PlayerControlButtons extends StatelessWidget {
                                 ValueListenableBuilder<bool>(
                                   valueListenable: playNextSongAutomatically,
                                   builder: (_, autoPlay, __) {
-                                    final canGoNext = audioHandler.hasNext ||
-                                        repeatMode != AudioServiceRepeatMode.none ||
+                                    final canGoNext =
+                                        audioHandler.hasNext ||
+                                        repeatMode !=
+                                            AudioServiceRepeatMode.none ||
                                         autoPlay;
                                     return IconButton(
                                       icon: Icon(
@@ -353,8 +367,9 @@ class PlayerControlButtons extends StatelessWidget {
                                         disabledBackgroundColor:
                                             colorScheme.surfaceContainerHighest,
                                         shape: RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(16),
+                                          borderRadius: BorderRadius.circular(
+                                            16,
+                                          ),
                                         ),
                                         padding: buttonPadding,
                                         minimumSize: Size(
