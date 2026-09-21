@@ -30,6 +30,20 @@ jobs:
             echo "CATCHIFY_WEBSITE_TOKEN is required to publish assets to catchify0/catchify0.github.io"
             exit 1
           fi
+          if ! curl --fail-with-body --silent --show-error \
+            -H "Authorization: Bearer $CATCHIFY_WEBSITE_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            https://api.github.com/user > /dev/null; then
+            echo "CATCHIFY_WEBSITE_TOKEN was rejected by GitHub. Rotate/update the repository secret before running a release."
+            exit 1
+          fi
+          if ! curl --fail-with-body --silent --show-error \
+            -H "Authorization: Bearer $CATCHIFY_WEBSITE_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            https://api.github.com/repos/catchify0/catchify0.github.io > /dev/null; then
+            echo "CATCHIFY_WEBSITE_TOKEN cannot access catchify0/catchify0.github.io. Use a token with the required repository release permissions."
+            exit 1
+          fi
 
       - name: Extract version from pubspec.yaml
         id: extract_version
