@@ -205,35 +205,38 @@ class _HomePageState extends State<HomePage> {
     if (_isRefreshing) return;
     _isRefreshing = true;
     final refreshGeneration = ++_feedGeneration;
-    try {
-      logger.log(
-        '[HOME_REFRESH_REQUEST] source=pull_to_refresh bypass=false '
-        'window=60s',
-      );
-      final refreshedSections = await getUnifiedHomeFeed(
-        forceRefresh: true,
-        mood: _selectedMood,
-      );
+    logger.log(
+      '[HOME_REFRESH_REQUEST] source=pull_to_refresh bypass=false '
+      'window=60s mode=background',
+    );
 
-      if (mounted && refreshGeneration == _feedGeneration) {
-        setState(() {
-          _homeFeedFuture = Future.value(refreshedSections);
-        });
-      }
-    } catch (error, stackTrace) {
-      logger.log(
-        'Home feed pull-to-refresh failed',
-        error: error,
-        stackTrace: stackTrace,
-      );
-      if (mounted && refreshGeneration == _feedGeneration) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Unable to refresh home feed')),
+    unawaited(() async {
+      try {
+        final refreshedSections = await getUnifiedHomeFeed(
+          forceRefresh: true,
+          mood: _selectedMood,
         );
+
+        if (mounted && refreshGeneration == _feedGeneration) {
+          setState(() {
+            _homeFeedFuture = Future.value(refreshedSections);
+          });
+        }
+      } catch (error, stackTrace) {
+        logger.log(
+          'Home feed pull-to-refresh failed',
+          error: error,
+          stackTrace: stackTrace,
+        );
+        if (mounted && refreshGeneration == _feedGeneration) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Unable to refresh home feed')),
+          );
+        }
+      } finally {
+        _isRefreshing = false;
       }
-    } finally {
-      _isRefreshing = false;
-    }
+    }());
   }
 
   String _getGreeting() {
