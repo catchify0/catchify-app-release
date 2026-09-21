@@ -92,6 +92,7 @@ Future<dynamic> getData(
   String key, {
   dynamic defaultValue,
   Duration? cachingDuration,
+  bool allowExpired = false,
 }) async {
   // Set appropriate cache duration based on key
   cachingDuration ??= _getCacheDurationForKey(key);
@@ -108,7 +109,8 @@ Future<dynamic> getData(
   final _box = await _openBox(category);
   if (category == 'cache') {
     final cacheIsValid = isCacheValid(_box, key, cachingDuration);
-    if (!cacheIsValid) {
+    final hasTimestamp = _box.get('${key}_date') is DateTime;
+    if (!hasTimestamp || (!cacheIsValid && !allowExpired)) {
       await deleteData(category, key);
       await deleteData(category, '${key}_date');
       return defaultValue;

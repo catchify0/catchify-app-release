@@ -206,11 +206,13 @@ class _HomePageState extends State<HomePage> {
     _isRefreshing = true;
     final refreshGeneration = ++_feedGeneration;
     try {
-      logger.log('[HOME_REFRESH_REQUEST] source=pull_to_refresh bypass=true');
+      logger.log(
+        '[HOME_REFRESH_REQUEST] source=pull_to_refresh bypass=false '
+        'window=60s',
+      );
       final refreshedSections = await getUnifiedHomeFeed(
         forceRefresh: true,
         mood: _selectedMood,
-        bypassRefreshDeduplication: true,
       );
 
       if (mounted && refreshGeneration == _feedGeneration) {
