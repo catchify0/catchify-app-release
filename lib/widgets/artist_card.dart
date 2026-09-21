@@ -54,8 +54,20 @@ class ArtistCard extends StatelessWidget {
         width: cardWidth,
         child: Material(
           color: Colors.transparent,
+          borderRadius: AppTokens.borderRadiusLarge,
+          clipBehavior: Clip.antiAlias,
           child: InkWell(
-            borderRadius: BorderRadius.circular(AppTokens.radiusLarge),
+            borderRadius: AppTokens.borderRadiusLarge,
+            overlayColor: WidgetStateProperty.resolveWith((states) {
+              if (states.contains(WidgetState.pressed)) {
+                return colorScheme.primary.withValues(alpha: 0.08);
+              }
+              if (states.contains(WidgetState.hovered) ||
+                  states.contains(WidgetState.focused)) {
+                return colorScheme.primary.withValues(alpha: 0.05);
+              }
+              return null;
+            }),
             onTap: () {
               if (artistId.isEmpty) return;
               context.push(
@@ -130,7 +142,6 @@ class ArtistCard extends StatelessWidget {
         ),
       ),
     );
-
   }
 
   Widget _buildFallback(ColorScheme colorScheme) {

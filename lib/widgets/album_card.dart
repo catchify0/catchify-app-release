@@ -68,48 +68,67 @@ class AlbumCard extends StatelessWidget {
       }
     }
 
-    final semanticLabel = rawArtist.isNotEmpty ? '$displayTitle, by $rawArtist' : displayTitle;
+    final semanticLabel = rawArtist.isNotEmpty
+        ? '$displayTitle, by $rawArtist'
+        : displayTitle;
 
     return Semantics(
       label: semanticLabel,
       button: true,
       child: SizedBox(
         width: size,
-        child: GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          onTap: onTap,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              PlaylistCube(
-                album,
-                size: size,
-                cubeIcon: FluentIcons.album_24_filled,
+        child: Material(
+          color: Colors.transparent,
+          borderRadius: AppTokens.borderRadiusCard,
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
+            borderRadius: AppTokens.borderRadiusCard,
+            overlayColor: WidgetStateProperty.resolveWith((states) {
+              if (states.contains(WidgetState.pressed)) {
+                return colorScheme.primary.withValues(alpha: 0.08);
+              }
+              if (states.contains(WidgetState.hovered) ||
+                  states.contains(WidgetState.focused)) {
+                return colorScheme.primary.withValues(alpha: 0.05);
+              }
+              return null;
+            }),
+            onTap: onTap,
+            child: Padding(
+              padding: const EdgeInsets.all(2),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  PlaylistCube(
+                    album,
+                    size: size,
+                    cubeIcon: FluentIcons.album_24_filled,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    displayTitle,
+                    style: AppTextStyles.cardTitle.copyWith(
+                      color: colorScheme.onSurface,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    style: AppTextStyles.cardSubtitle.copyWith(
+                      color: colorScheme.onSurfaceVariant,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
               ),
-              const SizedBox(height: 8),
-              Text(
-                displayTitle,
-                style: AppTextStyles.cardTitle.copyWith(
-                  color: colorScheme.onSurface,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-              const SizedBox(height: 2),
-              Text(
-                subtitle,
-                style: AppTextStyles.cardSubtitle.copyWith(
-                  color: colorScheme.onSurfaceVariant,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ],
+            ),
           ),
         ),
       ),
     );
-
   }
 }
