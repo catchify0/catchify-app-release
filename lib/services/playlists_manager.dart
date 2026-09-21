@@ -1502,6 +1502,31 @@ Future<List<Map<String, dynamic>>> getSuggestedArtists({
 Future<Map<String, List<Map<String, dynamic>>>> getLanguageCategoryShelves(
   String language, {
   bool forceRefresh = false,
+}) {
+  final requestKey =
+      '${language.trim().toLowerCase()}|${forceRefresh ? 'refresh' : 'cached'}';
+  final existing = _languageCategoryShelvesInFlight[requestKey];
+  if (existing != null) {
+    return existing;
+  }
+
+  late Future<Map<String, List<Map<String, dynamic>>>> tracked;
+  tracked = _loadLanguageCategoryShelves(language, forceRefresh: forceRefresh)
+      .whenComplete(() {
+        if (identical(_languageCategoryShelvesInFlight[requestKey], tracked)) {
+          _languageCategoryShelvesInFlight.remove(requestKey);
+        }
+      });
+  _languageCategoryShelvesInFlight[requestKey] = tracked;
+  return tracked;
+}
+
+final Map<String, Future<Map<String, List<Map<String, dynamic>>>>>
+_languageCategoryShelvesInFlight = {};
+
+Future<Map<String, List<Map<String, dynamic>>>> _loadLanguageCategoryShelves(
+  String language, {
+  required bool forceRefresh,
 }) async {
   final cleanLang = language.trim().toLowerCase();
   final cacheKey = 'ytm_cat_shelves_v2_$cleanLang';
@@ -3639,9 +3664,10 @@ Future<List<HomeSection>> _loadUnifiedHomeFeed({
       final langWatch = Stopwatch()..start();
       final langFuture = isRegionalLanguage
           ? _fetchLanguageCuratedSections(
-              contentLang: contentLang,
-              forceRefresh: forceRefresh,
-            ).then((res) {
+                  contentLang: contentLang,
+                  forceRefresh: forceRefresh,
+                )
+              .then((res) {
               languageMs = langWatch.elapsedMilliseconds;
               return res;
             }).catchError((e, st) {
