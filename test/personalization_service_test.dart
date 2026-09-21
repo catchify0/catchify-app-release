@@ -179,7 +179,7 @@ void main() {
     );
 
     test(
-      'buildPersonalizedSections generates "Made for you", "Because you listened", and "Continue listening" for active listener',
+      'buildPersonalizedSections generates "Because you listened" and "Continue listening" for active listener',
       () {
         final signals = UserSignals(
           likedSongs: [
@@ -216,7 +216,7 @@ void main() {
         expect(sections.isNotEmpty, true);
 
         final hasMadeForYou = sections.any((s) => s.title == 'Made for you');
-        expect(hasMadeForYou, true);
+        expect(hasMadeForYou, false);
 
         final hasBecauseYouListened = sections.any(
           (s) => s.title.startsWith('Because you listened to'),
@@ -270,6 +270,42 @@ void main() {
         expect(madeForYou.contents.any((track) => track['ytid'] == 's1'), false);
         // 'cand_1', 'cand_2', 'cand_3' should be present
         expect(madeForYou.contents.any((track) => track['ytid'] == 'cand_1'), true);
+      },
+    );
+
+    test(
+      'buildPersonalizedSections omits Made for you when only played candidates remain',
+      () {
+        const signals = UserSignals(
+          likedSongs: [
+            {'ytid': 'recent_1', 'title': 'Played Song', 'artist': 'Artist'},
+          ],
+          recentSongs: [
+            {'ytid': 'recent_1', 'title': 'Played Song', 'artist': 'Artist'},
+            {'ytid': 'recent_2', 'title': 'Another Song', 'artist': 'Artist'},
+          ],
+          likedPlaylists: [],
+          customPlaylists: [],
+          searchQueries: [],
+          playCounts: {},
+        );
+
+        final sections = PersonalizationService.instance.buildPersonalizedSections(
+          signalsOverride: signals,
+          relevantCandidates: const [
+            {'ytid': 'recent_1', 'title': 'Played Song', 'artist': 'Artist'},
+            {'ytid': 'recent_2', 'title': 'Another Song', 'artist': 'Artist'},
+          ],
+        );
+
+        expect(sections.any((s) => s.title == 'Made for you'), false);
+        final continueListening = sections.firstWhere(
+          (s) => s.title == 'Continue listening',
+        );
+        expect(
+          continueListening.contents.map((song) => song['ytid']),
+          containsAll(['recent_1', 'recent_2']),
+        );
       },
     );
   });

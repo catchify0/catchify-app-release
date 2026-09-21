@@ -458,11 +458,8 @@ class PersonalizationService {
       }
     }
 
-    // Fallback: if no candidates or insufficient fresh recommendations, rank from signals
-    if (madeForYouTracks.length < 3) {
-      madeForYouTracks = rankSongs(signals, limit: 12);
-    }
-
+    // Do not fall back to recent or liked signals here: those already power
+    // "Continue listening" and would make the recommendation shelf duplicate it.
     if (madeForYouTracks.length >= 3) {
       sections.add(
         HomeSection(
