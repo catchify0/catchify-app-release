@@ -3601,6 +3601,9 @@ Future<List<HomeSection>> _loadUnifiedHomeFeed({
 
   final sections = <HomeSection>[];
   final languageSections = <HomeSection>[];
+  final madeForYouFuture = getMadeForYouRecommendations(
+    forceRefresh: forceRefresh,
+  ).catchError((_) => <Map<String, dynamic>>[]);
 
   // 2. Fetch the native home shelves only for English. For regional content
   // languages, showing the generic FEmusic_home response would mix unrelated
@@ -3810,12 +3813,7 @@ Future<List<HomeSection>> _loadUnifiedHomeFeed({
   }
 
   // 4. Generate fresh local personalization with relevant recommendations
-  List<Map<String, dynamic>> madeForYouRecs = const [];
-  try {
-    madeForYouRecs = await getMadeForYouRecommendations(
-      forceRefresh: forceRefresh,
-    );
-  } catch (_) {}
+  final madeForYouRecs = await madeForYouFuture;
 
   final personalizedSections = PersonalizationService.instance
       .buildPersonalizedSections(
