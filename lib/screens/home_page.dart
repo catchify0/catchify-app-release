@@ -169,6 +169,9 @@ class _HomePageState extends State<HomePage> {
       '[HOME_LANGUAGE_REFRESH] old=$oldLang new=$newLang forceRefresh=true',
     );
 
+    // Invalidate any older refresh immediately. The debounced request below
+    // will create the next generation once the latest language settles.
+    _feedGeneration++;
     _languageRefreshDebounce?.cancel();
     _languageRefreshDebounce = Timer(const Duration(milliseconds: 300), () {
       if (!mounted || contentLanguagePreferenceNotifier.value != newLang) {
@@ -385,6 +388,7 @@ class _HomePageState extends State<HomePage> {
                 ),
                 _buildMoodChipsSection(context),
                 AsyncLoader<List<HomeSection>>(
+                  key: ValueKey(_feedGeneration),
                   future: _homeFeedFuture,
                   loadingWidget: _buildFeedSkeleton(context, playlistHeight),
                   errorBuilder: (context, error, stackTrace) =>
