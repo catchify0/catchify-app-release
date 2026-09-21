@@ -77,6 +77,7 @@ String? lastFetchedLyrics;
 String? _latestLyricsRequest;
 int _latestLyricsRequestId = 0;
 final Map<String, Future<String?>> _lyricsInFlight = {};
+final Map<String, Future<String?>> _streamUrlInFlight = {};
 
 void reloadSongLibraryStateFromStorage() {
   final userBox = Hive.box('user');
@@ -1017,6 +1018,36 @@ Future<String> resolveOfficialAudioYtId(
 
 /// Resolves a playable stream URL for a song (cached when possible).
 Future<String?> fetchSongStreamUrl(
+  String songId,
+  bool isLive, {
+  String? title,
+  String? artist,
+}) async {
+  final requestKey = [
+    songId,
+    isLive ? 'live' : 'audio',
+    title?.trim().toLowerCase() ?? '',
+    artist?.trim().toLowerCase() ?? '',
+    audioQualitySetting.value,
+  ].join('|');
+  final existing = _streamUrlInFlight[requestKey];
+  if (existing != null) {
+    logger.log('[PLAYER_STREAM] coalesced=true ytid=$songId');
+    return existing;
+  }
+
+  late final Future<String?> request;
+  request = _fetchSongStreamUrl(songId, isLive, title: title, artist: artist)
+      .whenComplete(() {
+        if (identical(_streamUrlInFlight[requestKey], request)) {
+          _streamUrlInFlight.remove(requestKey);
+        }
+      });
+  _streamUrlInFlight[requestKey] = request;
+  return request;
+}
+
+Future<String?> _fetchSongStreamUrl(
   String songId,
   bool isLive, {
   String? title,
