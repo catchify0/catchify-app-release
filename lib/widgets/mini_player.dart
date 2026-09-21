@@ -39,23 +39,20 @@ final Stream<FullPlayerState> _fullPlayerStateStream =
     Rx.combineLatest2(
           audioHandler.playbackStateStream,
           audioHandler.queue.distinct(),
-          (PlaybackState state, List<MediaItem> queue) =>
-              FullPlayerState(
-                playbackState: state,
-                queue: queue,
-                position: PositionData(
-                  Duration.zero,
-                  Duration.zero,
-                  Duration.zero,
-                ),
-              ),
+          (PlaybackState state, List<MediaItem> queue) => FullPlayerState(
+            playbackState: state,
+            queue: queue,
+            position: PositionData(Duration.zero, Duration.zero, Duration.zero),
+          ),
         )
-        .distinct((prev, curr) =>
-            prev.playbackState.playing == curr.playbackState.playing &&
-            prev.playbackState.processingState ==
-                curr.playbackState.processingState &&
-            prev.playbackState.queueIndex == curr.playbackState.queueIndex &&
-            prev.queue.length == curr.queue.length)
+        .distinct(
+          (prev, curr) =>
+              prev.playbackState.playing == curr.playbackState.playing &&
+              prev.playbackState.processingState ==
+                  curr.playbackState.processingState &&
+              prev.playbackState.queueIndex == curr.playbackState.queueIndex &&
+              prev.queue.length == curr.queue.length,
+        )
         .asBroadcastStream();
 
 class MiniPlayer extends StatelessWidget {
@@ -66,13 +63,12 @@ class MiniPlayer extends StatelessWidget {
   static const double _artworkSize = AppTokens.miniPlayerArtworkSize;
   static const double _artworkRadius = 14;
 
-
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
 
     return AnimatedSize(
-      duration: const Duration(milliseconds: 300),
+      duration: AppTokens.motionStandard,
       curve: Curves.easeOutCubic,
       child: StreamBuilder<MediaItem?>(
         stream: audioHandler.mediaItem,
@@ -204,14 +200,18 @@ class _MiniPlayerBodyState extends State<_MiniPlayerBody>
                 child: GlassSurface(
                   borderRadius: BorderRadius.circular(MiniPlayer._borderRadius),
                   padding: const EdgeInsets.symmetric(horizontal: 10),
-                  surfaceColor: colorScheme.surfaceContainerHighest.withValues(alpha: 0.76),
-                  borderColor: colorScheme.outlineVariant.withValues(alpha: 0.46),
+                  surfaceColor: colorScheme.surfaceContainerHighest.withValues(
+                    alpha: 0.76,
+                  ),
+                  borderColor: colorScheme.outlineVariant.withValues(
+                    alpha: 0.46,
+                  ),
                   child: Row(
                     children: [
                       _ArtworkWidget(metadata: metadata),
                       Expanded(
                         child: AnimatedSwitcher(
-                          duration: const Duration(milliseconds: 300),
+                          duration: AppTokens.motionStandard,
                           switchInCurve: Curves.easeIn,
                           switchOutCurve: Curves.easeOut,
                           layoutBuilder: (currentChild, previousChildren) =>
@@ -355,7 +355,8 @@ class _ControlsWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final canGoNext = hasNext ||
+    final canGoNext =
+        hasNext ||
         repeatNotifier.value != AudioServiceRepeatMode.none ||
         playNextSongAutomatically.value;
 
@@ -425,13 +426,14 @@ class _CircularPlayButton extends StatelessWidget {
               final posData = snapshot.data;
               final totalDuration =
                   (posData != null && posData.duration > Duration.zero)
-                      ? posData.duration
-                      : (metadata.duration ?? Duration.zero);
-              final progress = (posData == null || totalDuration.inMilliseconds == 0)
+                  ? posData.duration
+                  : (metadata.duration ?? Duration.zero);
+              final progress =
+                  (posData == null || totalDuration.inMilliseconds == 0)
                   ? 0.0
                   : (posData.position.inMilliseconds /
-                          totalDuration.inMilliseconds)
-                      .clamp(0.0, 1.0);
+                            totalDuration.inMilliseconds)
+                        .clamp(0.0, 1.0);
 
               return RepaintBoundary(
                 child: CustomPaint(
