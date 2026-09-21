@@ -3474,6 +3474,7 @@ final Map<String, Future<List<HomeSection>>> _homeFeedInFlight = {};
 final _backendHomeFeedService = BackendHomeFeedService();
 final Map<String, DateTime> _recentHomeFeedRefreshes = {};
 final Map<String, List<HomeSection>> _recentHomeFeedResults = {};
+final Map<String, int> _latestHomeFeedRequestTokens = {};
 const _homeFeedRefreshDeduplicationWindow = Duration(seconds: 60);
 
 Future<List<HomeSection>> getUnifiedHomeFeed({
@@ -3519,19 +3520,23 @@ Future<List<HomeSection>> getUnifiedHomeFeed({
     return existing;
   }
 
+  final requestToken = (_latestHomeFeedRequestTokens[cacheRequestKey] ?? 0) + 1;
+  _latestHomeFeedRequestTokens[cacheRequestKey] = requestToken;
   final future =
       _loadUnifiedHomeFeed(
         forceRefresh: effectiveForceRefresh,
         mood: mood,
       ).then((result) {
-        if (result.isNotEmpty) {
+        if (result.isNotEmpty &&
+            _latestHomeFeedRequestTokens[cacheRequestKey] == requestToken) {
           _recentHomeFeedResults[cacheRequestKey] = result;
         }
         return result;
       });
   late Future<List<HomeSection>> tracked;
   tracked = future.whenComplete(() {
-    if (effectiveForceRefresh) {
+    if (effectiveForceRefresh &&
+        _latestHomeFeedRequestTokens[cacheRequestKey] == requestToken) {
       _recentHomeFeedRefreshes[cacheRequestKey] = DateTime.now();
     }
     if (identical(_homeFeedInFlight[requestKey], tracked)) {
