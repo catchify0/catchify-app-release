@@ -3472,11 +3472,12 @@ int _activeHomeFeedRequestId = 0;
 final Map<String, Future<List<HomeSection>>> _homeFeedInFlight = {};
 final Map<String, DateTime> _recentHomeFeedRefreshes = {};
 final Map<String, List<HomeSection>> _recentHomeFeedResults = {};
-const _homeFeedRefreshDeduplicationWindow = Duration(seconds: 10);
+const _homeFeedRefreshDeduplicationWindow = Duration(seconds: 60);
 
 Future<List<HomeSection>> getUnifiedHomeFeed({
   bool forceRefresh = false,
   String? mood,
+  bool bypassRefreshDeduplication = false,
 }) {
   final contentLang = contentLanguagePreference ?? 'en';
   final transportHl = resolveHomeFeedTransportLanguage(contentLang);
@@ -3490,7 +3491,7 @@ Future<List<HomeSection>> getUnifiedHomeFeed({
     normalizedMood,
   ].join('|');
   var effectiveForceRefresh = forceRefresh;
-  if (forceRefresh) {
+  if (forceRefresh && !bypassRefreshDeduplication) {
     final lastRefresh = _recentHomeFeedRefreshes[cacheRequestKey];
     if (lastRefresh != null &&
         DateTime.now().difference(lastRefresh) <

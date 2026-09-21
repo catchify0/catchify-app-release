@@ -80,11 +80,21 @@ class _HomePageState extends State<HomePage> {
   String? _currentContentLanguageCode;
   int _feedGeneration = 0;
 
-  void _initFutures({bool forceRefresh = false}) {
+  void _initFutures({
+    bool forceRefresh = false,
+    bool bypassRefreshDeduplication = false,
+    String source = 'automatic',
+  }) {
     _feedGeneration++;
+    if (forceRefresh) {
+      logger.log(
+        '[HOME_REFRESH_REQUEST] source=$source bypass=$bypassRefreshDeduplication',
+      );
+    }
     _homeFeedFuture = getUnifiedHomeFeed(
       forceRefresh: forceRefresh,
       mood: _selectedMood,
+      bypassRefreshDeduplication: bypassRefreshDeduplication,
     );
   }
 
@@ -92,7 +102,7 @@ class _HomePageState extends State<HomePage> {
     if (_selectedMood == mood) return;
     setState(() {
       _selectedMood = mood;
-      _initFutures(forceRefresh: true);
+      _initFutures(forceRefresh: true, source: 'mood');
     });
   }
 
@@ -160,7 +170,7 @@ class _HomePageState extends State<HomePage> {
     if (!mounted) return;
     setState(() {
       _selectedMood = 'All';
-      _initFutures(forceRefresh: true);
+      _initFutures(forceRefresh: true, source: 'language_change');
     });
   }
 
@@ -175,7 +185,7 @@ class _HomePageState extends State<HomePage> {
   void _retryHomeFeed() {
     if (!mounted) return;
     setState(() {
-      _initFutures(forceRefresh: true);
+      _initFutures(forceRefresh: true, source: 'retry');
     });
   }
 
@@ -186,9 +196,11 @@ class _HomePageState extends State<HomePage> {
     _isRefreshing = true;
     final refreshGeneration = ++_feedGeneration;
     try {
+      logger.log('[HOME_REFRESH_REQUEST] source=pull_to_refresh bypass=true');
       final refreshedSections = await getUnifiedHomeFeed(
         forceRefresh: true,
         mood: _selectedMood,
+        bypassRefreshDeduplication: true,
       );
 
       if (mounted && refreshGeneration == _feedGeneration) {
