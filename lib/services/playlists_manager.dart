@@ -3674,12 +3674,19 @@ Future<List<HomeSection>> _loadUnifiedHomeFeed({
   // languages, showing the generic FEmusic_home response would mix unrelated
   // global recommendations into a language-specific feed.
   if (!offlineMode.value) {
-    logger.log(
-      '[HOME_REQUEST] contentLanguage=$contentLang hl=$transportHl gl=$reg browseId=FEmusic_home',
-    );
-
     try {
       final isRegionalLanguage = !shouldUseNativeHomeFeed(contentLang);
+      if (isRegionalLanguage) {
+        logger.log(
+          '[HOME_REQUEST] native_home_skipped contentLanguage=$contentLang '
+          'reason=regional_language',
+        );
+      } else {
+        logger.log(
+          '[HOME_REQUEST] contentLanguage=$contentLang hl=$transportHl '
+          'gl=$reg browseId=FEmusic_home',
+        );
+      }
       final backendFuture = !isRegionalLanguage
           ? _backendHomeFeedService.fetchHomeFeed()
           : Future.value(<HomeSection>[]);
