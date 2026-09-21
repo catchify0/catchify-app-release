@@ -394,8 +394,9 @@ class _HomePageState extends State<HomePage> {
                   errorBuilder: (context, error, stackTrace) =>
                       _buildFeedError(context, _retryHomeFeed),
                   builder: (context, sections) {
-                    if (homeRenderMs == null && appStartupStopwatch.isRunning) {
-                      homeRenderMs = appStartupStopwatch.elapsedMilliseconds;
+                    if (homeContentMs == null &&
+                        appStartupStopwatch.isRunning) {
+                      homeContentMs = appStartupStopwatch.elapsedMilliseconds;
                       checkAndLogColdStartPerf();
                     }
                     if (sections.isEmpty) {

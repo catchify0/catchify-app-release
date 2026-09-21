@@ -288,15 +288,15 @@ final Stopwatch appStartupStopwatch = Stopwatch();
 int? appStartupMs;
 int? appFirstFrameMs;
 int? homeCacheMs;
-int? homeRenderMs;
+int? homeContentMs;
 
 void checkAndLogColdStartPerf() {
   if (appStartupMs != null &&
       appFirstFrameMs != null &&
       homeCacheMs != null &&
-      homeRenderMs != null) {
+      homeContentMs != null) {
     logger.log(
-      '[PERF] startup_ms=$appStartupMs first_frame_ms=$appFirstFrameMs home_cache_ms=$homeCacheMs home_render_ms=$homeRenderMs',
+      '[PERF] startup_ms=$appStartupMs first_frame_ms=$appFirstFrameMs home_cache_ms=$homeCacheMs home_content_ms=$homeContentMs',
     );
   }
 }

@@ -24,6 +24,7 @@ import 'package:fluentui_system_icons/fluentui_system_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:catchify/constants/app_tokens.dart';
+import 'package:catchify/extensions/l10n.dart';
 import 'package:catchify/main.dart';
 import 'package:catchify/models/home_section.dart';
 import 'package:catchify/services/playlists_manager.dart';
@@ -50,6 +51,20 @@ class HomeSectionRenderer extends StatelessWidget {
   static const double kHomeHorizontalPadding = AppTokens.pagePadding;
   static const double kHomeCardSpacing = AppTokens.cardGap;
   static const double kHomeSectionSpacing = AppTokens.sectionGap;
+
+  String _localizedTitle(BuildContext context) {
+    final l10n = context.l10n;
+    return switch (section.title.trim().toLowerCase()) {
+      'quick picks' => l10n?.quickPicks ?? section.title,
+      'trending songs for you' => l10n?.trendingSongsForYou ?? section.title,
+      'featured playlists' => l10n?.featuredPlaylists ?? section.title,
+      'trending community playlists' =>
+        l10n?.trendingCommunityPlaylists ?? section.title,
+      'new releases' => l10n?.newReleases ?? section.title,
+      'artists for you' => l10n?.artistsForYou ?? section.title,
+      _ => section.title,
+    };
+  }
 
   void _openPlaylist(BuildContext context, Map playlist) {
     final playlistId =
@@ -82,7 +97,7 @@ class HomeSectionRenderer extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         SectionHeader(
-          title: section.title,
+          title: _localizedTitle(context),
           subtitle: section.subtitle,
           padding: const EdgeInsets.fromLTRB(
             AppTokens.pagePadding,
@@ -119,8 +134,7 @@ class HomeSectionRenderer extends StatelessWidget {
             HomeContentType.artists => _buildArtistCards(context),
             HomeContentType.playlists => _buildPlaylistCards(context),
             HomeContentType.mixed ||
-            HomeContentType.unknown =>
-              _buildMixedCards(context),
+            HomeContentType.unknown => _buildMixedCards(context),
           },
         const SizedBox(height: AppTokens.sectionGap),
       ],
@@ -139,10 +153,7 @@ class HomeSectionRenderer extends StatelessWidget {
     }
 
     return SizedBox(
-      height: chunkedSongs
-              .map((c) => c.length)
-              .fold<int>(0, math.max) *
-          68.0,
+      height: chunkedSongs.map((c) => c.length).fold<int>(0, math.max) * 68.0,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         physics: const BouncingScrollPhysics(),
@@ -202,7 +213,10 @@ class HomeSectionRenderer extends StatelessWidget {
     final textScaler = MediaQuery.textScalerOf(context);
     final titleHeight = textScaler.scale(19);
     final subtitleHeight = textScaler.scale(16);
-    return (avatarSize + 26.0 + titleHeight + subtitleHeight).clamp(148.0, 190.0);
+    return (avatarSize + 26.0 + titleHeight + subtitleHeight).clamp(
+      148.0,
+      190.0,
+    );
   }
 
   Widget _buildSongCards(BuildContext context) {
@@ -225,10 +239,7 @@ class HomeSectionRenderer extends StatelessWidget {
               rank: rank,
               onTap: () async {
                 await audioHandler.playPlaylistSong(
-                  playlist: {
-                    'title': section.title,
-                    'list': section.contents,
-                  },
+                  playlist: {'title': section.title, 'list': section.contents},
                   songIndex: index,
                 );
               },
@@ -264,7 +275,10 @@ class HomeSectionRenderer extends StatelessWidget {
   }
 
   Widget _buildArtistCards(BuildContext context) {
-    final shelfHeight = _getArtistShelfHeight(context, AppTokens.artistAvatarSize);
+    final shelfHeight = _getArtistShelfHeight(
+      context,
+      AppTokens.artistAvatarSize,
+    );
     return SizedBox(
       height: shelfHeight,
       child: ListView.separated(
@@ -286,7 +300,10 @@ class HomeSectionRenderer extends StatelessWidget {
 
   Widget _buildPlaylistCards(BuildContext context) {
     final items = section.contents;
-    final shelfHeight = _getCardShelfHeight(context, AppTokens.playlistCardSize);
+    final shelfHeight = _getCardShelfHeight(
+      context,
+      AppTokens.playlistCardSize,
+    );
 
     return SizedBox(
       height: shelfHeight,
@@ -311,7 +328,10 @@ class HomeSectionRenderer extends StatelessWidget {
   }
 
   Widget _buildMixedCards(BuildContext context) {
-    final shelfHeight = _getCardShelfHeight(context, AppTokens.playlistCardSize);
+    final shelfHeight = _getCardShelfHeight(
+      context,
+      AppTokens.playlistCardSize,
+    );
     return SizedBox(
       height: shelfHeight,
       child: ListView.separated(
