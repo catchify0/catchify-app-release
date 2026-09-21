@@ -3643,8 +3643,13 @@ Future<List<HomeSection>> _loadUnifiedHomeFeed({
               );
 
           final composedSections = HomeFeedComposer.compose(
-            remoteSections: cachedSections,
+            remoteSections: shouldUseNativeHomeFeed(contentLang)
+                ? cachedSections
+                : const [],
             moodSection: moodSection,
+            languageSections: shouldUseNativeHomeFeed(contentLang)
+                ? const []
+                : cachedSections,
             personalizedSections: personalizedSections,
           );
 
