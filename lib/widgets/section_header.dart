@@ -21,6 +21,7 @@
 import 'package:fluentui_system_icons/fluentui_system_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:catchify/constants/app_tokens.dart';
+import 'package:catchify/theme/app_text_styles.dart';
 
 /// Clean, standardized section shelf header.
 /// Title prominently on top, optional subtle subtitle below, clean action on right.
@@ -70,11 +71,8 @@ class SectionHeader extends StatelessWidget {
                         title,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
+                        style: AppTextStyles.sectionTitle.copyWith(
                           color: colorScheme.onSurface,
-                          fontSize: 21,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: -0.4,
                         ),
                       ),
                     ),
@@ -86,10 +84,7 @@ class SectionHeader extends StatelessWidget {
                     subtitle!.trim(),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 11.5,
-                      fontWeight: FontWeight.w600,
-                      letterSpacing: 0.8,
+                    style: AppTextStyles.categoryHeader.copyWith(
                       color: colorScheme.primary.withValues(alpha: 0.88),
                     ),
                   ),
@@ -104,7 +99,13 @@ class SectionHeader extends StatelessWidget {
                 color: colorScheme.primary.withValues(alpha: 0.12),
                 borderRadius: AppTokens.borderRadiusControl,
               ),
-              child: actionButton!,
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(
+                  minWidth: AppTokens.minInteractiveSize,
+                  minHeight: AppTokens.minInteractiveSize,
+                ),
+                child: actionButton!,
+              ),
             ),
           ] else if (onTap != null) ...[
             const SizedBox(width: 8),

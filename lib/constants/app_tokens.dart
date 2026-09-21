@@ -32,6 +32,10 @@ abstract final class AppTokens {
   static const double rowGap = 8.0;
   static const double itemSpacing = 12.0;
 
+  // ── Motion ──
+  static const Duration motionFast = Duration(milliseconds: 160);
+  static const Duration motionStandard = Duration(milliseconds: 240);
+
   // ── Radii ──
   static const double radiusSmall = 8.0;
   static const double radiusControl = 10.0;
@@ -41,13 +45,27 @@ abstract final class AppTokens {
   static const double radiusSheet = 20.0;
   static const double radiusPill = 999.0;
 
-  static final BorderRadius borderRadiusSmall = BorderRadius.circular(radiusSmall);
-  static final BorderRadius borderRadiusControl = BorderRadius.circular(radiusControl);
-  static final BorderRadius borderRadiusMedium = BorderRadius.circular(radiusMedium);
-  static final BorderRadius borderRadiusCard = BorderRadius.circular(radiusCard);
-  static final BorderRadius borderRadiusLarge = BorderRadius.circular(radiusLarge);
-  static final BorderRadius borderRadiusSheet = BorderRadius.circular(radiusSheet);
-  static final BorderRadius borderRadiusPill = BorderRadius.circular(radiusPill);
+  static final BorderRadius borderRadiusSmall = BorderRadius.circular(
+    radiusSmall,
+  );
+  static final BorderRadius borderRadiusControl = BorderRadius.circular(
+    radiusControl,
+  );
+  static final BorderRadius borderRadiusMedium = BorderRadius.circular(
+    radiusMedium,
+  );
+  static final BorderRadius borderRadiusCard = BorderRadius.circular(
+    radiusCard,
+  );
+  static final BorderRadius borderRadiusLarge = BorderRadius.circular(
+    radiusLarge,
+  );
+  static final BorderRadius borderRadiusSheet = BorderRadius.circular(
+    radiusSheet,
+  );
+  static final BorderRadius borderRadiusPill = BorderRadius.circular(
+    radiusPill,
+  );
 
   // ── Card Dimensions ──
   static const double songCardSize = 140.0;
@@ -73,12 +91,23 @@ abstract final class AppTokens {
   static const double iconInline = 20.0;
   static const double iconSmall = 16.0;
   static const double iconLarge = 28.0;
+  static const double minInteractiveSize = 44.0;
 
   // ── Edge Insets ──
-  static const EdgeInsets screenPadding = EdgeInsets.symmetric(horizontal: pagePadding);
-  static const EdgeInsets shelfPadding = EdgeInsets.symmetric(horizontal: pagePadding);
-  static const EdgeInsets chipListPadding = EdgeInsets.symmetric(horizontal: pagePadding);
-  static const EdgeInsets headerPadding = EdgeInsets.fromLTRB(pagePadding, 12, pagePadding, titleBottomGap);
+  static const EdgeInsets screenPadding = EdgeInsets.symmetric(
+    horizontal: pagePadding,
+  );
+  static const EdgeInsets shelfPadding = EdgeInsets.symmetric(
+    horizontal: pagePadding,
+  );
+  static const EdgeInsets chipListPadding = EdgeInsets.symmetric(
+    horizontal: pagePadding,
+  );
+  static const EdgeInsets headerPadding = EdgeInsets.fromLTRB(
+    pagePadding,
+    12,
+    pagePadding,
+    titleBottomGap,
+  );
   static const EdgeInsets cardPadding = EdgeInsets.all(12.0);
 }
-
