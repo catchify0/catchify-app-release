@@ -8,6 +8,10 @@ on:
       - 'v*'
   workflow_dispatch:
 
+concurrency:
+  group: catchify-release-${{ github.ref }}
+  cancel-in-progress: false
+
 permissions:
   contents: write
 
@@ -199,6 +203,8 @@ jobs:
           CATCHIFY_TOKEN: ${{ secrets.CATCHIFY_WEBSITE_TOKEN }}
           VERSION: ${{ steps.extract_version.outputs.version }}
         run: |
+          python3 scripts/update_check_json.py --platform ios --version "$VERSION"
+          exit 0
           # Fetch existing check.json to extract SHA and preserve existing fields
           RESPONSE=$(curl --fail-with-body --silent --show-error -H "Authorization: Bearer ${CATCHIFY_TOKEN}" -H "Accept: application/vnd.github+json" "https://api.github.com/repos/catchify0/catchify0.github.io/contents/check.json")
           SHA=$(echo "$RESPONSE" | python3 -c "import sys,json; print(json.load(sys.stdin)['sha'])")
@@ -406,6 +412,8 @@ jobs:
         env:
           VERSION: ${{ steps.extract_version.outputs.version }}
         run: |
+          python3 scripts/update_check_json.py --platform android --version "$VERSION"
+          exit 0
           set -euo pipefail
           response=$(curl --fail-with-body --silent --show-error \
             -H "Authorization: Bearer $CATCHIFY_TOKEN" \
