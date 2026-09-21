@@ -295,6 +295,9 @@ jobs:
           distribution: temurin
           java-version: '17'
 
+      - name: Setup Gradle cache
+        uses: gradle/actions/setup-gradle@v4
+
       - name: Install Android SDK components
         run: |
           export ANDROID_HOME="${ANDROID_HOME:-$ANDROID_SDK_ROOT}"
@@ -342,7 +345,20 @@ jobs:
 
       - name: Build Android Release APKs
         if: ${{ env.ANDROID_KEYSTORE_BASE64 != '' && env.ANDROID_KEY_ALIAS != '' && env.ANDROID_KEY_PASSWORD != '' && env.ANDROID_STORE_PASSWORD != '' }}
-        run: flutter build apk --release --flavor github --split-per-abi
+        run: |
+          set -euo pipefail
+          for attempt in 1 2 3; do
+            echo "Android release build attempt ${attempt}/3"
+            if flutter build apk --release --flavor github --split-per-abi; then
+              exit 0
+            fi
+            if [ "$attempt" -lt 3 ]; then
+              echo "Android release build failed; retrying after a transient Gradle/network failure..."
+              sleep $((attempt * 20))
+            fi
+          done
+          echo "Android release build failed after 3 attempts"
+          exit 1
 
       - name: Collect Android artifacts
         if: ${{ env.ANDROID_KEYSTORE_BASE64 != '' && env.ANDROID_KEY_ALIAS != '' && env.ANDROID_KEY_PASSWORD != '' && env.ANDROID_STORE_PASSWORD != '' }}
