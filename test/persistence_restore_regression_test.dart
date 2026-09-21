@@ -39,82 +39,53 @@ void main() {
     }
   });
 
-  test(
-    'reload normalizes malformed restored library and settings values',
-    () async {
-      await Hive.box('user').put('likedSongs', {'not': 'a list'});
-      await Hive.box('user').put('recentlyPlayedSongs', 42);
-      await Hive.box('user').put('playlists', ['valid', 99]);
-      await Hive.box('user').put('customPlaylists', ['not a map']);
-      await Hive.box('user').put('likedPlaylists', [42]);
-      await Hive.box('user').put('playlistFolders', [null]);
-      await Hive.box('user').put('pinnedPlaylistIds', ['pin', 7]);
+  test('reload normalizes malformed restored library and settings values', () async {
+    await Hive.box('user').put('likedSongs', {'not': 'a list'});
+    await Hive.box('user').put('recentlyPlayedSongs', 42);
+    await Hive.box('user').put('playlists', ['valid', 99]);
+    await Hive.box('user').put('customPlaylists', ['not a map']);
+    await Hive.box('user').put('likedPlaylists', [42]);
+    await Hive.box('user').put('playlistFolders', [null]);
+    await Hive.box('user').put('pinnedPlaylistIds', ['pin', 7]);
 
-      await Hive.box('settings').put('useProxy', 'yes');
-      await Hive.box('settings').put('lyricsOffsetMs', 'fast');
-      await Hive.box('settings').put('equalizerBandGains', ['bad', 1.5]);
-      await Hive.box('settings').put('languageCode', 123);
-      await Hive.box('settings').put('contentLanguageCode', []);
+    await Hive.box('settings').put('useProxy', 'yes');
+    await Hive.box('settings').put('lyricsOffsetMs', 'fast');
+    await Hive.box('settings').put('equalizerBandGains', ['bad', 1.5]);
+    await Hive.box('settings').put('languageCode', 123);
+    await Hive.box('settings').put('contentLanguageCode', []);
 
-      expect(reloadSongLibraryStateFromStorage, returnsNormally);
-      expect(reloadPlaylistLibraryStateFromStorage, returnsNormally);
-      expect(reloadSettingsFromStorage, returnsNormally);
+    expect(reloadSongLibraryStateFromStorage, returnsNormally);
+    expect(reloadPlaylistLibraryStateFromStorage, returnsNormally);
+    expect(reloadSettingsFromStorage, returnsNormally);
 
-      expect(userLikedSongsList.value, isEmpty);
-      expect(userRecentlyPlayed.value, isEmpty);
-      expect(userPlaylists.value, ['valid']);
-      expect(userCustomPlaylists.value, isEmpty);
-      expect(userLikedPlaylists.value, isEmpty);
-      expect(userPlaylistFolders.value, isEmpty);
-      expect(pinnedPlaylistIds.value, ['pin']);
-      expect(useProxy.value, isFalse);
-      expect(lyricsOffsetNotifier.value, 0);
-      expect(equalizerBandGains.value, [0.0, 1.5]);
-      expect(languageSetting, isNotNull);
-      expect(contentLanguagePreference, isNotNull);
-    },
-  );
+    expect(userLikedSongsList.value, isEmpty);
+    expect(userRecentlyPlayed.value, isEmpty);
+    expect(userPlaylists.value, ['valid']);
+    expect(userCustomPlaylists.value, isEmpty);
+    expect(userLikedPlaylists.value, isEmpty);
+    expect(userPlaylistFolders.value, isEmpty);
+    expect(pinnedPlaylistIds.value, ['pin']);
+    expect(useProxy.value, isFalse);
+    expect(lyricsOffsetNotifier.value, 0);
+    expect(equalizerBandGains.value, [0.0, 1.5]);
+    expect(languageSetting, isNotNull);
+    expect(contentLanguagePreference, isNotNull);
+  });
 
-  test(
-    'malformed cache timestamps are treated as expired instead of crashing',
-    () async {
-      await clearCache();
-      final cacheBox = Hive.box('cache');
-      await cacheBox.put('malformed_cache', ['stale']);
-      await cacheBox.put('malformed_cache_date', 'not a timestamp');
+  test('malformed cache timestamps are treated as expired instead of crashing', () async {
+    await clearCache();
+    final cacheBox = Hive.box('cache');
+    await cacheBox.put('malformed_cache', ['stale']);
+    await cacheBox.put('malformed_cache_date', 'not a timestamp');
 
-      final value = await getData(
-        'cache',
-        'malformed_cache',
-        defaultValue: const <dynamic>[],
-      );
+    final value = await getData(
+      'cache',
+      'malformed_cache',
+      defaultValue: const <dynamic>[],
+    );
 
-      expect(value, isEmpty);
-      expect(cacheBox.containsKey('malformed_cache'), isFalse);
-      expect(cacheBox.containsKey('malformed_cache_date'), isFalse);
-    },
-  );
-
-  test(
-    'expired cache can be read for stale-while-revalidate fallback',
-    () async {
-      await clearCache();
-      final cacheBox = Hive.box('cache');
-      await cacheBox.put('stale_home', ['stale']);
-      await cacheBox.put(
-        'stale_home_date',
-        DateTime.now().subtract(const Duration(hours: 2)),
-      );
-
-      final value = await getData(
-        'cache',
-        'stale_home',
-        cachingDuration: const Duration(hours: 1),
-        allowExpired: true,
-      );
-
-      expect(value, equals(['stale']));
-      expect(cacheBox.containsKey('stale_home'), isTrue);
-    },
-  );
+    expect(value, isEmpty);
+    expect(cacheBox.containsKey('malformed_cache'), isFalse);
+    expect(cacheBox.containsKey('malformed_cache_date'), isFalse);
+  });
 }

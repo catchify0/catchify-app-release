@@ -3583,7 +3583,6 @@ Future<List<HomeSection>> _loadUnifiedHomeFeed({
         'cache',
         cacheKey,
         cachingDuration: homeFeedCacheDuration,
-        allowExpired: true,
       );
       if (homeCacheMs == null && appStartupStopwatch.isRunning) {
         homeCacheMs = cacheStopwatch.elapsedMilliseconds;
@@ -3602,30 +3601,6 @@ Future<List<HomeSection>> _loadUnifiedHomeFeed({
             ..log(
               '[HOME_FEED] cache hit key=$cacheKey sections=${cachedSections.length}',
             );
-          final cacheIsFresh = isCacheValid(
-            Hive.box('cache'),
-            cacheKey,
-            homeFeedCacheDuration,
-          );
-          if (!cacheIsFresh && !offlineMode.value) {
-            logger.log(
-              '[HOME_SWR] stale cache displayed; starting background revalidation '
-              'key=$cacheKey',
-            );
-            unawaited(
-              getUnifiedHomeFeed(forceRefresh: true, mood: mood).catchError((
-                error,
-                stackTrace,
-              ) {
-                logger.log(
-                  '[HOME_SWR] background revalidation failed key=$cacheKey',
-                  error: error,
-                  stackTrace: stackTrace,
-                );
-                return <HomeSection>[];
-              }),
-            );
-          }
 
           List<Map<String, dynamic>> madeForYouRecs = const [];
           try {
