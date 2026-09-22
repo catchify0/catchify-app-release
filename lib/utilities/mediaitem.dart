@@ -19,9 +19,12 @@
  *     please visit: https://github.com/catchify0/catchify0.github.io
  */
 
+import 'dart:io';
+
 import 'package:audio_service/audio_service.dart';
 import 'package:catchify/services/artwork_service.dart';
 import 'package:catchify/services/common_services.dart';
+import 'package:catchify/services/io_service.dart';
 import 'package:catchify/utilities/queue_entry_utils.dart';
 
 Map mediaItemToMap(MediaItem mediaItem) {
@@ -29,6 +32,7 @@ Map mediaItemToMap(MediaItem mediaItem) {
   final ytid = extras?['ytid']?.toString().trim();
   final canonicalId =
       ytid != null && ytid.isNotEmpty ? ytid : mediaItem.id;
+  final artworkPath = extras?['artworkPath']?.toString();
   return {
     'id': canonicalId,
     'ytid': canonicalId,
@@ -42,6 +46,9 @@ Map mediaItemToMap(MediaItem mediaItem) {
     'lowResImage': extras?['lowResImage'],
     'isLive': extras?['isLive'] ?? false,
     'duration': mediaItem.duration?.inSeconds,
+    'artworkPath': artworkPath != null && artworkPath.isNotEmpty
+        ? artworkPath
+        : null,
     'source': extras?['source'],
     'contentType': extras?['contentType'],
   };
@@ -57,8 +64,12 @@ MediaItem mapToMediaItem(
       : <String, dynamic>{};
   final isOffline = offlineSong.isNotEmpty;
 
-  final offlineArtworkPath =
+  final storedArtworkPath =
       isOffline ? offlineSong['artworkPath']?.toString() : null;
+  final offlineArtworkPath = _resolveOfflineArtworkPath(
+    ytid,
+    storedArtworkPath,
+  );
 
   final artUri = ArtworkService.instance.resolveArtUri(
     song,
@@ -91,12 +102,36 @@ MediaItem mapToMediaItem(
       'videoAuthor': song['videoAuthor'],
       'isLive': song['isLive'],
       'highResImage': song['highResImage'],
-      'artworkPath': isOffline ? offlineSong['artworkPath']?.toString() : null,
-      'artWorkPath': isOffline ? offlineSong['artworkPath']?.toString() : null,
+      'artworkPath': offlineArtworkPath,
+      'artWorkPath': offlineArtworkPath,
       'source': song['source'],
       'contentType': song['contentType'],
     },
   );
+}
+
+String? _resolveOfflineArtworkPath(String? ytid, String? storedPath) {
+  if (ytid == null || ytid.isEmpty) return null;
+
+  final candidates = <String>[
+    if (storedPath != null && storedPath.isNotEmpty) storedPath,
+    if (_canonicalArtworkPath(ytid) case final canonicalPath?)
+      canonicalPath,
+  ];
+  for (final path in candidates) {
+    final file = File(path);
+    if (file.existsSync() && file.lengthSync() > 0) return file.path;
+  }
+  return null;
+}
+
+String? _canonicalArtworkPath(String ytid) {
+  try {
+    return FilePaths.getArtworkPath(ytid);
+  } catch (error) {
+    if (error.toString().contains('LateInitializationError')) return null;
+    rethrow;
+  }
 }
 
 /// Compares two Duration objects with tolerance for minor differences.

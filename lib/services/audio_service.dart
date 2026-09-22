@@ -32,6 +32,7 @@ import 'package:catchify/services/android_auto_service.dart';
 import 'package:catchify/services/common_services.dart';
 import 'package:catchify/services/data_manager.dart';
 import 'package:catchify/services/listening_stats_service.dart';
+import 'package:catchify/services/io_service.dart';
 import 'package:catchify/services/proxy_manager.dart';
 import 'package:catchify/services/radio_service.dart';
 import 'package:catchify/services/settings_manager.dart';
@@ -2323,8 +2324,19 @@ class CatchifyAudioHandler extends BaseAudioHandler {
             final f = File(audioPath);
             if (await f.exists()) {
               songData['audioPath'] = audioPath;
-              if (offlineSong['artworkPath'] != null) {
-                songData['artworkPath'] = offlineSong['artworkPath'];
+              final storedArtworkPath = offlineSong['artworkPath']?.toString();
+              final artworkCandidates = <String>[
+                if (storedArtworkPath != null && storedArtworkPath.isNotEmpty)
+                  storedArtworkPath,
+                FilePaths.getArtworkPath(ytid),
+              ];
+              for (final artworkPath in artworkCandidates) {
+                final artworkFile = File(artworkPath);
+                if (await artworkFile.exists() &&
+                    await artworkFile.length() > 0) {
+                  songData['artworkPath'] = artworkFile.path;
+                  break;
+              }
               }
               return true;
             }
