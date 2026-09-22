@@ -423,8 +423,14 @@ class _ControlsWidget extends StatelessWidget {
             style: IconButton.styleFrom(
               foregroundColor: colorScheme.primary,
               padding: const EdgeInsets.all(4),
-              minimumSize: const Size(32, 32),
-              maximumSize: const Size(32, 32),
+              minimumSize: const Size(
+                AppTokens.minInteractiveSize,
+                AppTokens.minInteractiveSize,
+              ),
+              maximumSize: const Size(
+                AppTokens.minInteractiveSize,
+                AppTokens.minInteractiveSize,
+              ),
               shape: const CircleBorder(),
             ),
             visualDensity: VisualDensity.compact,
