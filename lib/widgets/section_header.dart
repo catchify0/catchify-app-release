@@ -61,15 +61,23 @@ class SectionHeader extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     if (icon != null) ...[
-                      Icon(icon, size: 20, color: colorScheme.primary),
+                      Padding(
+                        padding: const EdgeInsets.only(top: 2),
+                        child: Icon(
+                          icon,
+                          size: 20,
+                          color: colorScheme.primary,
+                        ),
+                      ),
                       const SizedBox(width: 8),
                     ],
                     Expanded(
                       child: Text(
                         title,
-                        maxLines: 1,
+                        maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                         style: AppTextStyles.sectionTitle.copyWith(
                           color: colorScheme.onSurface,
@@ -82,7 +90,7 @@ class SectionHeader extends StatelessWidget {
                   const SizedBox(height: 2),
                   Text(
                     subtitle!.trim(),
-                    maxLines: 1,
+                    maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: AppTextStyles.categoryHeader.copyWith(
                       color: colorScheme.primary.withValues(alpha: 0.88),
@@ -94,17 +102,20 @@ class SectionHeader extends StatelessWidget {
           ),
           if (actionButton != null) ...[
             const SizedBox(width: 8),
-            DecoratedBox(
-              decoration: BoxDecoration(
-                color: colorScheme.primary.withValues(alpha: 0.12),
-                borderRadius: AppTokens.borderRadiusControl,
-              ),
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(
-                  minWidth: AppTokens.minInteractiveSize,
-                  minHeight: AppTokens.minInteractiveSize,
+            Align(
+              alignment: Alignment.topCenter,
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  color: colorScheme.primary.withValues(alpha: 0.12),
+                  borderRadius: AppTokens.borderRadiusControl,
                 ),
-                child: actionButton,
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(
+                    minWidth: AppTokens.minInteractiveSize,
+                    minHeight: AppTokens.minInteractiveSize,
+                  ),
+                  child: actionButton,
+                ),
               ),
             ),
           ] else if (onTap != null) ...[

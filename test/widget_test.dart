@@ -20,6 +20,36 @@ void main() {
     expect(find.text('Recommended For You'), findsOneWidget);
   });
 
+  testWidgets('SectionHeader keeps long titles and actions visible', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(
+      const MediaQuery(
+        data: MediaQueryData(textScaler: TextScaler.linear(1.8)),
+        child: MaterialApp(
+          home: Scaffold(
+            body: SectionHeader(
+              title: 'Recommended music for your evening listening session',
+              subtitle: 'PERSONALISED PICKS',
+              actionButton: IconButton(
+                onPressed: null,
+                tooltip: 'Play all',
+                icon: Icon(Icons.play_arrow),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    expect(
+      find.text('Recommended music for your evening listening session'),
+      findsOneWidget,
+    );
+    expect(find.byTooltip('Play all'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('NullArtworkWidget renders placeholder title', (
     WidgetTester tester,
   ) async {
