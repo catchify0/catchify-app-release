@@ -305,11 +305,16 @@ class _SearchPageState extends State<SearchPage> {
 
   Widget _buildFilterChips(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final scaledChipHeight = MediaQuery.textScalerOf(context).scale(34);
+    final chipStripHeight = math.max(
+      AppTokens.minInteractiveSize,
+      scaledChipHeight,
+    );
 
     return Padding(
       padding: const EdgeInsets.only(top: 8, bottom: 8),
       child: SizedBox(
-        height: AppTokens.minInteractiveSize,
+        height: chipStripHeight,
         child: ListView.separated(
           scrollDirection: Axis.horizontal,
           physics: const BouncingScrollPhysics(),
