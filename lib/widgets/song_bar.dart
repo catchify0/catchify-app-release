@@ -30,6 +30,7 @@ import 'package:go_router/go_router.dart';
 import 'package:catchify/extensions/l10n.dart';
 import 'package:catchify/main.dart';
 import 'package:catchify/services/common_services.dart';
+import 'package:catchify/services/io_service.dart';
 import 'package:catchify/services/playlists_manager.dart';
 import 'package:catchify/services/router_service.dart';
 import 'package:catchify/services/settings_manager.dart';
@@ -85,7 +86,10 @@ List<PopupMenuEntry<String>> _buildSongMenuItems({
         value: 'play_next',
         child: Row(
           children: [
-            Icon(FluentIcons.receipt_play_24_regular, color: colorScheme.onSurfaceVariant,),
+            Icon(
+              FluentIcons.receipt_play_24_regular,
+              color: colorScheme.onSurfaceVariant,
+            ),
             const SizedBox(width: 8),
             Text(playNextText, style: TextStyle(color: colorScheme.onSurface)),
           ],
@@ -96,7 +100,10 @@ List<PopupMenuEntry<String>> _buildSongMenuItems({
         value: 'go_to_artist',
         child: Row(
           children: [
-            Icon(FluentIcons.person_24_regular, color: colorScheme.onSurfaceVariant),
+            Icon(
+              FluentIcons.person_24_regular,
+              color: colorScheme.onSurfaceVariant,
+            ),
             const SizedBox(width: 8),
             Text(
               l10n.goToArtist,
@@ -110,7 +117,10 @@ List<PopupMenuEntry<String>> _buildSongMenuItems({
         value: 'add_to_queue',
         child: Row(
           children: [
-            Icon(FluentIcons.text_bullet_list_add_24_regular, color: colorScheme.onSurfaceVariant,),
+            Icon(
+              FluentIcons.text_bullet_list_add_24_regular,
+              color: colorScheme.onSurfaceVariant,
+            ),
             const SizedBox(width: 8),
             Text(
               addToQueueText,
@@ -121,30 +131,34 @@ List<PopupMenuEntry<String>> _buildSongMenuItems({
       ),
     PopupMenuItem<String>(
       value: 'like',
-        child: ValueListenableBuilder<bool>(
-          valueListenable: songLikeStatus,
-          builder: (_, value, __) {
-            return Row(
-              children: [
-                Icon(
-                  _SongBarState.likeStatusToIconMapper[value], color: colorScheme.onSurfaceVariant,
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  value ? removeFromLikedSongsText : addToLikedSongsText,
-                  style: TextStyle(color: colorScheme.onSurface),
-                ),
-              ],
-            );
-          },
-        ),
+      child: ValueListenableBuilder<bool>(
+        valueListenable: songLikeStatus,
+        builder: (_, value, __) {
+          return Row(
+            children: [
+              Icon(
+                _SongBarState.likeStatusToIconMapper[value],
+                color: colorScheme.onSurfaceVariant,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                value ? removeFromLikedSongsText : addToLikedSongsText,
+                style: TextStyle(color: colorScheme.onSurface),
+              ),
+            ],
+          );
+        },
       ),
+    ),
     if (canRename)
       PopupMenuItem<String>(
         value: 'rename',
         child: Row(
           children: [
-            Icon(FluentIcons.edit_24_regular, color: colorScheme.onSurfaceVariant),
+            Icon(
+              FluentIcons.edit_24_regular,
+              color: colorScheme.onSurfaceVariant,
+            ),
             const SizedBox(width: 8),
             Text(
               renameSongText,
@@ -158,7 +172,10 @@ List<PopupMenuEntry<String>> _buildSongMenuItems({
         value: 'remove',
         child: Row(
           children: [
-            Icon(FluentIcons.delete_24_regular, color: colorScheme.onSurfaceVariant),
+            Icon(
+              FluentIcons.delete_24_regular,
+              color: colorScheme.onSurfaceVariant,
+            ),
             const SizedBox(width: 8),
             Text(
               removeFromPlaylistText,
@@ -172,7 +189,10 @@ List<PopupMenuEntry<String>> _buildSongMenuItems({
         value: 'add_to_playlist',
         child: Row(
           children: [
-            Icon(FluentIcons.album_add_24_regular, color: colorScheme.onSurfaceVariant),
+            Icon(
+              FluentIcons.album_add_24_regular,
+              color: colorScheme.onSurfaceVariant,
+            ),
             const SizedBox(width: 8),
             Text(
               addToPlaylistText,
@@ -186,7 +206,10 @@ List<PopupMenuEntry<String>> _buildSongMenuItems({
         value: 'remove_from_recents',
         child: Row(
           children: [
-            Icon(FluentIcons.delete_24_regular, color: colorScheme.onSurfaceVariant),
+            Icon(
+              FluentIcons.delete_24_regular,
+              color: colorScheme.onSurfaceVariant,
+            ),
             const SizedBox(width: 8),
             Text(
               removeFromRecentlyPlayedText,
@@ -415,15 +438,20 @@ class _SongBarState extends State<SongBar> {
     // Cache frequently accessed values
     _songTitle = widget.song['title'] ?? '';
     _songArtist = widget.song is Map ? getDisplayArtist(widget.song) : '';
-    _artworkPath = _firstNonEmptyString([
-      widget.song['artworkPath'],
-      widget.song['artWorkPath'],
-    ]);
-    _lowResImageUrl = _firstNonEmptyString([
-      widget.song['highResImage'],
-      widget.song['image'],
-      widget.song['lowResImage'],
-    ]) ?? '';
+    _artworkPath = _resolveArtworkPath(
+      _firstNonEmptyString([
+        widget.song['artworkPath'],
+        widget.song['artWorkPath'],
+      ]),
+      widget.song['ytid']?.toString() ?? '',
+    );
+    _lowResImageUrl =
+        _firstNonEmptyString([
+          widget.song['highResImage'],
+          widget.song['image'],
+          widget.song['lowResImage'],
+        ]) ??
+        '';
     if (_lowResImageUrl.isNotEmpty) {
       _lowResImageUrl = formatArtworkResolution(_lowResImageUrl, 1080);
     }
@@ -463,11 +491,13 @@ class _SongBarState extends State<SongBar> {
       widget.song['artworkPath'],
       widget.song['artWorkPath'],
     ]);
-    final rawNewImageUrl = _firstNonEmptyString([
-      widget.song['highResImage'],
-      widget.song['image'],
-      widget.song['lowResImage'],
-    ]) ?? '';
+    final rawNewImageUrl =
+        _firstNonEmptyString([
+          widget.song['highResImage'],
+          widget.song['image'],
+          widget.song['lowResImage'],
+        ]) ??
+        '';
     final newLowResImageUrl = rawNewImageUrl.isNotEmpty
         ? formatArtworkResolution(rawNewImageUrl, 1080)
         : '';
@@ -481,16 +511,31 @@ class _SongBarState extends State<SongBar> {
 
     if (_songTitle != newTitle ||
         _songArtist != newArtist ||
-        _artworkPath != newArtworkPath ||
+        _artworkPath != _resolveArtworkPath(newArtworkPath, newYtid) ||
         _lowResImageUrl != newLowResImageUrl ||
         songChanged) {
       setState(() {
         _songTitle = newTitle;
         _songArtist = newArtist;
-        _artworkPath = newArtworkPath;
+        _artworkPath = _resolveArtworkPath(newArtworkPath, newYtid);
         _lowResImageUrl = newLowResImageUrl;
       });
     }
+  }
+
+  String? _resolveArtworkPath(String? metadataPath, String ytid) {
+    if (metadataPath != null &&
+        metadataPath.isNotEmpty &&
+        File(metadataPath).existsSync()) {
+      return metadataPath;
+    }
+    if (ytid.isEmpty || !isSongAlreadyOffline(ytid)) return metadataPath;
+
+    try {
+      final canonicalPath = FilePaths.getArtworkPath(ytid);
+      if (File(canonicalPath).existsSync()) return canonicalPath;
+    } catch (_) {}
+    return metadataPath;
   }
 
   @override
@@ -589,7 +634,8 @@ class _SongBarState extends State<SongBar> {
   Widget _buildAlbumArt(ColorScheme colorScheme) {
     const size = 52.0;
     final songDuration = widget.song['duration'];
-    final isDurationAvailable = widget.showMusicDuration &&
+    final isDurationAvailable =
+        widget.showMusicDuration &&
         songDuration != null &&
         (songDuration is! num || songDuration > 0);
 
@@ -955,10 +1001,7 @@ class _OnlineArtwork extends StatelessWidget {
 
               if (isLetterboxed) {
                 imageWidget = ClipRect(
-                  child: Transform.scale(
-                    scale: 1.34,
-                    child: imageWidget,
-                  ),
+                  child: Transform.scale(scale: 1.34, child: imageWidget),
                 );
               }
 
@@ -1010,8 +1053,10 @@ class _OnlineArtwork extends StatelessWidget {
             errorWidget: (context, url, error) {
               if (url.contains('maxresdefault.jpg')) {
                 return CachedNetworkImage(
-                  imageUrl:
-                      url.replaceFirst('maxresdefault.jpg', 'hqdefault.jpg'),
+                  imageUrl: url.replaceFirst(
+                    'maxresdefault.jpg',
+                    'hqdefault.jpg',
+                  ),
                   width: size,
                   height: size,
                   fit: BoxFit.cover,
