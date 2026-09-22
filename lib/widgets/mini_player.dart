@@ -66,9 +66,13 @@ class MiniPlayer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final transitionDuration =
+        MediaQuery.maybeOf(context)?.disableAnimations ?? false
+        ? Duration.zero
+        : AppTokens.motionStandard;
 
     return AnimatedSize(
-      duration: AppTokens.motionStandard,
+      duration: transitionDuration,
       curve: Curves.easeOutCubic,
       child: StreamBuilder<MediaItem?>(
         stream: audioHandler.mediaItem,
@@ -122,6 +126,7 @@ class _MiniPlayerBodyState extends State<_MiniPlayerBody>
     with SingleTickerProviderStateMixin {
   late final AnimationController _animationController;
   late final Animation<double> _scaleAnimation;
+  bool _disableAnimations = false;
 
   @override
   void initState() {
@@ -139,6 +144,21 @@ class _MiniPlayerBodyState extends State<_MiniPlayerBody>
   void dispose() {
     _animationController.dispose();
     super.dispose();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final disableAnimations =
+        MediaQuery.maybeOf(context)?.disableAnimations ?? false;
+    if (_disableAnimations == disableAnimations) return;
+
+    _disableAnimations = disableAnimations;
+    if (_disableAnimations && _animationController.isAnimating) {
+      _animationController
+        ..stop()
+        ..value = 0;
+    }
   }
 
   static const double _dragThresholdForNavigation = 10;
@@ -172,6 +192,9 @@ class _MiniPlayerBodyState extends State<_MiniPlayerBody>
     final colorScheme = widget.colorScheme;
     final metadata = widget.metadata;
     final state = widget.state;
+    final transitionDuration = _disableAnimations
+        ? Duration.zero
+        : AppTokens.motionStandard;
 
     return Semantics(
       button: true,
@@ -184,9 +207,15 @@ class _MiniPlayerBodyState extends State<_MiniPlayerBody>
           return Transform.scale(
             scale: _scaleAnimation.value,
             child: GestureDetector(
-              onTapDown: (_) => _animationController.forward(),
-              onTapUp: (_) => _animationController.reverse(),
-              onTapCancel: () => _animationController.reverse(),
+              onTapDown: _disableAnimations
+                  ? null
+                  : (_) => _animationController.forward(),
+              onTapUp: _disableAnimations
+                  ? null
+                  : (_) => _animationController.reverse(),
+              onTapCancel: _disableAnimations
+                  ? null
+                  : () => _animationController.reverse(),
               onVerticalDragUpdate: _handleVerticalDrag,
               onTap: _navigateToNowPlaying,
               child: SizedBox(
@@ -219,7 +248,7 @@ class _MiniPlayerBodyState extends State<_MiniPlayerBody>
                         _ArtworkWidget(metadata: metadata),
                         Expanded(
                           child: AnimatedSwitcher(
-                            duration: AppTokens.motionStandard,
+                            duration: transitionDuration,
                             switchInCurve: Curves.easeIn,
                             switchOutCurve: Curves.easeOut,
                             layoutBuilder: (currentChild, previousChildren) =>
