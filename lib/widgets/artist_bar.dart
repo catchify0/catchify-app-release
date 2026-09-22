@@ -45,50 +45,55 @@ class ArtistBar extends StatelessWidget {
     );
     final image = normalizeArtistThumbnailUrl(artist['image']?.toString());
 
-    return Material(
-      color: colorScheme.surfaceContainerLow,
-      borderRadius: borderRadius,
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 14),
-          child: Row(
-            children: [
-              _ArtistArtwork(image: image),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      title,
-                      style: TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 15,
-                        color: colorScheme.onSurface,
+    return Semantics(
+      button: true,
+      label: '$title, ${context.l10n!.artist}',
+      child: Material(
+        color: colorScheme.surfaceContainerLow,
+        borderRadius: borderRadius,
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 14),
+            child: Row(
+              children: [
+                _ArtistArtwork(image: image),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        title,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 15,
+                          color: colorScheme.onSurface,
+                        ),
                       ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 3),
-                    Text(
-                      context.l10n!.artist,
-                      style: TextStyle(
-                        color: colorScheme.onSurfaceVariant,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
+                      const SizedBox(height: 3),
+                      Text(
+                        context.l10n!.artist,
+                        style: TextStyle(
+                          color: colorScheme.onSurfaceVariant,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-              Icon(
-                FluentIcons.chevron_right_24_regular,
-                color: colorScheme.onSurfaceVariant,
-                size: 20,
-              ),
-            ],
+                Icon(
+                  FluentIcons.chevron_right_24_regular,
+                  color: colorScheme.onSurfaceVariant,
+                  size: 20,
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -106,7 +111,7 @@ class _ArtistArtwork extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
 
     if (image != null && image!.isNotEmpty) {
-      return Container(
+      return DecoratedBox(
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           border: Border.all(
