@@ -348,8 +348,6 @@ class NavigationManager {
                           'assets/icons/catchify_icon.png',
                           width: 48,
                           height: 48,
-                          color: Theme.of(context).colorScheme.primary,
-                          colorBlendMode: BlendMode.srcIn,
                         ),
                       ),
                     ),

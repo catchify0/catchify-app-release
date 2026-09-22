@@ -53,8 +53,6 @@ class AboutPage extends StatelessWidget {
                       'assets/icons/catchify_icon.png',
                       width: 96,
                       height: 96,
-                      color: colorScheme.primary,
-                      colorBlendMode: BlendMode.srcIn,
                     ),
                   ),
                   const SizedBox(height: 16),

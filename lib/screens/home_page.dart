@@ -285,8 +285,6 @@ class _HomePageState extends State<HomePage> {
                   width: 38,
                   height: 38,
                   fit: BoxFit.cover,
-                  color: Theme.of(context).colorScheme.primary,
-                  colorBlendMode: BlendMode.srcIn,
                   semanticLabel: 'Catchify',
                 ),
               ),
