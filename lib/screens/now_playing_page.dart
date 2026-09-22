@@ -19,12 +19,12 @@
  *     please visit: https://github.com/catchify0/catchify0.github.io
  */
 
+
 import 'dart:async';
 
 import 'package:audio_service/audio_service.dart';
 import 'package:fluentui_system_icons/fluentui_system_icons.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_flip_card/flutter_flip_card.dart';
 import 'package:catchify/constants/app_tokens.dart';
 import 'package:catchify/extensions/l10n.dart';
 import 'package:catchify/main.dart';
@@ -35,15 +35,8 @@ import 'package:catchify/widgets/now_playing/now_playing_artwork.dart';
 import 'package:catchify/widgets/now_playing/now_playing_controls.dart';
 import 'package:catchify/widgets/queue_list_view.dart';
 
-class NowPlayingPage extends StatefulWidget {
+class NowPlayingPage extends StatelessWidget {
   const NowPlayingPage({super.key});
-
-  @override
-  State<NowPlayingPage> createState() => _NowPlayingPageState();
-}
-
-class _NowPlayingPageState extends State<NowPlayingPage> {
-  final _lyricsController = FlipCardController();
 
   @override
   Widget build(BuildContext context) {
@@ -99,7 +92,6 @@ class _NowPlayingPageState extends State<NowPlayingPage> {
                               size: size,
                               adjustedIconSize: baseIconSize,
                               adjustedMiniIconSize: miniIconSize,
-                              lyricsController: _lyricsController,
                             )
                           : _MobileLayout(
                               metadata: metadata,
@@ -107,7 +99,6 @@ class _NowPlayingPageState extends State<NowPlayingPage> {
                               adjustedIconSize: baseIconSize,
                               adjustedMiniIconSize: miniIconSize,
                               isLargeScreen: isLargeScreen,
-                              lyricsController: _lyricsController,
                             ),
                     ),
                   ],
@@ -203,13 +194,11 @@ class _DesktopLayout extends StatelessWidget {
     required this.size,
     required this.adjustedIconSize,
     required this.adjustedMiniIconSize,
-    required this.lyricsController,
   });
   final MediaItem metadata;
   final Size size;
   final double adjustedIconSize;
   final double adjustedMiniIconSize;
-  final FlipCardController lyricsController;
 
   @override
   Widget build(BuildContext context) {
@@ -227,7 +216,6 @@ class _DesktopLayout extends StatelessWidget {
                     child: NowPlayingArtwork(
                       size: size,
                       metadata: metadata,
-                      lyricsController: lyricsController,
                     ),
                   ),
                 ),
@@ -247,7 +235,6 @@ class _DesktopLayout extends StatelessWidget {
                   metadata: metadata,
                   iconSize: adjustedMiniIconSize,
                   isLargeScreen: true,
-                  lyricsController: lyricsController,
                 ),
                 const SizedBox(height: 16),
               ],
@@ -267,14 +254,12 @@ class _MobileLayout extends StatelessWidget {
     required this.adjustedIconSize,
     required this.adjustedMiniIconSize,
     required this.isLargeScreen,
-    required this.lyricsController,
   });
   final MediaItem metadata;
   final Size size;
   final double adjustedIconSize;
   final double adjustedMiniIconSize;
   final bool isLargeScreen;
-  final FlipCardController lyricsController;
 
   @override
   Widget build(BuildContext context) {
@@ -298,7 +283,6 @@ class _MobileLayout extends StatelessWidget {
               child: NowPlayingArtwork(
                 size: size,
                 metadata: metadata,
-                lyricsController: lyricsController,
               ),
             ),
           ),
@@ -318,7 +302,6 @@ class _MobileLayout extends StatelessWidget {
             metadata: metadata,
             iconSize: adjustedMiniIconSize,
             isLargeScreen: isLargeScreen,
-            lyricsController: lyricsController,
           ),
           const SizedBox(height: 16),
         ],
@@ -337,7 +320,6 @@ class _MobileLayout extends StatelessWidget {
               child: NowPlayingArtwork(
                 size: size,
                 metadata: metadata,
-                lyricsController: lyricsController,
               ),
             ),
           ),
@@ -362,7 +344,6 @@ class _MobileLayout extends StatelessWidget {
                   metadata: metadata,
                   iconSize: adjustedMiniIconSize,
                   isLargeScreen: isLargeScreen,
-                  lyricsController: lyricsController,
                 ),
                 const SizedBox(height: 8),
               ],

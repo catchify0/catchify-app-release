@@ -53,20 +53,23 @@ class SyncedLyricsWidget extends StatefulWidget {
 
 class _SyncedLyricsWidgetState extends State<SyncedLyricsWidget> {
   late List<LyricLine> _lines;
+  // GlobalKeys for each row so Scrollable.ensureVisible can locate them.
+  List<GlobalKey> _rowKeys = [];
   final ScrollController _scrollController = ScrollController();
   int _currentLineIndex = -1;
   StreamSubscription<PositionData>? _positionSub;
   bool _isUserScrolling = false;
   Timer? _scrollPauseTimer;
 
-  // Each lyric row: a generous fixed height so multi-line text doesn't overflow.
-  static const double _rowHeight = 64;
+  // Gap threshold: lines more than 3 seconds apart get extra spacing.
+  static const int _gapThresholdMs = 3000;
   static const double _verticalPadding = 28;
 
   @override
   void initState() {
     super.initState();
     _lines = LrcParser.parse(widget.lyrics);
+    _rowKeys = List.generate(_lines.length, (_) => GlobalKey());
     _subscribe();
 
     // Snap to the correct line immediately when lyrics first load
@@ -86,6 +89,7 @@ class _SyncedLyricsWidgetState extends State<SyncedLyricsWidget> {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.lyrics != widget.lyrics) {
       _lines = LrcParser.parse(widget.lyrics);
+      _rowKeys = List.generate(_lines.length, (_) => GlobalKey());
       _currentLineIndex = -1;
       _scrollPauseTimer?.cancel();
       _isUserScrolling = false;
@@ -178,23 +182,22 @@ class _SyncedLyricsWidgetState extends State<SyncedLyricsWidget> {
   void _scrollToLine(int index, {bool force = false}) {
     if (!force && _isUserScrolling) return;
     if (index < 0 || !_scrollController.hasClients) return;
-    final position = _scrollController.position;
-
-    // Target: precisely center the active line in the visible area accounting for vertical padding
-    final viewportHeight = position.viewportDimension;
-    final target = _verticalPadding +
-        (index * _rowHeight) -
-        (viewportHeight / 2) +
-        (_rowHeight / 2);
-    final safeTarget = target.clamp(0.0, position.maxScrollExtent);
-
-    if ((safeTarget - position.pixels).abs() > 2) {
-      _scrollController.animateTo(
-        safeTarget,
-        duration: const Duration(milliseconds: 350),
-        curve: Curves.easeOutCubic,
-      );
-    }
+    // With dynamic row heights we use Scrollable.ensureVisible so the active
+    // line is always fully visible and roughly centred in the viewport.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !_scrollController.hasClients) return;
+      if (force || !_isUserScrolling) {
+        final ctx = _rowKeys[index].currentContext;
+        if (ctx != null) {
+          Scrollable.ensureVisible(
+            ctx,
+            alignment: 0.4,
+            duration: const Duration(milliseconds: 350),
+            curve: Curves.easeOutCubic,
+          );
+        }
+      }
+    });
   }
 
   @override
@@ -233,73 +236,162 @@ class _SyncedLyricsWidgetState extends State<SyncedLyricsWidget> {
     );
   }
 
+  /// Returns true when the gap between line [index] and the previous line
+  /// is long enough to deserve extra visual breathing room.
+  bool _hasGapBefore(int index) {
+    if (index == 0) return false;
+    final gap = _lines[index].timeInMs - _lines[index - 1].timeInMs;
+    return gap >= _gapThresholdMs;
+  }
+
   Widget _buildList(BuildContext context) {
     final textColor = Theme.of(context).colorScheme.onSecondaryContainer;
     final colorScheme = Theme.of(context).colorScheme;
+    final accentColor = colorScheme.primary;
 
     return Stack(
       children: [
-        NotificationListener<ScrollNotification>(
-          onNotification: (notification) {
-            _onScrollNotification(notification);
-            return false;
-          },
-          child: ListView.builder(
-            controller: _scrollController,
-            padding: const EdgeInsets.only(
-              top: _verticalPadding,
-              bottom: _verticalPadding + 32,
-              left: 20,
-              right: 20,
-            ),
-            physics: const BouncingScrollPhysics(),
-            itemCount: _lines.length,
-            itemExtent: _rowHeight,
-            itemBuilder: (context, index) {
-              final isCurrent = index == _currentLineIndex;
-
-              return GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onTap: () {
-                  final ms = _lines[index].timeInMs;
-                  _scrollPauseTimer?.cancel();
-                  setState(() {
-                    _currentLineIndex = index;
-                    _isUserScrolling = false;
-                  });
-                  _scrollToLine(index, force: true);
-                  audioHandler.seek(Duration(milliseconds: ms));
-                },
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: AnimatedDefaultTextStyle(
-                    duration: const Duration(milliseconds: 250),
-                    style: isCurrent
-                        ? TextStyle(
-                            fontFamilyFallback: const ['AnekTamil'],
-                            fontSize: 18.5,
-                            fontWeight: FontWeight.w800,
-                            color: textColor,
-                            height: 1.4,
-                            letterSpacing: -0.2,
-                          )
-                        : TextStyle(
-                            fontFamilyFallback: const ['AnekTamil'],
-                            fontSize: 16,
-                            fontWeight: FontWeight.w500,
-                            color: textColor.withValues(alpha: 0.40),
-                            height: 1.4,
-                          ),
-                    child: Text(
-                      _lines[index].text,
-                      textAlign: TextAlign.left,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                ),
-              );
+        // Gradient fade mask at top and bottom
+        ShaderMask(
+          shaderCallback: (rect) => LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Colors.transparent,
+              Colors.white,
+              Colors.white,
+              Colors.transparent,
+            ],
+            stops: const [0.0, 0.08, 0.88, 1.0],
+          ).createShader(rect),
+          blendMode: BlendMode.dstIn,
+          child: NotificationListener<ScrollNotification>(
+            onNotification: (notification) {
+              _onScrollNotification(notification);
+              return false;
             },
+            child: ListView.builder(
+              controller: _scrollController,
+              padding: const EdgeInsets.only(
+                top: _verticalPadding,
+                bottom: _verticalPadding + 32,
+                left: 20,
+                right: 20,
+              ),
+              physics: const BouncingScrollPhysics(),
+              itemCount: _lines.length,
+              // No itemExtent — dynamic height so active line never clips
+              itemBuilder: (context, index) {
+                final isCurrent = index == _currentLineIndex;
+                final showGap = _hasGapBefore(index);
+
+                return RepaintBoundary(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // Extra spacing for paragraph / instrumental break
+                      if (showGap)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 6),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 4,
+                                height: 4,
+                                margin: const EdgeInsets.only(right: 6),
+                                decoration: BoxDecoration(
+                                  color: textColor.withValues(alpha: 0.20),
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                              Container(
+                                width: 4,
+                                height: 4,
+                                margin: const EdgeInsets.only(right: 6),
+                                decoration: BoxDecoration(
+                                  color: textColor.withValues(alpha: 0.15),
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                              Container(
+                                width: 4,
+                                height: 4,
+                                decoration: BoxDecoration(
+                                  color: textColor.withValues(alpha: 0.10),
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      GestureDetector(
+                        key: _rowKeys[index],
+                        behavior: HitTestBehavior.opaque,
+                        onTap: () {
+                          final ms = _lines[index].timeInMs;
+                          _scrollPauseTimer?.cancel();
+                          setState(() {
+                            _currentLineIndex = index;
+                            _isUserScrolling = false;
+                          });
+                          _scrollToLine(index, force: true);
+                          audioHandler.seek(Duration(milliseconds: ms));
+                        },
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 250),
+                          curve: Curves.easeOut,
+                          padding: EdgeInsets.only(
+                            top: isCurrent ? 6 : 2,
+                            bottom: isCurrent ? 10 : 6,
+                            left: isCurrent ? 12 : 0,
+                          ),
+                          decoration: isCurrent
+                              ? BoxDecoration(
+                                  border: Border(
+                                    left: BorderSide(
+                                      color: accentColor,
+                                      width: 3,
+                                    ),
+                                  ),
+                                )
+                              : null,
+                          child: AnimatedDefaultTextStyle(
+                            duration: const Duration(milliseconds: 250),
+                            curve: Curves.easeOut,
+                            style: isCurrent
+                                ? TextStyle(
+                                    fontFamilyFallback: const ['AnekTamil'],
+                                    fontSize: 18.5,
+                                    fontWeight: FontWeight.w800,
+                                    color: textColor,
+                                    height: 1.4,
+                                    letterSpacing: -0.2,
+                                  )
+                                : TextStyle(
+                                    fontFamilyFallback: const ['AnekTamil'],
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w500,
+                                    color: textColor.withValues(alpha: 0.40),
+                                    height: 1.4,
+                                  ),
+                            child: Text(
+                              _lines[index].text,
+                              textAlign: TextAlign.left,
+                              // No clipping on the active line; others get 2-line cap
+                              maxLines: isCurrent ? null : 2,
+                              overflow: isCurrent
+                                  ? TextOverflow.visible
+                                  : TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
           ),
         ),
         if (_isUserScrolling)
@@ -333,7 +425,7 @@ class _SyncedLyricsWidgetState extends State<SyncedLyricsWidget> {
                       ),
                       const SizedBox(width: 6),
                       Text(
-                        'Sync paused • Tap to resume',
+                        'Sync paused \u2022 Tap to resume',
                         style: TextStyle(
                           fontFamilyFallback: const ['AnekTamil'],
                           fontSize: 11,
