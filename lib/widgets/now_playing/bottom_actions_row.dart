@@ -22,6 +22,7 @@
 import 'package:audio_service/audio_service.dart';
 import 'package:fluentui_system_icons/fluentui_system_icons.dart';
 import 'package:flutter/material.dart';
+import 'package:catchify/constants/app_tokens.dart';
 import 'package:catchify/extensions/l10n.dart';
 import 'package:catchify/main.dart';
 import 'package:catchify/services/common_services.dart';
@@ -250,7 +251,10 @@ class _BottomActionsRowState extends State<BottomActionsRow> {
                 : colorScheme.surfaceContainerLow.withValues(alpha: 0.8),
             tapTargetSize: MaterialTapTargetSize.shrinkWrap,
             padding: const EdgeInsets.all(10),
-            minimumSize: const Size(42, 42),
+            minimumSize: const Size(
+              AppTokens.minInteractiveSize,
+              AppTokens.minInteractiveSize,
+            ),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
             ),
@@ -277,7 +281,10 @@ class _BottomActionsRowState extends State<BottomActionsRow> {
         backgroundColor: colorScheme.surfaceContainerLow.withValues(alpha: 0.8),
         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
         padding: const EdgeInsets.all(10),
-        minimumSize: const Size(42, 42),
+        minimumSize: const Size(
+          AppTokens.minInteractiveSize,
+          AppTokens.minInteractiveSize,
+        ),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
       onPressed: onPressed,
@@ -297,10 +304,14 @@ class _BottomActionsRowState extends State<BottomActionsRow> {
         if (isActive) {
           if (value.inMilliseconds < 0) {
             final count = -value.inMilliseconds;
-            tooltip = count == 1 ? 'Sleep: End of song' : 'Sleep: $count songs left';
+            tooltip = count == 1
+                ? 'Sleep: End of song'
+                : 'Sleep: $count songs left';
           } else {
             final mins = value.inMinutes;
-            tooltip = mins > 0 ? 'Sleep: $mins min' : 'Sleep: ${value.inSeconds}s';
+            tooltip = mins > 0
+                ? 'Sleep: $mins min'
+                : 'Sleep: ${value.inSeconds}s';
           }
         }
 
@@ -321,7 +332,10 @@ class _BottomActionsRowState extends State<BottomActionsRow> {
                 : colorScheme.surfaceContainerLow.withValues(alpha: 0.8),
             tapTargetSize: MaterialTapTargetSize.shrinkWrap,
             padding: const EdgeInsets.all(10),
-            minimumSize: const Size(42, 42),
+            minimumSize: const Size(
+              AppTokens.minInteractiveSize,
+              AppTokens.minInteractiveSize,
+            ),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
             ),
@@ -344,10 +358,14 @@ void _showActiveTimerActions(BuildContext context, Duration currentTimer) {
   var info = '';
   if (currentTimer.inMilliseconds < 0) {
     final count = -currentTimer.inMilliseconds;
-    info = count == 1 ? 'Music will stop at the end of this song.' : 'Music will stop after $count songs.';
+    info = count == 1
+        ? 'Music will stop at the end of this song.'
+        : 'Music will stop after $count songs.';
   } else {
     final mins = currentTimer.inMinutes;
-    info = mins > 0 ? 'Music will stop in $mins minutes.' : 'Music will stop in ${currentTimer.inSeconds} seconds.';
+    info = mins > 0
+        ? 'Music will stop in $mins minutes.'
+        : 'Music will stop in ${currentTimer.inSeconds} seconds.';
   }
 
   showDialog(
@@ -358,7 +376,10 @@ void _showActiveTimerActions(BuildContext context, Duration currentTimer) {
           children: [
             Icon(FluentIcons.timer_24_filled, color: colorScheme.primary),
             const SizedBox(width: 12),
-            const Text('Sleep Timer Active', style: TextStyle(fontWeight: FontWeight.bold)),
+            const Text(
+              'Sleep Timer Active',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
           ],
         ),
         content: Text(info),
@@ -373,7 +394,10 @@ void _showActiveTimerActions(BuildContext context, Duration currentTimer) {
                 duration: const Duration(seconds: 1, milliseconds: 500),
               );
             },
-            child: const Text('Cancel Timer', style: TextStyle(color: Colors.redAccent)),
+            child: const Text(
+              'Cancel Timer',
+              style: TextStyle(color: Colors.redAccent),
+            ),
           ),
           FilledButton(
             onPressed: () {
@@ -422,7 +446,9 @@ void _showSleepTimerDialog(BuildContext context) {
       var selectedMode = current.inMilliseconds < 0 ? 1 : 0;
       var hours = current.inMilliseconds > 0 ? (current.inMinutes ~/ 60) : 0;
       var minutes = current.inMilliseconds > 0 ? (current.inMinutes % 60) : 30;
-      var songCount = current.inMilliseconds < 0 ? (-current.inMilliseconds) : 1;
+      var songCount = current.inMilliseconds < 0
+          ? (-current.inMilliseconds)
+          : 1;
 
       return StatefulBuilder(
         builder: (context, setState) {
@@ -455,7 +481,10 @@ void _showSleepTimerDialog(BuildContext context) {
                       ButtonSegment(
                         value: 1,
                         label: Text('Song Count'),
-                        icon: Icon(FluentIcons.music_note_2_24_regular, size: 16),
+                        icon: Icon(
+                          FluentIcons.music_note_2_24_regular,
+                          size: 16,
+                        ),
                       ),
                     ],
                     selected: {selectedMode},
@@ -549,11 +578,17 @@ void _showSleepTimerDialog(BuildContext context) {
                       children: [
                         ActionChip(
                           label: const Text('End of current song'),
-                          backgroundColor: songCount == 1 ? colorScheme.primaryContainer : colorScheme.surfaceContainerHighest,
+                          backgroundColor: songCount == 1
+                              ? colorScheme.primaryContainer
+                              : colorScheme.surfaceContainerHighest,
                           labelStyle: TextStyle(
-                            color: songCount == 1 ? colorScheme.primary : colorScheme.onSurfaceVariant,
+                            color: songCount == 1
+                                ? colorScheme.primary
+                                : colorScheme.onSurfaceVariant,
                             fontSize: 12,
-                            fontWeight: songCount == 1 ? FontWeight.bold : FontWeight.normal,
+                            fontWeight: songCount == 1
+                                ? FontWeight.bold
+                                : FontWeight.normal,
                           ),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
@@ -563,11 +598,17 @@ void _showSleepTimerDialog(BuildContext context) {
                         ...[2, 3, 5, 10].map((count) {
                           return ActionChip(
                             label: Text('$count songs'),
-                            backgroundColor: songCount == count ? colorScheme.primaryContainer : colorScheme.surfaceContainerHighest,
+                            backgroundColor: songCount == count
+                                ? colorScheme.primaryContainer
+                                : colorScheme.surfaceContainerHighest,
                             labelStyle: TextStyle(
-                              color: songCount == count ? colorScheme.primary : colorScheme.onSurfaceVariant,
+                              color: songCount == count
+                                  ? colorScheme.primary
+                                  : colorScheme.onSurfaceVariant,
                               fontSize: 12,
-                              fontWeight: songCount == count ? FontWeight.bold : FontWeight.normal,
+                              fontWeight: songCount == count
+                                  ? FontWeight.bold
+                                  : FontWeight.normal,
                             ),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
