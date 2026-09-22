@@ -12,7 +12,6 @@ class CatchifyBrandIcon extends StatelessWidget {
   static const _asset = 'assets/icons/catchify_icon.png';
   static const _innerMaskAsset =
       'assets/icons/catchify_icon_inner_mask.png';
-  static const _noteMaskAsset = 'assets/icons/catchify_icon_note_mask.png';
 
   final double size;
   final Color? color;
@@ -39,13 +38,6 @@ class CatchifyBrandIcon extends StatelessWidget {
             ),
             Image.asset(
               _innerMaskAsset,
-              fit: fit,
-              color: noteColor,
-              colorBlendMode: BlendMode.srcIn,
-              excludeFromSemantics: true,
-            ),
-            Image.asset(
-              _noteMaskAsset,
               fit: fit,
               color: noteColor,
               colorBlendMode: BlendMode.srcIn,
