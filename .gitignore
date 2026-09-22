@@ -61,3 +61,6 @@ lib/localization/app_*.dart
 lib/localization/untranslated.json
 android/key.properties
 android/app/key.jks
+
+# Youtify reference files (local only - too large for GitHub)
+youtify_reference/
