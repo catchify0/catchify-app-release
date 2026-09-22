@@ -25,7 +25,7 @@ import 'package:catchify/constants/app_tokens.dart';
 import 'package:catchify/theme/app_text_styles.dart';
 
 class CustomBar extends StatelessWidget {
-  CustomBar(
+  const CustomBar(
     this.tileName,
     this.tileIcon, {
     this.description,

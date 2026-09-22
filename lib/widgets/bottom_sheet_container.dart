@@ -50,7 +50,7 @@ class BottomSheetContainer extends StatelessWidget {
     final size = MediaQuery.sizeOf(context);
     final bottomPadding = MediaQuery.paddingOf(context).bottom;
 
-    return Container(
+    return DecoratedBox(
       decoration: BoxDecoration(
         color: colorScheme.surfaceContainerLow,
         borderRadius: const BorderRadius.vertical(
@@ -60,62 +60,77 @@ class BottomSheetContainer extends StatelessWidget {
       child: SafeArea(
         top: false,
         child: ConstrainedBox(
-          constraints: BoxConstraints(
-            maxHeight: size.height * maxHeightFactor,
-          ),
+          constraints: BoxConstraints(maxHeight: size.height * maxHeightFactor),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               if (showDragHandle)
-                Padding(
-                  padding: const EdgeInsets.only(top: 10, bottom: 6),
-                  child: Center(
-                    child: Container(
-                      width: 36,
-                      height: 4,
-                      decoration: BoxDecoration(
-                        color: colorScheme.onSurfaceVariant.withValues(alpha: 0.35),
-                        borderRadius: BorderRadius.circular(AppTokens.radiusPill),
+                ExcludeSemantics(
+                  child: Padding(
+                    padding: const EdgeInsets.only(top: 10, bottom: 6),
+                    child: Center(
+                      child: Container(
+                        width: 36,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: colorScheme.onSurfaceVariant.withValues(
+                            alpha: 0.35,
+                          ),
+                          borderRadius: BorderRadius.circular(
+                            AppTokens.radiusPill,
+                          ),
+                        ),
                       ),
                     ),
                   ),
                 ),
               if (title != null)
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 8, 20, 10),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              title!,
-                              style: AppTextStyles.rowTitle.copyWith(
-                                color: colorScheme.onSurface,
-                                fontSize: 16,
-                              ),
-                            ),
-                            if (subtitle != null) ...[
-                              const SizedBox(height: 2),
+                Semantics(
+                  header: true,
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 8, 20, 10),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
                               Text(
-                                subtitle!,
-                                style: AppTextStyles.caption.copyWith(
-                                  color: colorScheme.onSurfaceVariant,
+                                title!,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: AppTextStyles.rowTitle.copyWith(
+                                  color: colorScheme.onSurface,
+                                  fontSize: 16,
                                 ),
                               ),
+                              if (subtitle != null) ...[
+                                const SizedBox(height: 2),
+                                Text(
+                                  subtitle!,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: AppTextStyles.caption.copyWith(
+                                    color: colorScheme.onSurfaceVariant,
+                                  ),
+                                ),
+                              ],
                             ],
-                          ],
+                          ),
                         ),
-                      ),
-                      if (trailing != null) trailing!,
-                    ],
+                        if (trailing != null) ...[
+                          const SizedBox(width: 8),
+                          trailing!,
+                        ],
+                      ],
+                    ),
                   ),
                 ),
               Flexible(
                 child: Padding(
-                  padding: padding ??
+                  padding:
+                      padding ??
                       EdgeInsets.fromLTRB(
                         16,
                         0,
