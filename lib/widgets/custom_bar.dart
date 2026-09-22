@@ -155,7 +155,7 @@ class CustomBar extends StatelessWidget {
                     ),
                     if (trailing != null) ...[
                       const SizedBox(width: 8),
-                      Flexible(fit: FlexFit.loose, child: trailing!),
+                      Flexible(child: trailing!),
                     ],
                   ],
                 ),
@@ -194,7 +194,6 @@ class SettingSwitch extends StatelessWidget {
       child: Switch(
         value: value,
         onChanged: onChanged,
-        materialTapTargetSize: MaterialTapTargetSize.padded,
         thumbColor: WidgetStateProperty.resolveWith((states) {
           if (!isEnabled) return disabledThumbColor;
           if (states.contains(WidgetState.selected)) {

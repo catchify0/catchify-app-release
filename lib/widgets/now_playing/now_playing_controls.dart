@@ -259,7 +259,7 @@ class PlayerControlButtons extends StatelessWidget {
               : 10.0,
         );
 
-        final buttonConstraints = BoxConstraints(
+        const buttonConstraints = BoxConstraints(
           minWidth: minButtonSize,
           minHeight: minButtonSize,
         );
@@ -329,9 +329,9 @@ class PlayerControlButtons extends StatelessWidget {
                                       borderRadius: BorderRadius.circular(16),
                                     ),
                                     padding: buttonPadding,
-                                    minimumSize: Size(
-                                      minButtonSize,
-                                      minButtonSize,
+                                    minimumSize: const Size(
+                                      AppTokens.minInteractiveSize,
+                                      AppTokens.minInteractiveSize,
                                     ),
                                   ),
                                 ),
@@ -377,9 +377,9 @@ class PlayerControlButtons extends StatelessWidget {
                                           ),
                                         ),
                                         padding: buttonPadding,
-                                        minimumSize: Size(
-                                          minButtonSize,
-                                          minButtonSize,
+                                        minimumSize: const Size(
+                                          AppTokens.minInteractiveSize,
+                                          AppTokens.minInteractiveSize,
                                         ),
                                       ),
                                     );
