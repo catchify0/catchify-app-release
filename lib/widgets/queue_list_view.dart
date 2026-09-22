@@ -29,6 +29,8 @@ import 'package:flutter/material.dart';
 import 'package:catchify/extensions/l10n.dart';
 import 'package:catchify/main.dart';
 import 'package:catchify/services/settings_manager.dart';
+import 'package:catchify/utilities/mediaitem.dart';
+import 'package:catchify/utilities/queue_entry_utils.dart';
 import 'package:catchify/widgets/confirmation_dialog.dart';
 import 'package:catchify/widgets/no_artwork_cube.dart';
 import 'package:hive/hive.dart';
@@ -533,7 +535,11 @@ class _ArtworkThumbnail extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final artworkPath = song['artworkPath'] as String?;
+    final ytid = canonicalSongId(song);
+    final artworkPath = resolveOfflineArtworkPath(
+      ytid,
+      song['artworkPath']?.toString() ?? song['artWorkPath']?.toString(),
+    );
     if (artworkPath != null && artworkPath.isNotEmpty) {
       return ClipRRect(
         borderRadius: BorderRadius.circular(radius),

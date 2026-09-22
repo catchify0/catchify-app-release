@@ -66,7 +66,7 @@ MediaItem mapToMediaItem(
 
   final storedArtworkPath =
       isOffline ? offlineSong['artworkPath']?.toString() : null;
-  final offlineArtworkPath = _resolveOfflineArtworkPath(
+  final offlineArtworkPath = resolveOfflineArtworkPath(
     ytid,
     storedArtworkPath,
   );
@@ -110,7 +110,7 @@ MediaItem mapToMediaItem(
   );
 }
 
-String? _resolveOfflineArtworkPath(String? ytid, String? storedPath) {
+String? resolveOfflineArtworkPath(String? ytid, String? storedPath) {
   if (ytid == null || ytid.isEmpty) return null;
 
   final candidates = <String>[
