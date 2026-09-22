@@ -126,7 +126,9 @@ class PersonalizationService {
 
     List<String> searches = const [];
     if (Hive.isBoxOpen('user')) {
-      final rawSearches = Hive.box('user').get('searchHistory', defaultValue: []);
+      final rawSearches = Hive.box(
+        'user',
+      ).get('searchHistory', defaultValue: []);
       if (rawSearches is List) {
         searches = rawSearches.whereType<String>().toList();
       }
@@ -138,11 +140,16 @@ class PersonalizationService {
     final playCounts = <String, int>{};
     try {
       final now = DateTime.now();
-      final currentMonthKey = '${now.year}-${now.month.toString().padLeft(2, "0")}';
-      final topSongs = listeningStatsService.monthTopSongs(currentMonthKey, limit: 50);
+      final currentMonthKey =
+          '${now.year}-${now.month.toString().padLeft(2, "0")}';
+      final topSongs = listeningStatsService.monthTopSongs(
+        currentMonthKey,
+        limit: 50,
+      );
       for (final song in topSongs) {
         final id = song['ytid']?.toString() ?? song['id']?.toString();
-        final count = song['playCount'] as int? ??
+        final count =
+            song['playCount'] as int? ??
             song['listeningCount'] as int? ??
             int.tryParse(song['playCount']?.toString() ?? '') ??
             0;
@@ -179,11 +186,8 @@ class PersonalizationService {
     List<Map<String, dynamic>>? candidates,
     int limit = 20,
   }) {
-    final candidatePool = candidates ??
-        [
-          ...signals.likedSongs,
-          ...signals.recentSongs,
-        ];
+    final candidatePool =
+        candidates ?? [...signals.likedSongs, ...signals.recentSongs];
 
     if (candidatePool.isEmpty) return const [];
 
@@ -222,15 +226,18 @@ class PersonalizationService {
       // 2. Recent playback with time decay
       final recentIdx = recentIndices[id];
       if (recentIdx != null) {
-        score += PersonalizationWeights.recentPlayWeight *
+        score +=
+            PersonalizationWeights.recentPlayWeight *
             PersonalizationWeights.calculateTimeDecay(recentIdx);
       }
 
       // 3. Play count frequency bonus
       final playCount = signals.playCounts[id] ?? 0;
       if (playCount > 0) {
-        score += (playCount * PersonalizationWeights.playCountMultiplier)
-            .clamp(0.0, 100.0);
+        score += (playCount * PersonalizationWeights.playCountMultiplier).clamp(
+          0.0,
+          100.0,
+        );
       }
 
       // 4. Radio seed bonus
@@ -242,7 +249,8 @@ class PersonalizationService {
       final title = song['title']?.toString().toLowerCase() ?? '';
       final artist = song['artist']?.toString().toLowerCase() ?? '';
       for (final query in searchTokens) {
-        if (title.contains(query) || (artist.isNotEmpty && query.contains(artist))) {
+        if (title.contains(query) ||
+            (artist.isNotEmpty && query.contains(artist))) {
           score += PersonalizationWeights.searchMatchBonus;
           break;
         }
@@ -297,7 +305,8 @@ class PersonalizationService {
       for (final part in parts) {
         final key = part.toLowerCase();
         artistScores[key] =
-            (artistScores[key] ?? 0) + PersonalizationWeights.artistAffinityBonus;
+            (artistScores[key] ?? 0) +
+            PersonalizationWeights.artistAffinityBonus;
         artistImages[key] ??= s['image']?.toString();
         artistIds[key] ??= s['artistId']?.toString();
         artistDisplayNames[key] ??= part;
@@ -332,7 +341,8 @@ class PersonalizationService {
       for (final key in artistScores.keys.toList()) {
         if (key.contains(lowerQ) || lowerQ.contains(key)) {
           artistScores[key] =
-              (artistScores[key] ?? 0) + PersonalizationWeights.searchMatchBonus;
+              (artistScores[key] ?? 0) +
+              PersonalizationWeights.searchMatchBonus;
         }
       }
     }
@@ -363,11 +373,7 @@ class PersonalizationService {
     for (final p in signals.customPlaylists) {
       final id = p['ytid']?.toString() ?? p['id']?.toString() ?? '';
       if (id.isNotEmpty) {
-        scored[id] = _ScoredItem(
-          item: p,
-          score: 90.0,
-          id: id,
-        );
+        scored[id] = _ScoredItem(item: p, score: 90.0, id: id);
       }
     }
 
@@ -376,11 +382,7 @@ class PersonalizationService {
       if (PlaylistUtils.isArtistPlaylist(p)) continue;
       final id = p['ytid']?.toString() ?? p['id']?.toString() ?? '';
       if (id.isNotEmpty && !scored.containsKey(id)) {
-        scored[id] = _ScoredItem(
-          item: p,
-          score: 80.0,
-          id: id,
-        );
+        scored[id] = _ScoredItem(item: p, score: 80.0, id: id);
       }
     }
 
@@ -470,7 +472,9 @@ class PersonalizationService {
           isChunkedSongs: true,
         ),
       );
-      logger.log('[PERSONALIZATION_SECTION] title="Made for you" items=${madeForYouTracks.length}');
+      logger.log(
+        '[PERSONALIZATION_SECTION] title="Made for you" items=${madeForYouTracks.length}',
+      );
     }
 
     // 3. "Because you listened to [Top Artist]"
@@ -478,16 +482,36 @@ class PersonalizationService {
     if (topArtists.isNotEmpty) {
       final topArtistName = topArtists.first['title']?.toString() ?? '';
       if (topArtistName.isNotEmpty) {
-        final artistSongs = _findSongsByArtist(
+        final artistHistory = _findSongsByArtist(
           [...signals.likedSongs, ...signals.recentSongs],
           topArtistName,
           limit: 8,
         );
+        final playedIds = {
+          ...signals.likedSongs.map(_extractSongId),
+          ...signals.recentSongs.map(_extractSongId),
+        };
+        final freshArtistRecommendations = _findSongsByArtist(
+          relevantCandidates ?? const [],
+          topArtistName,
+          limit: 8,
+        ).where((song) => !playedIds.contains(_extractSongId(song))).toList();
+        final artistSongs = <Map<String, dynamic>>[
+          ...freshArtistRecommendations,
+          ...artistHistory.where(
+            (song) => !freshArtistRecommendations.any(
+              (recommendation) =>
+                  _extractSongId(recommendation) == _extractSongId(song),
+            ),
+          ),
+        ].take(8).toList();
         if (artistSongs.length >= 2) {
           sections.add(
             HomeSection(
               title: 'Because you listened to $topArtistName',
-              subtitle: 'SIMILAR TRACKS & FAVORITES',
+              subtitle: freshArtistRecommendations.isNotEmpty
+                  ? 'MORE FROM THIS ARTIST'
+                  : 'YOUR FAVORITES',
               type: HomeContentType.songs,
               contents: artistSongs,
               isChunkedSongs: true,

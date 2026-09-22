@@ -304,6 +304,22 @@ void checkAndLogColdStartPerf() {
 void main() async {
   appStartupStopwatch.start();
   WidgetsFlutterBinding.ensureInitialized();
+  FlutterError.onError = (details) {
+    logger.log(
+      'Flutter framework error',
+      error: details.exception,
+      stackTrace: details.stack,
+    );
+    FlutterError.presentError(details);
+  };
+  PlatformDispatcher.instance.onError = (error, stackTrace) {
+    logger.log(
+      'Unhandled platform error',
+      error: error,
+      stackTrace: stackTrace,
+    );
+    return false;
+  };
 
   await initialisation();
   appStartupMs = appStartupStopwatch.elapsedMilliseconds;
@@ -320,6 +336,7 @@ void main() async {
 
 Future<void> initialisation() async {
   try {
+    await logger.initialize();
     await Hive.initFlutter();
 
     await Future.wait([

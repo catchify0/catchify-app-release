@@ -256,20 +256,72 @@ void main() {
           {'ytid': 's1', 'title': 'Badass (Played)', 'artist': 'Anirudh'},
           {'ytid': 'cand_1', 'title': 'Leo Das Entry', 'artist': 'Anirudh'},
           {'ytid': 'cand_2', 'title': 'Jailer Theme', 'artist': 'Anirudh'},
-          {'ytid': 'cand_3', 'title': 'Vikram Title Track', 'artist': 'Anirudh'},
+          {
+            'ytid': 'cand_3',
+            'title': 'Vikram Title Track',
+            'artist': 'Anirudh',
+          },
         ];
 
-        final sections = PersonalizationService.instance.buildPersonalizedSections(
-          signalsOverride: signals,
-          relevantCandidates: freshCandidates,
-        );
+        final sections = PersonalizationService.instance
+            .buildPersonalizedSections(
+              signalsOverride: signals,
+              relevantCandidates: freshCandidates,
+            );
 
-        final madeForYou = sections.firstWhere((s) => s.title == 'Made for you');
+        final madeForYou = sections.firstWhere(
+          (s) => s.title == 'Made for you',
+        );
         expect(madeForYou.subtitle, 'RECOMMENDED FOR YOU');
         // 's1' is in recentSongs, so it must be filtered out of fresh recommendations
-        expect(madeForYou.contents.any((track) => track['ytid'] == 's1'), false);
+        expect(
+          madeForYou.contents.any((track) => track['ytid'] == 's1'),
+          false,
+        );
         // 'cand_1', 'cand_2', 'cand_3' should be present
-        expect(madeForYou.contents.any((track) => track['ytid'] == 'cand_1'), true);
+        expect(
+          madeForYou.contents.any((track) => track['ytid'] == 'cand_1'),
+          true,
+        );
+      },
+    );
+
+    test(
+      'Because you listened adds fresh artist recommendations before favorites',
+      () {
+        const signals = UserSignals(
+          likedSongs: [
+            {'ytid': 'liked_1', 'title': 'Liked One', 'artist': 'Artist'},
+            {'ytid': 'liked_2', 'title': 'Liked Two', 'artist': 'Artist'},
+          ],
+          recentSongs: [
+            {'ytid': 'recent_1', 'title': 'Recent One', 'artist': 'Artist'},
+          ],
+          likedPlaylists: [],
+          customPlaylists: [],
+          searchQueries: [],
+          playCounts: {},
+        );
+
+        final sections = PersonalizationService.instance
+            .buildPersonalizedSections(
+              signalsOverride: signals,
+              relevantCandidates: const [
+                {'ytid': 'fresh_1', 'title': 'Fresh One', 'artist': 'Artist'},
+                {'ytid': 'fresh_2', 'title': 'Fresh Two', 'artist': 'Artist'},
+                {'ytid': 'other_1', 'title': 'Other Artist', 'artist': 'Other'},
+              ],
+            );
+
+        final because = sections.firstWhere(
+          (section) => section.title == 'Because you listened to Artist',
+        );
+        expect(because.subtitle, 'MORE FROM THIS ARTIST');
+        expect(because.contents.take(2).map((song) => song['ytid']), [
+          'fresh_1',
+          'fresh_2',
+        ]);
+        expect(because.contents.any((song) => song['ytid'] == 'liked_1'), true);
       },
     );
 
@@ -290,13 +342,22 @@ void main() {
           playCounts: {},
         );
 
-        final sections = PersonalizationService.instance.buildPersonalizedSections(
-          signalsOverride: signals,
-          relevantCandidates: const [
-            {'ytid': 'recent_1', 'title': 'Played Song', 'artist': 'Artist'},
-            {'ytid': 'recent_2', 'title': 'Another Song', 'artist': 'Artist'},
-          ],
-        );
+        final sections = PersonalizationService.instance
+            .buildPersonalizedSections(
+              signalsOverride: signals,
+              relevantCandidates: const [
+                {
+                  'ytid': 'recent_1',
+                  'title': 'Played Song',
+                  'artist': 'Artist',
+                },
+                {
+                  'ytid': 'recent_2',
+                  'title': 'Another Song',
+                  'artist': 'Artist',
+                },
+              ],
+            );
 
         expect(sections.any((s) => s.title == 'Made for you'), false);
         final continueListening = sections.firstWhere(
