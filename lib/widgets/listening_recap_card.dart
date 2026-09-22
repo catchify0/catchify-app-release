@@ -21,9 +21,8 @@
 
 import 'package:flutter/material.dart';
 import 'package:catchify/extensions/l10n.dart';
+import 'package:catchify/widgets/catchify_brand_icon.dart';
 import 'package:catchify/widgets/song_bar.dart';
-
-const _appIconAsset = 'assets/icons/catchify_icon.png';
 
 class ListeningRecapCard extends StatelessWidget {
   const ListeningRecapCard({
@@ -153,11 +152,7 @@ class _RecapBrandHeader extends StatelessWidget {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Image.asset(
-                      _appIconAsset,
-                      width: 16,
-                      height: 16,
-                    ),
+                    const CatchifyBrandIcon(size: 16),
                     const SizedBox(width: 6),
                     Text(
                       'Catchify',

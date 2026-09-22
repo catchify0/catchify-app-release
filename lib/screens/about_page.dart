@@ -25,6 +25,7 @@ import 'package:catchify/constants/version.dart';
 import 'package:catchify/utilities/url_launcher.dart';
 import 'package:catchify/extensions/l10n.dart';
 import 'package:catchify/widgets/mini_player_bottom_space.dart';
+import 'package:catchify/widgets/catchify_brand_icon.dart';
 
 class AboutPage extends StatelessWidget {
   const AboutPage({super.key});
@@ -49,11 +50,7 @@ class AboutPage extends StatelessWidget {
                 children: [
                   ClipRRect(
                     borderRadius: BorderRadius.circular(24),
-                    child: Image.asset(
-                      'assets/icons/catchify_icon.png',
-                      width: 96,
-                      height: 96,
-                    ),
+                    child: const CatchifyBrandIcon(size: 96),
                   ),
                   const SizedBox(height: 16),
                   Text(

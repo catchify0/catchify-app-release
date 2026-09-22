@@ -6,6 +6,7 @@ import 'package:catchify/widgets/custom_search_bar.dart';
 import 'package:catchify/widgets/empty_state.dart';
 import 'package:catchify/widgets/loading_skeleton.dart';
 import 'package:catchify/widgets/marquee.dart';
+import 'package:catchify/widgets/catchify_brand_icon.dart';
 
 void main() {
   testWidgets('SectionHeader renders title correctly', (
@@ -83,6 +84,20 @@ void main() {
     );
 
     expect(find.text('My Playlist'), findsOneWidget);
+  });
+
+  testWidgets('CatchifyBrandIcon renders note fill over the original outline', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(body: CatchifyBrandIcon(size: 64)),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+    expect(find.byType(CatchifyBrandIcon), findsOneWidget);
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets(

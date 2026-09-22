@@ -45,6 +45,7 @@ import 'package:catchify/widgets/listening_recap_card.dart';
 import 'package:catchify/widgets/loading_skeleton.dart';
 import 'package:catchify/widgets/mini_player_bottom_space.dart';
 import 'package:catchify/widgets/section_header.dart';
+import 'package:catchify/widgets/catchify_brand_icon.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -280,10 +281,8 @@ class _HomePageState extends State<HomePage> {
               ),
               child: ClipRRect(
                 borderRadius: AppTokens.borderRadiusControl,
-                child: Image.asset(
-                  'assets/icons/catchify_icon.png',
-                  width: 38,
-                  height: 38,
+                child: const CatchifyBrandIcon(
+                  size: 38,
                   fit: BoxFit.cover,
                   semanticLabel: 'Catchify',
                 ),

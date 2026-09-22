@@ -45,6 +45,7 @@ import 'package:catchify/screens/user_songs_page.dart';
 import 'package:catchify/services/playlist_download_service.dart';
 import 'package:catchify/services/settings_manager.dart';
 import 'package:catchify/widgets/offline_search_placeholder.dart';
+import 'package:catchify/widgets/catchify_brand_icon.dart';
 
 class NavigationManager {
   factory NavigationManager() {
@@ -344,11 +345,7 @@ class NavigationManager {
                       padding: const EdgeInsets.all(8),
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(12),
-                        child: Image.asset(
-                          'assets/icons/catchify_icon.png',
-                          width: 48,
-                          height: 48,
-                        ),
+                        child: const CatchifyBrandIcon(size: 48),
                       ),
                     ),
                     applicationLegalese:

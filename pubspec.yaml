@@ -55,6 +55,7 @@ flutter:
   assets:
     - assets/licenses/
     - assets/icons/catchify_icon.png
+    - assets/icons/catchify_icon_note_mask.png
     - assets/icons/developer.jpg
     - assets/icons/listening-music-headphones.svg
     - assets/icons/Good-morning.svg
