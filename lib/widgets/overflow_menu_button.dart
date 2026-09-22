@@ -21,6 +21,7 @@
 
 import 'package:fluentui_system_icons/fluentui_system_icons.dart';
 import 'package:flutter/material.dart';
+import 'package:catchify/constants/app_tokens.dart';
 
 class OverflowMenuButton<T> extends StatelessWidget {
   const OverflowMenuButton({
@@ -52,8 +53,8 @@ class OverflowMenuButton<T> extends StatelessWidget {
       onSelected: onSelected,
       itemBuilder: itemBuilder,
       icon: Container(
-        width: 36,
-        height: 36,
+        width: AppTokens.minInteractiveSize,
+        height: AppTokens.minInteractiveSize,
         decoration: BoxDecoration(
           color: colorScheme.surfaceContainerLow.withValues(alpha: 0.9),
           borderRadius: effectiveBorderRadius,
