@@ -5,6 +5,7 @@ import 'package:catchify/widgets/no_artwork_cube.dart';
 import 'package:catchify/widgets/custom_search_bar.dart';
 import 'package:catchify/widgets/empty_state.dart';
 import 'package:catchify/widgets/loading_skeleton.dart';
+import 'package:catchify/widgets/marquee.dart';
 
 void main() {
   testWidgets('SectionHeader renders title correctly', (
@@ -67,9 +68,9 @@ void main() {
     WidgetTester tester,
   ) async {
     await tester.pumpWidget(
-      MediaQuery(
-        data: const MediaQueryData(textScaler: TextScaler.linear(2)),
-        child: const MaterialApp(
+      const MediaQuery(
+        data: MediaQueryData(textScaler: TextScaler.linear(2)),
+        child: MaterialApp(
           home: Scaffold(
             body: EmptyState(
               title: 'Your library is waiting',
@@ -94,9 +95,9 @@ void main() {
     WidgetTester tester,
   ) async {
     await tester.pumpWidget(
-      MediaQuery(
-        data: const MediaQueryData(disableAnimations: true),
-        child: const MaterialApp(
+      const MediaQuery(
+        data: MediaQueryData(disableAnimations: true),
+        child: MaterialApp(
           home: Scaffold(
             body: SkeletonShimmer(child: SkeletonBox(width: 120, height: 48)),
           ),
@@ -123,5 +124,33 @@ void main() {
     expect(find.byType(ShaderMask), findsOneWidget);
     await tester.pump(const Duration(milliseconds: 300));
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('MarqueeWidget respects reduced-motion preference', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(
+      const MediaQuery(
+        data: MediaQueryData(disableAnimations: true),
+        child: MaterialApp(
+          home: Scaffold(
+            body: SizedBox(
+              width: 120,
+              child: MarqueeWidget(
+                child: SizedBox(
+                  width: 360,
+                  child: Text('A long track title that can scroll'),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 2));
+    expect(tester.takeException(), isNull);
+    expect(find.byType(SingleChildScrollView), findsOneWidget);
   });
 }

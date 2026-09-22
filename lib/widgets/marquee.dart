@@ -47,8 +47,10 @@ class _MarqueeWidgetState extends State<MarqueeWidget>
     with SingleTickerProviderStateMixin, AutomaticKeepAliveClientMixin {
   late ScrollController _scrollController;
   Timer? _timer;
+  Completer<bool>? _sleepCompleter;
   bool _isAnimating = false;
   bool _isDisposed = false;
+  bool _disableAnimations = false;
 
   @override
   bool get wantKeepAlive => true;
@@ -69,18 +71,50 @@ class _MarqueeWidgetState extends State<MarqueeWidget>
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final disableAnimations =
+        MediaQuery.maybeOf(context)?.disableAnimations ?? false;
+    if (_disableAnimations == disableAnimations) return;
+
+    _disableAnimations = disableAnimations;
+    if (_disableAnimations) {
+      _cancelPendingSleep();
+      if (_scrollController.hasClients &&
+          _scrollController.position.hasContentDimensions) {
+        _scrollController.jumpTo(0);
+      }
+    } else if (!_isAnimating) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _startAnimation());
+    }
+  }
+
+  @override
   void dispose() {
     _isDisposed = true;
-    _timer?.cancel();
+    _cancelPendingSleep();
     _scrollController.dispose();
     super.dispose();
   }
 
-  Future<bool> _sleep(Duration duration) {
-    final completer = Completer<bool>();
+  void _cancelPendingSleep() {
     _timer?.cancel();
+    _timer = null;
+    final completer = _sleepCompleter;
+    _sleepCompleter = null;
+    if (completer != null && !completer.isCompleted) {
+      completer.complete(false);
+    }
+  }
+
+  Future<bool> _sleep(Duration duration) {
+    _cancelPendingSleep();
+    final completer = Completer<bool>();
+    _sleepCompleter = completer;
     _timer = Timer(duration, () {
-      if (!_isDisposed) {
+      _timer = null;
+      _sleepCompleter = null;
+      if (!_isDisposed && !_disableAnimations) {
         completer.complete(true);
       } else {
         completer.complete(false);
@@ -105,11 +139,13 @@ class _MarqueeWidgetState extends State<MarqueeWidget>
   }
 
   Future<void> _startAnimation() async {
-    if (_isDisposed || _isAnimating) return;
+    if (_isDisposed || _isAnimating || _disableAnimations) return;
 
     _isAnimating = true;
 
-    while (_scrollController.hasClients && !_isDisposed) {
+    while (_scrollController.hasClients &&
+        !_isDisposed &&
+        !_disableAnimations) {
       try {
         if (_scrollController.position.maxScrollExtent <= 0) {
           break;
