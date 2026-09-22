@@ -111,16 +111,21 @@ class NowPlayingControls extends StatelessWidget {
                               ? () => _openArtistPage(context, metadata)
                               : null,
                           borderRadius: AppTokens.borderRadiusSmall,
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 4,
+                          child: ConstrainedBox(
+                            constraints: const BoxConstraints(
+                              minHeight: AppTokens.minInteractiveSize,
                             ),
-                            child: MarqueeTextWidget(
-                              text: metadata.artist!,
-                              fontColor: colorScheme.onSurfaceVariant,
-                              fontSize: artistFontSize * fontScale,
-                              fontWeight: FontWeight.w500,
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 4,
+                              ),
+                              child: MarqueeTextWidget(
+                                text: metadata.artist!,
+                                fontColor: colorScheme.onSurfaceVariant,
+                                fontSize: artistFontSize * fontScale,
+                                fontWeight: FontWeight.w500,
+                              ),
                             ),
                           ),
                         ),
