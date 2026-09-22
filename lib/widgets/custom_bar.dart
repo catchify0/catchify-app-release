@@ -157,7 +157,12 @@ class CustomBar extends StatelessWidget {
                       ),
                       if (trailing != null) ...[
                         const SizedBox(width: 8),
-                        Flexible(child: trailing!),
+                        Expanded(
+                          child: Align(
+                            alignment: Alignment.centerRight,
+                            child: trailing,
+                          ),
+                        ),
                       ],
                     ],
                   ),
