@@ -261,11 +261,16 @@ class _LibraryPageState extends State<LibraryPage> {
   Widget _buildFilterChips(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     const filters = LibraryFilter.values;
+    final scaledChipHeight = MediaQuery.textScalerOf(context).scale(
+      AppTokens.chipHeight,
+    );
+    final chipStripHeight = scaledChipHeight
+        .clamp(AppTokens.minInteractiveSize, 64.0);
 
     return Padding(
       padding: const EdgeInsets.only(top: 12, bottom: 12),
       child: SizedBox(
-        height: AppTokens.minInteractiveSize,
+        height: chipStripHeight,
         child: ListView.separated(
           scrollDirection: Axis.horizontal,
           physics: const BouncingScrollPhysics(),

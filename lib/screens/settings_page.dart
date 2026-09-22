@@ -120,10 +120,15 @@ class _SettingsPageState extends State<SettingsPage> {
   Widget _sectionTitle(String title, Color primaryColor) {
     return Padding(
       padding: const EdgeInsets.only(left: 4, right: 4, top: 20, bottom: 8),
-      child: Text(
-        title,
-        style: AppTextStyles.categoryHeader.copyWith(
-          color: primaryColor,
+      child: Semantics(
+        header: true,
+        child: Text(
+          title,
+          style: AppTextStyles.categoryHeader.copyWith(
+            color: primaryColor,
+            letterSpacing: 1.0,
+            fontWeight: FontWeight.w700,
+          ),
         ),
       ),
     );

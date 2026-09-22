@@ -50,6 +50,29 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('SectionHeader preserves an icon with long localized title', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(
+      const MediaQuery(
+        data: MediaQueryData(textScaler: TextScaler.linear(1.6)),
+        child: MaterialApp(
+          home: Scaffold(
+            body: SectionHeader(
+              icon: Icons.library_music,
+              title: 'பரிந்துரைக்கப்பட்ட இசை மற்றும் புதிய வெளியீடுகள்',
+              subtitle: 'உங்கள் தனிப்பட்ட தேர்வுகள்',
+            ),
+          ),
+        ),
+      ),
+    );
+
+    expect(find.byIcon(Icons.library_music), findsOneWidget);
+    expect(find.text('பரிந்துரைக்கப்பட்ட இசை மற்றும் புதிய வெளியீடுகள்'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('NullArtworkWidget renders placeholder title', (
     WidgetTester tester,
   ) async {
