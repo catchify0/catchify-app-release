@@ -366,8 +366,10 @@ class NavigationManager {
               ),
               GoRoute(
                 path: 'playback',
-                pageBuilder: (context, state) =>
-                    _pushPage(child: const PlaybackSettingsPage(), state: state),
+                pageBuilder: (context, state) => _pushPage(
+                  child: const PlaybackSettingsPage(),
+                  state: state,
+                ),
               ),
               GoRoute(
                 path: 'player',
@@ -429,6 +431,9 @@ class NavigationManager {
       transitionDuration: const Duration(milliseconds: 180),
       reverseTransitionDuration: const Duration(milliseconds: 150),
       transitionsBuilder: (context, animation, secondaryAnimation, child) {
+        if (MediaQuery.maybeOf(context)?.disableAnimations ?? false) {
+          return child;
+        }
         return FadeTransition(
           opacity: CurvedAnimation(parent: animation, curve: Curves.easeOut),
           child: child,
@@ -447,6 +452,9 @@ class NavigationManager {
       transitionDuration: const Duration(milliseconds: 220),
       reverseTransitionDuration: const Duration(milliseconds: 180),
       transitionsBuilder: (context, animation, secondaryAnimation, child) {
+        if (MediaQuery.maybeOf(context)?.disableAnimations ?? false) {
+          return child;
+        }
         final curvedAnimation = CurvedAnimation(
           parent: animation,
           curve: Curves.easeOutCubic,
