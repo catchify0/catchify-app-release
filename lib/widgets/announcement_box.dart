@@ -21,6 +21,7 @@
 
 import 'package:fluentui_system_icons/fluentui_system_icons.dart';
 import 'package:flutter/material.dart';
+import 'package:catchify/constants/app_tokens.dart';
 import 'package:catchify/extensions/l10n.dart';
 import 'package:catchify/utilities/url_launcher.dart';
 
@@ -120,7 +121,10 @@ class AnnouncementBox extends StatelessWidget {
                     ),
                     onPressed: onDismiss,
                     style: IconButton.styleFrom(
-                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      minimumSize: const Size(
+                        AppTokens.minInteractiveSize,
+                        AppTokens.minInteractiveSize,
+                      ),
                     ),
                   ),
               ],
