@@ -31,6 +31,7 @@ Widget buildPlaybackIconButton(
   Color iconColor,
   Color backgroundColor, {
   EdgeInsets? padding,
+  bool useRoundedMaterialGlyphs = false,
 }) {
   return StreamBuilder<PlaybackState>(
     stream: audioHandler.playbackState.distinct((previous, current) {
@@ -61,7 +62,9 @@ Widget buildPlaybackIconButton(
         semanticLabel = context.l10n!.loading;
       } else if (processingState == AudioProcessingState.completed) {
         iconWidget = Icon(
-          FluentIcons.arrow_counterclockwise_24_regular,
+          useRoundedMaterialGlyphs
+              ? Icons.replay_rounded
+              : FluentIcons.arrow_counterclockwise_24_regular,
           color: iconColor,
           size: iconSize,
         );
@@ -69,9 +72,11 @@ Widget buildPlaybackIconButton(
         semanticLabel = context.l10n!.replay;
       } else {
         iconWidget = Icon(
-          isPlaying
-              ? FluentIcons.pause_24_regular
-              : FluentIcons.play_24_regular,
+          useRoundedMaterialGlyphs
+              ? (isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded)
+              : (isPlaying
+                    ? FluentIcons.pause_24_regular
+                    : FluentIcons.play_24_regular),
           color: iconColor,
           size: iconSize,
         );
@@ -124,12 +129,14 @@ class PlaybackIconButton extends StatelessWidget {
     required this.iconColor,
     required this.backgroundColor,
     this.padding,
+    this.useRoundedMaterialGlyphs = false,
   });
 
   final double iconSize;
   final Color iconColor;
   final Color backgroundColor;
   final EdgeInsets? padding;
+  final bool useRoundedMaterialGlyphs;
 
   @override
   Widget build(BuildContext context) {
@@ -138,6 +145,7 @@ class PlaybackIconButton extends StatelessWidget {
       iconColor,
       backgroundColor,
       padding: padding,
+      useRoundedMaterialGlyphs: useRoundedMaterialGlyphs,
     );
   }
 }

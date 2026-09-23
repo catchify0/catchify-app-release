@@ -405,9 +405,11 @@ class _NowPlayingPageState extends State<NowPlayingPage>
               ),
               const SizedBox(width: 16),
               buildPlaybackIconButton(
-                size.width < 360 ? 56 : 64,
-                colorScheme.onPrimary,
+                size.width < 360 ? 52 : 60,
+                colorScheme.primary,
                 colorScheme.onSurface,
+                padding: const EdgeInsets.all(18),
+                useRoundedMaterialGlyphs: true,
               ),
               const SizedBox(width: 16),
               IconButton(
