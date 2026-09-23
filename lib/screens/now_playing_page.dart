@@ -70,14 +70,13 @@ class _NowPlayingPageState extends State<NowPlayingPage>
     super.initState();
     _lyricsTransitionController = AnimationController(
       vsync: this,
-      // Forward: artwork shrinks to 58×58 header slot (520ms).
-      // AnimatedSwitcher uses 480ms so content is ready before artwork lands.
-      duration: const Duration(milliseconds: 520),
-      reverseDuration: const Duration(milliseconds: 380),
+      duration: const Duration(milliseconds: 320),
+      reverseDuration: const Duration(milliseconds: 300),
     );
     _artworkCurve = CurvedAnimation(
       parent: _lyricsTransitionController,
-      curve: Curves.easeInOutCubic,
+      curve: Curves.fastOutSlowIn,
+      reverseCurve: Curves.fastOutSlowIn.flipped,
     );
   }
 
@@ -148,33 +147,17 @@ class _NowPlayingPageState extends State<NowPlayingPage>
                   fit: StackFit.expand,
                   clipBehavior: Clip.none,
                   children: [
-                    // Keep lyrics inside NowPlayingPage and slide them into
-                    // place without changing the parent's size.
+                    // Keep lyrics inside NowPlayingPage and switch cleanly
                     AnimatedSwitcher(
-                      // 480ms: content is almost ready when the 520ms artwork
-                      // animation finishes, so no gap between the two.
-                      duration: const Duration(milliseconds: 480),
+                      duration: const Duration(milliseconds: 300),
                       switchInCurve: Curves.easeOutCubic,
                       switchOutCurve: Curves.easeInCubic,
-                      // Do not retain the outgoing player behind lyrics.
-                      // Both views are full-screen and would visibly overlap.
                       layoutBuilder: (currentChild, _) =>
                           currentChild ?? const SizedBox.shrink(),
                       transitionBuilder: (child, animation) =>
                           FadeTransition(
                             opacity: animation,
-                            child: SlideTransition(
-                              position: Tween<Offset>(
-                                begin: const Offset(0, 0.03),
-                                end: Offset.zero,
-                              ).animate(
-                                CurvedAnimation(
-                                  parent: animation,
-                                  curve: Curves.easeOutCubic,
-                                ),
-                              ),
-                              child: child,
-                            ),
+                            child: child,
                           ),
                       child: _showLyrics
                           ? _buildLyricsView(
@@ -197,6 +180,7 @@ class _NowPlayingPageState extends State<NowPlayingPage>
                                           adjustedIconSize: baseIconSize,
                                           adjustedMiniIconSize: miniIconSize,
                                           onLyricsTap: _openLyrics,
+                                          artworkVisible: !_artworkOverlayVisible,
                                         )
                                       : _MobileLayout(
                                           metadata: metadata,
@@ -205,33 +189,69 @@ class _NowPlayingPageState extends State<NowPlayingPage>
                                           adjustedMiniIconSize: miniIconSize,
                                           isLargeScreen: isLargeScreen,
                                           onLyricsTap: _openLyrics,
+                                          artworkVisible: !_artworkOverlayVisible,
                                         ),
                                 ),
                               ],
                             ),
-                      ),
+                    ),
                     if (_artworkOverlayVisible)
                       AnimatedBuilder(
                         animation: _artworkCurve,
-                        builder: (context, child) {
+                        child: SongArtworkWidget(
+                          metadata: metadata,
+                          size: artworkSize,
+                          borderRadius: 16,
+                        ),
+                        builder: (context, staticArtwork) {
                           final progress = _artworkCurve.value;
-                          final size = lerpDouble(artworkSize, 58, progress)!;
+                          final currentSize =
+                              lerpDouble(artworkSize, 58, progress)!;
+                          final currentLeft =
+                              lerpDouble(artworkLeft, compactLeft, progress)!;
+                          final currentTop =
+                              lerpDouble(artworkTop, compactTop, progress)!;
+                          final currentRadius =
+                              lerpDouble(16, 10, progress)!;
+                          final shadowAlpha =
+                              (1.0 - progress).clamp(0.0, 1.0);
+
                           return Positioned(
-                            left: lerpDouble(
-                              artworkLeft,
-                              compactLeft,
-                              progress,
-                            ),
-                            top: lerpDouble(artworkTop, compactTop, progress),
+                            left: currentLeft,
+                            top: currentTop,
+                            width: currentSize,
+                            height: currentSize,
                             child: IgnorePointer(
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(
-                                  lerpDouble(16, 10, progress)!,
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  borderRadius:
+                                      BorderRadius.circular(currentRadius),
+                                  boxShadow: shadowAlpha > 0.05
+                                      ? [
+                                          BoxShadow(
+                                            color: Colors.black.withValues(
+                                              alpha: 0.22 * shadowAlpha,
+                                            ),
+                                            blurRadius: 16 * shadowAlpha,
+                                            offset: Offset(
+                                              0,
+                                              6 * shadowAlpha,
+                                            ),
+                                          ),
+                                        ]
+                                      : null,
                                 ),
-                                child: SongArtworkWidget(
-                                  metadata: metadata,
-                                  size: size,
-                                  borderRadius: 16,
+                                child: ClipRRect(
+                                  borderRadius:
+                                      BorderRadius.circular(currentRadius),
+                                  child: FittedBox(
+                                    fit: BoxFit.cover,
+                                    child: SizedBox(
+                                      width: artworkSize,
+                                      height: artworkSize,
+                                      child: staticArtwork,
+                                    ),
+                                  ),
                                 ),
                               ),
                             ),
@@ -271,15 +291,14 @@ class _NowPlayingPageState extends State<NowPlayingPage>
   }
 
   void _closeLyrics() {
-    // Reverse the artwork animation. _showLyrics stays true during the
-    // reverse so the lyrics header (with 58×58 slot) remains visible.
-    // Only after the animation fully completes do we hide both the lyrics
-    // view and the artwork overlay atomically — eliminating any flicker
-    // between the disappearing overlay and the appearing NowPlayingArtwork.
+    // Parallel close: switch views immediately while reversing the
+    // floating artwork. Eliminates the previous 860ms serial delay.
+    setState(() {
+      _showLyrics = false;
+    });
     _lyricsTransitionController.reverse().whenCompleteOrCancel(() {
-      if (mounted) {
+      if (mounted && !_showLyrics) {
         setState(() {
-          _showLyrics = false;
           _artworkOverlayVisible = false;
         });
       }
@@ -697,12 +716,14 @@ class _DesktopLayout extends StatelessWidget {
     required this.adjustedIconSize,
     required this.adjustedMiniIconSize,
     required this.onLyricsTap,
+    this.artworkVisible = true,
   });
   final MediaItem metadata;
   final Size size;
   final double adjustedIconSize;
   final double adjustedMiniIconSize;
   final VoidCallback onLyricsTap;
+  final bool artworkVisible;
 
   @override
   Widget build(BuildContext context) {
@@ -719,9 +740,15 @@ class _DesktopLayout extends StatelessWidget {
                 Expanded(
                   flex: 5,
                   child: Center(
-                    child: NowPlayingArtwork(
-                      size: size,
-                      metadata: metadata,
+                    child: Visibility(
+                      visible: artworkVisible,
+                      maintainSize: true,
+                      maintainAnimation: true,
+                      maintainState: true,
+                      child: NowPlayingArtwork(
+                        size: size,
+                        metadata: metadata,
+                      ),
                     ),
                   ),
                 ),
@@ -777,6 +804,7 @@ class _MobileLayout extends StatelessWidget {
     required this.adjustedMiniIconSize,
     required this.isLargeScreen,
     required this.onLyricsTap,
+    this.artworkVisible = true,
   });
   final MediaItem metadata;
   final Size size;
@@ -784,6 +812,7 @@ class _MobileLayout extends StatelessWidget {
   final double adjustedMiniIconSize;
   final bool isLargeScreen;
   final VoidCallback onLyricsTap;
+  final bool artworkVisible;
 
   @override
   Widget build(BuildContext context) {
@@ -804,9 +833,15 @@ class _MobileLayout extends StatelessWidget {
           Expanded(
             flex: 5,
             child: Center(
-              child: NowPlayingArtwork(
-                size: size,
-                metadata: metadata,
+              child: Visibility(
+                visible: artworkVisible,
+                maintainSize: true,
+                maintainAnimation: true,
+                maintainState: true,
+                child: NowPlayingArtwork(
+                  size: size,
+                  metadata: metadata,
+                ),
               ),
             ),
           ),
@@ -842,9 +877,15 @@ class _MobileLayout extends StatelessWidget {
           Expanded(
             flex: 4,
             child: Center(
-              child: NowPlayingArtwork(
-                size: size,
-                metadata: metadata,
+              child: Visibility(
+                visible: artworkVisible,
+                maintainSize: true,
+                maintainAnimation: true,
+                maintainState: true,
+                child: NowPlayingArtwork(
+                  size: size,
+                  metadata: metadata,
+                ),
               ),
             ),
           ),

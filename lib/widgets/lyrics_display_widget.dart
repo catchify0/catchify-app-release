@@ -194,20 +194,54 @@ class _SyncedLyricsWidgetState extends State<SyncedLyricsWidget> {
 
         // Top + bottom fade so lyrics dissolve gracefully into the
         // header above and the controls card below.
-        return ShaderMask(
-          shaderCallback: (rect) => LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: const [
-              Colors.transparent,
-              Colors.white,
-              Colors.white,
-              Colors.transparent,
-            ],
-            stops: const [0.0, 0.08, 0.82, 1.0],
-          ).createShader(rect),
-          blendMode: BlendMode.dstIn,
-          child: lyricView,
+        // Uses zero-cost gradient overlays instead of ShaderMask (which invokes
+        // expensive saveLayer on every frame during scrolling).
+        return Stack(
+          children: [
+            lyricView,
+            // Top fade
+            Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              height: 28,
+              child: IgnorePointer(
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        colorScheme.surface,
+                        colorScheme.surface.withValues(alpha: 0.0),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            // Bottom fade
+            Positioned(
+              bottom: 0,
+              left: 0,
+              right: 0,
+              height: 48,
+              child: IgnorePointer(
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.bottomCenter,
+                      end: Alignment.topCenter,
+                      colors: [
+                        colorScheme.surface,
+                        colorScheme.surface.withValues(alpha: 0.0),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
         );
       },
     );
