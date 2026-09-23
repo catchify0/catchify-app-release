@@ -25,6 +25,7 @@ import 'dart:ui' show lerpDouble;
 import 'package:audio_service/audio_service.dart';
 import 'package:fluentui_system_icons/fluentui_system_icons.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:catchify/constants/app_tokens.dart';
 import 'package:catchify/extensions/l10n.dart';
 import 'package:catchify/main.dart';
@@ -40,6 +41,7 @@ import 'package:catchify/widgets/playback_icon_button.dart';
 import 'package:catchify/widgets/position_slider.dart';
 import 'package:catchify/widgets/queue_list_view.dart';
 import 'package:catchify/widgets/song_artwork.dart';
+import 'package:share_plus/share_plus.dart';
 
 /// Now Playing page — hosts the normal artwork/controls view and the
 /// compact in-page lyrics mode without pushing a separate route.
@@ -124,87 +126,102 @@ class _NowPlayingPageState extends State<NowPlayingPage>
                 final artworkSize = _artworkSize(size);
                 final artworkLeft = (constraints.maxWidth - artworkSize) / 2;
                 final artworkTop = _artworkTop(size);
-                final compactLeft = 14.0 + 6 + 44 + 4;
-                final compactTop = 8.0 + 6;
+                final compactLeft = 18.0;
+                final compactTop = 8.0 + 4;
 
                 return Stack(
-              children: [
-                // Keep the lyrics mode inside NowPlayingPage and slide it
-                // into place instead of fading between separate surfaces.
-                AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 420),
-                  switchInCurve: Curves.easeOutCubic,
-                  switchOutCurve: Curves.easeInCubic,
-                  transitionBuilder: (child, animation) => SlideTransition(
-                    position: Tween<Offset>(
-                      begin: const Offset(0, 0.035),
-                      end: Offset.zero,
-                    ).animate(
-                      CurvedAnimation(
-                        parent: animation,
-                        curve: Curves.easeOutCubic,
-                      ),
-                    ),
-                    child: child,
-                  ),
-                  child: _showLyrics
-                      ? _buildLyricsView(
-                          key: const ValueKey('lyrics'),
-                          metadata: metadata,
-                        )
-                      : Column(
-                          key: const ValueKey('normal'),
-                          children: [
-                            _buildAppBar(context, colorScheme, metadata),
-                            Expanded(
-                              child: isLargeScreen
-                                  ? _DesktopLayout(
-                                      metadata: metadata,
-                                      size: size,
-                                      adjustedIconSize: baseIconSize,
-                                      adjustedMiniIconSize: miniIconSize,
-                                      onLyricsTap: _openLyrics,
-                                    )
-                                  : _MobileLayout(
-                                      metadata: metadata,
-                                      size: size,
-                                      adjustedIconSize: baseIconSize,
-                                      adjustedMiniIconSize: miniIconSize,
-                                      isLargeScreen: isLargeScreen,
-                                      onLyricsTap: _openLyrics,
-                                    ),
+                  fit: StackFit.expand,
+                  clipBehavior: Clip.none,
+                  children: [
+                    // Keep lyrics inside NowPlayingPage and slide them into
+                    // place without changing the parent's size.
+                    AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 420),
+                      switchInCurve: Curves.easeOutCubic,
+                      switchOutCurve: Curves.easeInCubic,
+                      // Do not retain the outgoing player behind lyrics.
+                      // Both views are full-screen and would visibly overlap.
+                      layoutBuilder: (currentChild, _) =>
+                          currentChild ?? const SizedBox.shrink(),
+                      transitionBuilder: (child, animation) =>
+                          SlideTransition(
+                            position: Tween<Offset>(
+                              begin: const Offset(0, 0.035),
+                              end: Offset.zero,
+                            ).animate(
+                              CurvedAnimation(
+                                parent: animation,
+                                curve: Curves.easeOutCubic,
+                              ),
                             ),
-                          ],
-                        ),
-                ),
-                if (_showLyrics)
-                  AnimatedBuilder(
-                    animation: _lyricsTransitionController,
-                    builder: (context, child) {
-                      final progress = CurvedAnimation(
-                        parent: _lyricsTransitionController,
-                        curve: Curves.easeInOutCubic,
-                      ).value;
-                      final size = lerpDouble(artworkSize, 58, progress)!;
-                      return Positioned(
-                        left: lerpDouble(artworkLeft, compactLeft, progress),
-                        top: lerpDouble(artworkTop, compactTop, progress),
-                        child: IgnorePointer(
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(
-                              lerpDouble(16, 10, progress)!,
-                            ),
-                            child: SongArtworkWidget(
-                              metadata: metadata,
-                              size: size,
-                              borderRadius: 16,
-                            ),
+                            child: child,
                           ),
-                        ),
+                      child: _showLyrics
+                          ? _buildLyricsView(
+                              key: const ValueKey('lyrics'),
+                              metadata: metadata,
+                            )
+                          : Column(
+                              key: const ValueKey('normal'),
+                              children: [
+                                _buildAppBar(
+                                  context,
+                                  colorScheme,
+                                  metadata,
+                                ),
+                                Expanded(
+                                  child: isLargeScreen
+                                      ? _DesktopLayout(
+                                          metadata: metadata,
+                                          size: size,
+                                          adjustedIconSize: baseIconSize,
+                                          adjustedMiniIconSize: miniIconSize,
+                                          onLyricsTap: _openLyrics,
+                                        )
+                                      : _MobileLayout(
+                                          metadata: metadata,
+                                          size: size,
+                                          adjustedIconSize: baseIconSize,
+                                          adjustedMiniIconSize: miniIconSize,
+                                          isLargeScreen: isLargeScreen,
+                                          onLyricsTap: _openLyrics,
+                                        ),
+                                ),
+                              ],
+                            ),
+                      ),
+                    if (_showLyrics)
+                      AnimatedBuilder(
+                        animation: _lyricsTransitionController,
+                        builder: (context, child) {
+                          final progress = CurvedAnimation(
+                            parent: _lyricsTransitionController,
+                            curve: Curves.easeInOutCubic,
+                          ).value;
+                          final size = lerpDouble(artworkSize, 58, progress)!;
+                          return Positioned(
+                            left: lerpDouble(
+                              artworkLeft,
+                              compactLeft,
+                              progress,
+                            ),
+                            top: lerpDouble(artworkTop, compactTop, progress),
+                            child: IgnorePointer(
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(
+                                  lerpDouble(16, 10, progress)!,
+                                ),
+                                child: SongArtworkWidget(
+                                  metadata: metadata,
+                                  size: size,
+                                  borderRadius: 16,
+                                ),
+                              ),
+                            ),
+                          );
+                        },
                       );
-                    },
-                  ),
-              ],
+                  ],
                 );
               },
             );
@@ -273,6 +290,7 @@ class _NowPlayingPageState extends State<NowPlayingPage>
                       lyrics: lyrics,
                       positionDataStream: audioHandler.positionDataStream,
                       songId: songId,
+                      showAttribution: false,
                     );
                   },
                 ),
@@ -288,64 +306,46 @@ class _NowPlayingPageState extends State<NowPlayingPage>
     MediaItem metadata,
   ) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(14, 8, 14, 10),
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          color: colorScheme.surfaceContainerHigh.withValues(alpha: 0.88),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: colorScheme.outlineVariant.withValues(alpha: 0.45),
-          ),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
-          child: Row(
-            children: [
-              IconButton(
-                icon: const Icon(FluentIcons.chevron_down_24_regular),
-                tooltip: 'Close lyrics',
-                onPressed: _closeLyrics,
-              ),
-              const SizedBox(width: 4),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(10),
-                child: SongArtworkWidget(
-                  metadata: metadata,
-                  size: 58,
-                  borderRadius: 10,
+      padding: const EdgeInsets.fromLTRB(18, 8, 18, 4),
+      child: Row(
+        children: [
+          // The artwork is rendered once by the parent transition layer.
+          const SizedBox(width: 58, height: 58),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  metadata.title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: colorScheme.onSurface,
+                  ),
                 ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      metadata.title,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700,
-                        color: colorScheme.onSurface,
-                      ),
+                if (metadata.artist != null && metadata.artist!.isNotEmpty)
+                  Text(
+                    metadata.artist!,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: colorScheme.onSurface.withValues(alpha: 0.62),
                     ),
-                    if (metadata.artist != null && metadata.artist!.isNotEmpty)
-                      Text(
-                        metadata.artist!,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: colorScheme.onSurface.withValues(alpha: 0.55),
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-            ],
+                  ),
+              ],
+            ),
           ),
-        ),
+          IconButton(
+            icon: const Icon(Icons.close),
+            tooltip: 'Close lyrics',
+            color: colorScheme.onSurface,
+            onPressed: _closeLyrics,
+          ),
+        ],
       ),
     );
   }
@@ -365,38 +365,55 @@ class _NowPlayingPageState extends State<NowPlayingPage>
   Widget _buildLyricsMiniControls(ColorScheme colorScheme, Size size) {
     final miniSize = size.width < 360 ? 20.0 : 22.0;
     return Container(
-      padding: const EdgeInsets.fromLTRB(14, 8, 14, 12),
-      decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerLow.withValues(alpha: 0.94),
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-        border: Border(
-          top: BorderSide(
-            color: colorScheme.outlineVariant.withValues(alpha: 0.45),
-          ),
-        ),
-      ),
+      padding: const EdgeInsets.fromLTRB(24, 0, 24, 18),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
+          Row(
+            children: [
+              Text(
+                'Powered by LrcLib',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: colorScheme.onSurface.withValues(alpha: 0.58),
+                ),
+              ),
+              const Spacer(),
+              IconButton(
+                icon: const Icon(Icons.copy_rounded),
+                tooltip: 'Copy lyrics',
+                color: colorScheme.onSurface.withValues(alpha: 0.72),
+                onPressed: _copyLyrics,
+              ),
+              IconButton(
+                icon: const Icon(Icons.share_rounded),
+                tooltip: 'Share lyrics',
+                color: colorScheme.onSurface.withValues(alpha: 0.72),
+                onPressed: _shareLyrics,
+              ),
+            ],
+          ),
           const PositionSlider(),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               IconButton(
                 iconSize: miniSize,
-                icon: const Icon(FluentIcons.previous_24_filled),
+                icon: const Icon(FluentIcons.previous_24_regular),
+                color: colorScheme.onSurface.withValues(alpha: 0.72),
                 onPressed: audioHandler.skipToPrevious,
               ),
               const SizedBox(width: 16),
               buildPlaybackIconButton(
-                size.width < 360 ? 36 : 40,
-                colorScheme.onPrimaryContainer,
-                colorScheme.primaryContainer,
+                size.width < 360 ? 56 : 64,
+                colorScheme.onPrimary,
+                colorScheme.onSurface,
               ),
               const SizedBox(width: 16),
               IconButton(
                 iconSize: miniSize,
-                icon: const Icon(FluentIcons.next_24_filled),
+                icon: const Icon(FluentIcons.next_24_regular),
+                color: colorScheme.onSurface.withValues(alpha: 0.72),
                 onPressed: audioHandler.skipToNext,
               ),
             ],
@@ -404,6 +421,21 @@ class _NowPlayingPageState extends State<NowPlayingPage>
         ],
       ),
     );
+  }
+
+  Future<void> _copyLyrics() async {
+    final lyrics = await _lyricsFuture;
+    if (!mounted || lyrics == null || lyrics.isEmpty) return;
+    await Clipboard.setData(ClipboardData(text: lyrics));
+    if (mounted) {
+      showToast(context, 'Lyrics copied');
+    }
+  }
+
+  Future<void> _shareLyrics() async {
+    final lyrics = await _lyricsFuture;
+    if (lyrics == null || lyrics.isEmpty) return;
+    await Share.share(lyrics);
   }
 
   Widget _buildAppBar(

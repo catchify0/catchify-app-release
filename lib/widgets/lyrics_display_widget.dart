@@ -268,11 +268,13 @@ class LyricsDisplayWidget extends StatelessWidget {
     required this.lyrics,
     required this.positionDataStream,
     this.songId,
+    this.showAttribution = true,
   });
 
   final String lyrics;
   final Stream<PositionData> positionDataStream;
   final String? songId;
+  final bool showAttribution;
 
   @override
   Widget build(BuildContext context) {
@@ -284,17 +286,19 @@ class LyricsDisplayWidget extends StatelessWidget {
           )
         : PlainLyricsWidget(lyrics: lyrics);
 
-    return Stack(
+    final content = Stack(
       children: [
         Positioned.fill(child: lyricsContent),
-        const Positioned(
-          right: 10,
-          bottom: 8,
-          child: IgnorePointer(
-            child: _LrcLibAttribution(),
+        if (showAttribution)
+          const Positioned(
+            right: 10,
+            bottom: 8,
+            child: IgnorePointer(
+              child: _LrcLibAttribution(),
+            ),
           ),
-        ),
       ],
     );
+    return content;
   }
 }
