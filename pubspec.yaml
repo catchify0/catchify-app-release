@@ -1,4 +1,4 @@
-﻿name: catchify
+name: catchify
 description: Catchify - Music Streaming app made in Flutter!
 
 publish_to: 'none'
@@ -18,7 +18,7 @@ dependencies:
   fluentui_system_icons: ^1.1.273
   flutter:
     sdk: flutter
-  flutter_flip_card: ^0.0.6
+  flutter_lyric: ^3.0.8
   flutter_localizations:
     sdk: flutter
   flutter_svg: ^2.3.0

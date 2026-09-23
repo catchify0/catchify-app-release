@@ -254,19 +254,19 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.4.2"
-  flutter_flip_card:
-    dependency: "direct main"
-    description:
-      name: flutter_flip_card
-      sha256: cf67f31e85fa4452f493cac2f3c123bcacacb0f7feb3cc5f831faeea77cdc671
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.0.6"
   flutter_localizations:
     dependency: "direct main"
     description: flutter
     source: sdk
     version: "0.0.0"
+  flutter_lyric:
+    dependency: "direct main"
+    description:
+      name: flutter_lyric
+      sha256: "7cb3531568c4b5607564555298ac4415c5868a50d77172338894e535529f07d2"
+      url: "https://pub.dev"
+    source: hosted
+    version: "3.0.8"
   flutter_plugin_android_lifecycle:
     dependency: transitive
     description:
