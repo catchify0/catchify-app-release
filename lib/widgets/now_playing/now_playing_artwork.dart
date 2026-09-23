@@ -29,16 +29,18 @@ import 'package:catchify/services/settings_manager.dart';
 import 'package:catchify/widgets/song_artwork.dart';
 
 /// Displays the now-playing artwork with volume gesture support.
-/// Lyrics mode is hosted by [NowPlayingPage].
+/// Lyrics mode is hosted in NowPlayingPage.
 class NowPlayingArtwork extends StatefulWidget {
   const NowPlayingArtwork({
     super.key,
     required this.size,
     required this.metadata,
+    this.artworkKey,
   });
 
   final Size size;
   final MediaItem metadata;
+  final Key? artworkKey;
 
   @override
   State<NowPlayingArtwork> createState() => _NowPlayingArtworkState();
@@ -104,6 +106,7 @@ class _NowPlayingArtworkState extends State<NowPlayingArtwork> {
         alignment: Alignment.center,
         children: [
           DecoratedBox(
+            key: widget.artworkKey,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(borderRadius),
               boxShadow: [

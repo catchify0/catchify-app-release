@@ -64,6 +64,9 @@ class _NowPlayingPageState extends State<NowPlayingPage>
   late final CurvedAnimation _artworkCurve;
   Future<String?>? _lyricsFuture;
   String? _lyricsKey;
+  final GlobalKey _artworkKey = GlobalKey();
+  final GlobalKey _stackKey = GlobalKey();
+  Rect? _normalArtworkRect;
 
   @override
   void initState() {
@@ -143,6 +146,7 @@ class _NowPlayingPageState extends State<NowPlayingPage>
                 const compactTop = 8.0;
 
                 return Stack(
+                  key: _stackKey,
                   fit: StackFit.expand,
                   clipBehavior: Clip.none,
                   children: [
@@ -178,6 +182,7 @@ class _NowPlayingPageState extends State<NowPlayingPage>
                                     adjustedMiniIconSize: miniIconSize,
                                     onLyricsTap: _openLyrics,
                                     artworkVisible: !_artworkOverlayVisible,
+                                    artworkKey: _artworkKey,
                                   )
                                 : _MobileLayout(
                                     metadata: metadata,
@@ -187,6 +192,7 @@ class _NowPlayingPageState extends State<NowPlayingPage>
                                     isLargeScreen: isLargeScreen,
                                     onLyricsTap: _openLyrics,
                                     artworkVisible: !_artworkOverlayVisible,
+                                    artworkKey: _artworkKey,
                                   ),
                           ),
                         ],
@@ -225,13 +231,24 @@ class _NowPlayingPageState extends State<NowPlayingPage>
                           borderRadius: 16,
                         ),
                         builder: (context, staticArtwork) {
+                          final targetRect = _normalArtworkRect ??
+                              Rect.fromLTWH(
+                                artworkLeft,
+                                artworkTop,
+                                artworkSize,
+                                artworkSize,
+                              );
+                          final initialLeft = targetRect.left;
+                          final initialTop = targetRect.top;
+                          final initialSize = targetRect.width;
+
                           final progress = _artworkCurve.value;
                           final currentSize =
-                              lerpDouble(artworkSize, 58, progress)!;
+                              lerpDouble(initialSize, 58, progress)!;
                           final currentLeft =
-                              lerpDouble(artworkLeft, compactLeft, progress)!;
+                              lerpDouble(initialLeft, compactLeft, progress)!;
                           final currentTop =
-                              lerpDouble(artworkTop, compactTop, progress)!;
+                              lerpDouble(initialTop, compactTop, progress)!;
                           final currentRadius =
                               lerpDouble(16, 10, progress)!;
                           final shadowAlpha =
@@ -243,20 +260,32 @@ class _NowPlayingPageState extends State<NowPlayingPage>
                             width: currentSize,
                             height: currentSize,
                             child: IgnorePointer(
-                              child: Container(
+                              child: DecoratedBox(
                                 decoration: BoxDecoration(
                                   borderRadius:
                                       BorderRadius.circular(currentRadius),
-                                  boxShadow: shadowAlpha > 0.05
+                                  boxShadow: shadowAlpha > 0.02
                                       ? [
                                           BoxShadow(
-                                            color: Colors.black.withValues(
-                                              alpha: 0.22 * shadowAlpha,
+                                            color: colorScheme.primary
+                                                .withValues(
+                                              alpha: 0.28 * shadowAlpha,
                                             ),
-                                            blurRadius: 16 * shadowAlpha,
+                                            blurRadius: 32 * shadowAlpha,
                                             offset: Offset(
                                               0,
-                                              6 * shadowAlpha,
+                                              12 * shadowAlpha,
+                                            ),
+                                            spreadRadius: 2 * shadowAlpha,
+                                          ),
+                                          BoxShadow(
+                                            color: Colors.black.withValues(
+                                              alpha: 0.32 * shadowAlpha,
+                                            ),
+                                            blurRadius: 20 * shadowAlpha,
+                                            offset: Offset(
+                                              0,
+                                              8 * shadowAlpha,
                                             ),
                                           ),
                                         ]
@@ -268,8 +297,8 @@ class _NowPlayingPageState extends State<NowPlayingPage>
                                   child: FittedBox(
                                     fit: BoxFit.cover,
                                     child: SizedBox(
-                                      width: artworkSize,
-                                      height: artworkSize,
+                                      width: initialSize,
+                                      height: initialSize,
                                       child: staticArtwork,
                                     ),
                                   ),
@@ -299,11 +328,36 @@ class _NowPlayingPageState extends State<NowPlayingPage>
   }
 
   double _artworkTop(Size size) {
-    const appBarHeight = 78.0;
-    return appBarHeight + ((size.height - appBarHeight) * 0.18);
+    final artworkSize = _artworkSize(size);
+    final isLandscape = size.width > size.height;
+    if (isLandscape) {
+      return (size.height - artworkSize) / 2;
+    }
+    // Mobile portrait: artwork is centered in Expanded(flex: 5) out of total flex 9,
+    // between AppBar (~56px) and BottomActions (~60px).
+    const appBarHeight = 56.0;
+    const bottomBarHeight = 60.0;
+    final availableFlexHeight =
+        (size.height - appBarHeight - bottomBarHeight).clamp(0.0, double.infinity);
+    final flex5CenterY =
+        appBarHeight + (availableFlexHeight * (5.0 / 9.0)) / 2.0;
+    return (flex5CenterY - artworkSize / 2.0).clamp(16.0, size.height);
+  }
+
+  void _updateArtworkRect() {
+    final stackBox =
+        _stackKey.currentContext?.findRenderObject() as RenderBox?;
+    final artworkBox =
+        _artworkKey.currentContext?.findRenderObject() as RenderBox?;
+    if (stackBox != null && artworkBox != null && artworkBox.hasSize) {
+      final offset =
+          stackBox.globalToLocal(artworkBox.localToGlobal(Offset.zero));
+      _normalArtworkRect = offset & artworkBox.size;
+    }
   }
 
   void _openLyrics() {
+    _updateArtworkRect();
     setState(() {
       _showLyrics = true;
       _artworkOverlayVisible = true;
@@ -312,6 +366,7 @@ class _NowPlayingPageState extends State<NowPlayingPage>
   }
 
   void _closeLyrics() {
+    _updateArtworkRect();
     // Both views smoothly cross-fade while the artwork flies back to center.
     // When the reverse animation finishes at progress 0.0, clean up overlay.
     _lyricsTransitionController.reverse().whenCompleteOrCancel(() {
@@ -722,6 +777,7 @@ class _DesktopLayout extends StatelessWidget {
     required this.adjustedMiniIconSize,
     required this.onLyricsTap,
     this.artworkVisible = true,
+    this.artworkKey,
   });
   final MediaItem metadata;
   final Size size;
@@ -729,6 +785,7 @@ class _DesktopLayout extends StatelessWidget {
   final double adjustedMiniIconSize;
   final VoidCallback onLyricsTap;
   final bool artworkVisible;
+  final Key? artworkKey;
 
   @override
   Widget build(BuildContext context) {
@@ -751,6 +808,7 @@ class _DesktopLayout extends StatelessWidget {
                       maintainAnimation: true,
                       maintainState: true,
                       child: NowPlayingArtwork(
+                        artworkKey: artworkKey,
                         size: size,
                         metadata: metadata,
                       ),
@@ -810,6 +868,7 @@ class _MobileLayout extends StatelessWidget {
     required this.isLargeScreen,
     required this.onLyricsTap,
     this.artworkVisible = true,
+    this.artworkKey,
   });
   final MediaItem metadata;
   final Size size;
@@ -818,6 +877,7 @@ class _MobileLayout extends StatelessWidget {
   final bool isLargeScreen;
   final VoidCallback onLyricsTap;
   final bool artworkVisible;
+  final Key? artworkKey;
 
   @override
   Widget build(BuildContext context) {
@@ -844,6 +904,7 @@ class _MobileLayout extends StatelessWidget {
                 maintainAnimation: true,
                 maintainState: true,
                 child: NowPlayingArtwork(
+                  artworkKey: artworkKey,
                   size: size,
                   metadata: metadata,
                 ),
@@ -888,6 +949,7 @@ class _MobileLayout extends StatelessWidget {
                 maintainAnimation: true,
                 maintainState: true,
                 child: NowPlayingArtwork(
+                  artworkKey: artworkKey,
                   size: size,
                   metadata: metadata,
                 ),
