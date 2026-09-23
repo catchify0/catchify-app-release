@@ -138,12 +138,24 @@ class _BottomNavigationPageState extends State<BottomNavigationPage> {
                                       ),
                                       child: widget.child,
                                     ),
-                                    const Padding(
-                                      padding: EdgeInsets.symmetric(
-                                        horizontal: AppTokens.pagePadding,
-                                        vertical: 8,
+                                    AnimatedSlide(
+                                      offset: isMiniPlayerVisible
+                                          ? Offset.zero
+                                          : const Offset(0, 1.2),
+                                      duration: AppTokens.motionStandard,
+                                      curve: Curves.easeOutCubic,
+                                      child: AnimatedOpacity(
+                                        opacity: isMiniPlayerVisible ? 1.0 : 0.0,
+                                        duration: AppTokens.motionStandard,
+                                        curve: Curves.easeOutCubic,
+                                        child: const Padding(
+                                          padding: EdgeInsets.symmetric(
+                                            horizontal: AppTokens.pagePadding,
+                                            vertical: 8,
+                                          ),
+                                          child: MiniPlayer(),
+                                        ),
                                       ),
-                                      child: MiniPlayer(),
                                     ),
                                   ],
                                 );
@@ -241,6 +253,8 @@ class _BottomNavigationPageState extends State<BottomNavigationPage> {
     if (index < items.length) {
       final item = items[index];
       final isReselect = _previousTabIndex == index;
+
+      HapticFeedback.selectionClick();
 
       // Close any open bottom sheet before switching tabs
       closeCurrentBottomSheet();

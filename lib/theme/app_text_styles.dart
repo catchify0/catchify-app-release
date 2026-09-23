@@ -61,7 +61,7 @@ abstract final class AppTextStyles {
   );
 
   static const TextStyle cardSubtitle = TextStyle(
-    fontSize: 12.0,
+    fontSize: 12,
     fontWeight: FontWeight.w400,
     letterSpacing: 0,
     height: 1.25,
@@ -105,14 +105,14 @@ abstract final class AppTextStyles {
 
   // ── Metadata, Captions & Controls ──
   static const TextStyle secondary = TextStyle(
-    fontSize: 13.0,
+    fontSize: 13,
     fontWeight: FontWeight.w400,
     letterSpacing: 0,
     height: 1.3,
   );
 
   static const TextStyle secondaryMedium = TextStyle(
-    fontSize: 13.0,
+    fontSize: 13,
     fontWeight: FontWeight.w500,
     letterSpacing: 0,
     height: 1.3,
@@ -133,7 +133,7 @@ abstract final class AppTextStyles {
   );
 
   static const TextStyle button = TextStyle(
-    fontSize: 14.0,
+    fontSize: 14,
     fontWeight: FontWeight.w600,
     letterSpacing: 0.1,
   );
@@ -145,7 +145,7 @@ abstract final class AppTextStyles {
   );
 
   static const TextStyle categoryHeader = TextStyle(
-    fontSize: 12.0,
+    fontSize: 12,
     fontWeight: FontWeight.w700,
     letterSpacing: 1.2,
   );

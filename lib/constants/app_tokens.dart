@@ -40,6 +40,13 @@ abstract final class AppTokens {
   static const Duration motionStandard = Duration(milliseconds: 240);
   static const Duration shimmerCycle = Duration(milliseconds: 1450);
 
+  // ── Optics & Glass ──
+  static const double blurSubtle = 12.0;
+  static const double blurStandard = 18.0;
+  static const double blurProminent = 28.0;
+  static const double borderSubtle = 0.5;
+  static const double borderRegular = 1.0;
+
   // ── Radii ──
   static const double radiusSmall = 8.0;
   static const double radiusControl = 10.0;

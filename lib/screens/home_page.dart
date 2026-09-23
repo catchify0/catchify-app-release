@@ -23,6 +23,7 @@ import 'dart:async';
 import 'package:intl/intl.dart';
 import 'package:fluentui_system_icons/fluentui_system_icons.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:catchify/constants/app_constants.dart';
@@ -102,6 +103,7 @@ class _HomePageState extends State<HomePage> {
 
   void _onMoodSelected(String mood) {
     if (_selectedMood == mood) return;
+    HapticFeedback.lightImpact();
     setState(() {
       _selectedMood = mood;
       _initFutures(forceRefresh: true, source: 'mood');

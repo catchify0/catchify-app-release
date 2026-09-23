@@ -23,6 +23,7 @@ import 'dart:math' as math;
 import 'package:audio_service/audio_service.dart';
 import 'package:fluentui_system_icons/fluentui_system_icons.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:catchify/constants/app_tokens.dart';
 import 'package:catchify/main.dart';
 import 'package:catchify/models/full_player_state.dart';
@@ -412,7 +413,10 @@ class _ControlsWidget extends StatelessWidget {
         if (canGoNext) ...[
           const SizedBox(width: 4),
           IconButton(
-            onPressed: audioHandler.skipToNext,
+            onPressed: () {
+              HapticFeedback.lightImpact();
+              audioHandler.skipToNext();
+            },
             splashColor: Colors.transparent,
             highlightColor: Colors.transparent,
             icon: Icon(
@@ -506,9 +510,16 @@ class _CircularPlayButton extends StatelessWidget {
             )
           else
             IconButton(
-              onPressed: isCompleted
-                  ? () => audioHandler.playAgain()
-                  : (isPlaying ? audioHandler.pause : audioHandler.play),
+              onPressed: () {
+                HapticFeedback.lightImpact();
+                if (isCompleted) {
+                  audioHandler.playAgain();
+                } else if (isPlaying) {
+                  audioHandler.pause();
+                } else {
+                  audioHandler.play();
+                }
+              },
               splashColor: Colors.transparent,
               highlightColor: Colors.transparent,
               icon: Icon(

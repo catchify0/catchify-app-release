@@ -59,23 +59,32 @@ class EmptyState extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Container(
-              width: compact ? 56 : 72,
-              height: compact ? 56 : 72,
+            DecoratedBox(
               decoration: BoxDecoration(
                 color: colorScheme.surfaceContainerHigh.withValues(alpha: 0.6),
                 shape: BoxShape.circle,
+                border: Border.all(
+                  color: colorScheme.primary.withValues(alpha: 0.18),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: colorScheme.primary.withValues(alpha: 0.08),
+                    blurRadius: 16,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
               ),
-              child: Center(
-                child:
-                    iconWidget ??
-                    Icon(
-                      icon,
-                      size: compact ? 28 : 36,
-                      color: colorScheme.onSurfaceVariant.withValues(
-                        alpha: 0.8,
+              child: SizedBox(
+                width: compact ? 56 : 72,
+                height: compact ? 56 : 72,
+                child: Center(
+                  child: iconWidget ??
+                      Icon(
+                        icon,
+                        size: compact ? 28 : 36,
+                        color: colorScheme.primary,
                       ),
-                    ),
+                ),
               ),
             ),
             SizedBox(height: compact ? 12 : 16),

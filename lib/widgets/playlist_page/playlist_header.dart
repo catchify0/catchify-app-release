@@ -49,7 +49,7 @@ class PlaylistHeader extends StatelessWidget {
       child: Column(
         children: [
           if (isArtist)
-            Container(
+            DecoratedBox(
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 border: Border.all(
@@ -67,7 +67,7 @@ class PlaylistHeader extends StatelessWidget {
               child: ClipOval(child: image),
             )
           else
-            Container(
+            DecoratedBox(
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: [

@@ -66,6 +66,8 @@ abstract final class AppColors {
   // ── Glassmorphic & Optical Surface Tokens ──
   static const Color glassSurfaceDark = Color(0xCC18181E);
   static const Color glassBorderDark = Color(0x26FFFFFF);
+  static const Color glassSurfaceOled = Color(0xD9121216);
+  static const Color glassBorderOled = Color(0x33FFFFFF);
   static const Color glassSurfaceLight = Color(0xD9FFFFFF);
   static const Color glassBorderLight = Color(0x1A000000);
 }

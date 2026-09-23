@@ -22,6 +22,7 @@
 import 'package:audio_service/audio_service.dart';
 import 'package:fluentui_system_icons/fluentui_system_icons.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:catchify/constants/app_tokens.dart';
 import 'package:catchify/extensions/l10n.dart';
 import 'package:catchify/main.dart';
@@ -68,7 +69,10 @@ Widget buildPlaybackIconButton(
           color: iconColor,
           size: iconSize,
         );
-        onPressed = () => audioHandler.playAgain();
+        onPressed = () {
+          HapticFeedback.lightImpact();
+          audioHandler.playAgain();
+        };
         semanticLabel = context.l10n!.replay;
       } else {
         iconWidget = Icon(
@@ -80,11 +84,18 @@ Widget buildPlaybackIconButton(
           color: iconColor,
           size: iconSize,
         );
-        onPressed = isPlaying ? audioHandler.pause : audioHandler.play;
+        onPressed = () {
+          HapticFeedback.lightImpact();
+          if (isPlaying) {
+            audioHandler.pause();
+          } else {
+            audioHandler.play();
+          }
+        };
         semanticLabel = isPlaying ? context.l10n!.pause : context.l10n!.play;
       }
 
-      return Container(
+      return DecoratedBox(
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           boxShadow: [

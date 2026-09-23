@@ -212,7 +212,7 @@ class _SyncedLyricsWidgetState extends State<SyncedLyricsWidget> {
                       end: Alignment.bottomCenter,
                       colors: [
                         colorScheme.surface,
-                        colorScheme.surface.withValues(alpha: 0.0),
+                        colorScheme.surface.withValues(alpha: 0),
                       ],
                     ),
                   ),
@@ -233,7 +233,7 @@ class _SyncedLyricsWidgetState extends State<SyncedLyricsWidget> {
                       end: Alignment.topCenter,
                       colors: [
                         colorScheme.surface,
-                        colorScheme.surface.withValues(alpha: 0.0),
+                        colorScheme.surface.withValues(alpha: 0),
                       ],
                     ),
                   ),
@@ -297,7 +297,7 @@ class PlainLyricsWidget extends StatelessWidget {
                   end: Alignment.bottomCenter,
                   colors: [
                     colorScheme.surface,
-                    colorScheme.surface.withValues(alpha: 0.0),
+                    colorScheme.surface.withValues(alpha: 0),
                   ],
                 ),
               ),
@@ -318,7 +318,7 @@ class PlainLyricsWidget extends StatelessWidget {
                   end: Alignment.topCenter,
                   colors: [
                     colorScheme.surface,
-                    colorScheme.surface.withValues(alpha: 0.0),
+                    colorScheme.surface.withValues(alpha: 0),
                   ],
                 ),
               ),

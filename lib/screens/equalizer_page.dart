@@ -23,6 +23,7 @@ import 'dart:io';
 
 import 'package:fluentui_system_icons/fluentui_system_icons.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:catchify/constants/app_constants.dart';
 import 'package:catchify/extensions/l10n.dart';
@@ -139,6 +140,7 @@ class _EqualizerPageState extends State<EqualizerPage> {
   }
 
   Future<void> _applyPreset(String preset) async {
+    HapticFeedback.lightImpact();
     final presetGains = _getPresetGains(preset);
     for (var i = 0; i < presetGains.length; i++) {
       await audioHandler.setEqualizerBandGain(i, presetGains[i]);

@@ -87,13 +87,20 @@ class GlassSurface extends StatelessWidget {
     // High-contrast or explicit disable fallback to solid elevated surface
     final shouldBypassBlur = disableBlur || highContrast;
 
+    final scaffoldBg = Theme.of(context).scaffoldBackgroundColor;
+    final isOled = isDark && scaffoldBg == AppColors.pureBlack;
+
     final effectiveSurfaceColor = surfaceColor ??
         (isDark
-            ? (shouldBypassBlur ? AppColors.darkSurfaceElevated : AppColors.glassSurfaceDark)
+            ? (isOled
+                ? (shouldBypassBlur ? AppColors.pureBlackElevated : AppColors.glassSurfaceOled)
+                : (shouldBypassBlur ? AppColors.darkSurfaceElevated : AppColors.glassSurfaceDark))
             : (shouldBypassBlur ? AppColors.lightSurfaceElevated : AppColors.glassSurfaceLight));
 
     final effectiveBorderColor = borderColor ??
-        (isDark ? AppColors.glassBorderDark : AppColors.glassBorderLight);
+        (isDark
+            ? (isOled ? AppColors.glassBorderOled : AppColors.glassBorderDark)
+            : AppColors.glassBorderLight);
 
     final surface = Container(
       padding: padding,

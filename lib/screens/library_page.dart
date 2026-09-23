@@ -23,6 +23,7 @@ import 'dart:async';
 
 import 'package:fluentui_system_icons/fluentui_system_icons.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:catchify/constants/app_constants.dart';
 import 'package:catchify/extensions/l10n.dart';
@@ -289,6 +290,7 @@ class _LibraryPageState extends State<LibraryPage> {
                 child: InkWell(
                   onTap: () {
                     if (_selectedFilter != filter) {
+                      HapticFeedback.lightImpact();
                       setState(() {
                         _selectedFilter = filter;
                       });

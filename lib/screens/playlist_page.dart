@@ -282,7 +282,6 @@ class _PlaylistPageState extends State<PlaylistPage> {
       playlist,
       size: isLandscape ? 250 : screenWidth / commonPlaylistArtworkDivision,
       cubeIcon: widget.cubeIcon,
-      showTypeLabel: false,
     );
   }
 
@@ -314,7 +313,7 @@ class _PlaylistPageState extends State<PlaylistPage> {
             child: Row(
               children: [
                 Expanded(
-                  child: Container(
+                  child: DecoratedBox(
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(16),
                       boxShadow: [

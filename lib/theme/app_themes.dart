@@ -110,7 +110,6 @@ ThemeMode getThemeMode(int themeModeIndex) {
   } else {
     resolvedLight = ColorScheme.fromSeed(
       seedColor: primaryColorSetting,
-      brightness: Brightness.light,
     ).harmonized().copyWith(
       surface: AppColors.lightBackground,
       surfaceContainerLowest: AppColors.lightSurface,
@@ -209,10 +208,12 @@ ThemeData getAppTheme(ColorScheme colorScheme) {
         side: isLight
             ? BorderSide(
                 color: effectiveColorScheme.outlineVariant.withValues(alpha: 0.5),
-                width: 0.5,
+                width: AppTokens.borderSubtle,
               )
             : BorderSide(
-                color: effectiveColorScheme.outlineVariant.withValues(alpha: 0.15),
+                color: isPureBlack
+                    ? effectiveColorScheme.outlineVariant.withValues(alpha: 0.28)
+                    : effectiveColorScheme.outlineVariant.withValues(alpha: 0.15),
                 width: 0.8,
               ),
       ),
@@ -247,8 +248,10 @@ ThemeData getAppTheme(ColorScheme colorScheme) {
       ),
     ),
     listTileTheme: base.listTileTheme.copyWith(
-      textColor: effectiveColorScheme.primary,
-      iconColor: effectiveColorScheme.primary,
+      textColor: effectiveColorScheme.onSurface,
+      iconColor: effectiveColorScheme.onSurfaceVariant,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+      minVerticalPadding: 8,
     ),
     sliderTheme: base.sliderTheme.copyWith(
       year2023: false,

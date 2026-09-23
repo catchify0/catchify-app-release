@@ -21,36 +21,68 @@
 
 import 'package:fluentui_system_icons/fluentui_system_icons.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:catchify/extensions/l10n.dart';
+import 'package:catchify/theme/app_text_styles.dart';
 
 class OfflineSearchPlaceholder extends StatelessWidget {
   const OfflineSearchPlaceholder({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final l10n = context.l10n;
+
     return Scaffold(
-      appBar: AppBar(title: Text(context.l10n!.search)),
+      appBar: AppBar(title: Text(l10n?.search ?? 'Search')),
       body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              FluentIcons.cloud_off_24_regular,
-              size: 64,
-              color: Theme.of(
-                context,
-              ).colorScheme.onSurface.withValues(alpha: 0.5),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              context.l10n!.error,
-              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                color: Theme.of(
-                  context,
-                ).colorScheme.onSurface.withValues(alpha: 0.7),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 32),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              DecoratedBox(
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.6),
+                  border: Border.all(
+                    color: colorScheme.outlineVariant.withValues(alpha: 0.5),
+                  ),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Icon(
+                    FluentIcons.cloud_off_24_regular,
+                    size: 56,
+                    color: colorScheme.primary,
+                  ),
+                ),
               ),
-            ),
-          ],
+              const SizedBox(height: 24),
+              Text(
+                l10n?.offlineMode ?? 'Offline Mode',
+                style: AppTextStyles.sectionTitle.copyWith(
+                  color: colorScheme.onSurface,
+                  fontWeight: FontWeight.w700,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Search is unavailable while offline. You can listen to your downloaded songs and playlists in your library.',
+                style: AppTextStyles.body.copyWith(
+                  color: colorScheme.onSurfaceVariant,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              FilledButton.icon(
+                onPressed: () => context.go('/library'),
+                icon: const Icon(FluentIcons.library_24_filled, size: 20),
+                label: Text(l10n?.library ?? 'Go to Library'),
+              ),
+            ],
+          ),
         ),
       ),
     );

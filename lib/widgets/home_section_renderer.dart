@@ -206,14 +206,14 @@ class HomeSectionRenderer extends StatelessWidget {
     final textScaler = MediaQuery.textScalerOf(context);
     final titleHeight = textScaler.scale(19);
     final subtitleHeight = textScaler.scale(17);
-    return math.max(206.0, cardSize + 18.0 + titleHeight + subtitleHeight);
+    return math.max(206, cardSize + 18 + titleHeight + subtitleHeight);
   }
 
   double _getArtistShelfHeight(BuildContext context, double avatarSize) {
     final textScaler = MediaQuery.textScalerOf(context);
     final titleHeight = textScaler.scale(19);
     final subtitleHeight = textScaler.scale(16);
-    return math.max(148.0, avatarSize + 26.0 + titleHeight + subtitleHeight);
+    return math.max(148, avatarSize + 26 + titleHeight + subtitleHeight);
   }
 
   Widget _buildSongCards(BuildContext context) {

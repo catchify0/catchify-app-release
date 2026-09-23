@@ -23,6 +23,7 @@ import 'dart:math';
 
 import 'package:fluentui_system_icons/fluentui_system_icons.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:catchify/theme/app_colors.dart';
 
 class AccentColorPickerSheet extends StatelessWidget {
@@ -98,7 +99,10 @@ class AccentColorPickerSheet extends StatelessWidget {
                   item.color.toARGB32() == initialColor.toARGB32();
 
               return GestureDetector(
-                onTap: () => onColorSelected(item.color),
+                onTap: () {
+                  HapticFeedback.selectionClick();
+                  onColorSelected(item.color);
+                },
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 150),
                   decoration: BoxDecoration(

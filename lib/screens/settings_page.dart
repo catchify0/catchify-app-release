@@ -126,7 +126,7 @@ class _SettingsPageState extends State<SettingsPage> {
           title,
           style: AppTextStyles.categoryHeader.copyWith(
             color: primaryColor,
-            letterSpacing: 1.0,
+            letterSpacing: 1,
             fontWeight: FontWeight.w700,
           ),
         ),

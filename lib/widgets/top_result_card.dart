@@ -76,7 +76,7 @@ class TopResultCard extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w700,
-                        letterSpacing: 1.0,
+                        letterSpacing: 1,
                         color: colorScheme.primary,
                       ),
                     ),
@@ -181,13 +181,17 @@ class TopResultCard extends StatelessWidget {
 
   Widget _buildArtwork(String? artwork, bool isArtist, ColorScheme colorScheme) {
     const size = 86.0;
-    Widget placeholder = Container(
-      width: size,
-      height: size,
-      color: colorScheme.surfaceContainerHighest,
-      child: Icon(
-        isArtist ? FluentIcons.person_24_filled : FluentIcons.music_note_2_24_filled,
-        color: colorScheme.onSurfaceVariant,
+    final placeholder = DecoratedBox(
+      decoration: BoxDecoration(
+        color: colorScheme.surfaceContainerHighest,
+      ),
+      child: SizedBox(
+        width: size,
+        height: size,
+        child: Icon(
+          isArtist ? FluentIcons.person_24_filled : FluentIcons.music_note_2_24_filled,
+          color: colorScheme.onSurfaceVariant,
+        ),
       ),
     );
 

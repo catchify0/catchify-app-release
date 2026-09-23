@@ -24,6 +24,7 @@ import 'dart:async';
 import 'package:audio_service/audio_service.dart';
 import 'package:fluentui_system_icons/fluentui_system_icons.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:catchify/constants/app_tokens.dart';
 import 'package:go_router/go_router.dart';
 import 'package:catchify/extensions/l10n.dart';
@@ -320,8 +321,10 @@ class PlayerControlButtons extends StatelessWidget {
                                   tooltip: context.l10n!.skipToPrevious,
                                   constraints: buttonConstraints,
                                   iconSize: controlIconSize * 0.65,
-                                  onPressed: () =>
-                                      audioHandler.skipToPrevious(),
+                                  onPressed: () {
+                                    HapticFeedback.lightImpact();
+                                    audioHandler.skipToPrevious();
+                                  },
                                   style: IconButton.styleFrom(
                                     backgroundColor:
                                         colorScheme.surfaceContainerHighest,
@@ -364,7 +367,10 @@ class PlayerControlButtons extends StatelessWidget {
                                       constraints: buttonConstraints,
                                       iconSize: controlIconSize * 0.65,
                                       onPressed: canGoNext
-                                          ? () => audioHandler.skipToNext()
+                                          ? () {
+                                              HapticFeedback.lightImpact();
+                                              audioHandler.skipToNext();
+                                            }
                                           : null,
                                       style: IconButton.styleFrom(
                                         backgroundColor:
@@ -439,6 +445,7 @@ class PlayerControlButtons extends StatelessWidget {
             ),
           ),
           onPressed: () {
+            HapticFeedback.lightImpact();
             audioHandler.setShuffleMode(
               value
                   ? AudioServiceShuffleMode.none
@@ -490,6 +497,7 @@ class PlayerControlButtons extends StatelessWidget {
                 ),
               ),
               onPressed: () {
+                HapticFeedback.lightImpact();
                 final AudioServiceRepeatMode newMode;
                 if (repeatMode == AudioServiceRepeatMode.none) {
                   newMode = queue.length <= 1
