@@ -20,6 +20,7 @@
  */
 
 import 'dart:async';
+import 'dart:ui' show lerpDouble;
 
 import 'package:audio_service/audio_service.dart';
 import 'package:fluentui_system_icons/fluentui_system_icons.dart';
@@ -49,10 +50,28 @@ class NowPlayingPage extends StatefulWidget {
   State<NowPlayingPage> createState() => _NowPlayingPageState();
 }
 
-class _NowPlayingPageState extends State<NowPlayingPage> {
+class _NowPlayingPageState extends State<NowPlayingPage>
+    with SingleTickerProviderStateMixin {
   bool _showLyrics = false;
+  late final AnimationController _lyricsTransitionController;
   Future<String?>? _lyricsFuture;
   String? _lyricsKey;
+
+  @override
+  void initState() {
+    super.initState();
+    _lyricsTransitionController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 520),
+      reverseDuration: const Duration(milliseconds: 380),
+    );
+  }
+
+  @override
+  void dispose() {
+    _lyricsTransitionController.dispose();
+    super.dispose();
+  }
 
   String _songKey(MediaItem metadata) =>
       metadata.id.isNotEmpty
@@ -100,7 +119,15 @@ class _NowPlayingPageState extends State<NowPlayingPage> {
             }
             final metadata = snapshot.data!;
 
-            return Stack(
+            return LayoutBuilder(
+              builder: (context, constraints) {
+                final artworkSize = _artworkSize(size);
+                final artworkLeft = (constraints.maxWidth - artworkSize) / 2;
+                final artworkTop = _artworkTop(size);
+                final compactLeft = 14.0 + 6 + 44 + 4;
+                final compactTop = 8.0 + 6;
+
+                return Stack(
               children: [
                 // Keep the lyrics mode inside NowPlayingPage and slide it
                 // into place instead of fading between separate surfaces.
@@ -136,9 +163,7 @@ class _NowPlayingPageState extends State<NowPlayingPage> {
                                       size: size,
                                       adjustedIconSize: baseIconSize,
                                       adjustedMiniIconSize: miniIconSize,
-                                      onLyricsTap: () => setState(
-                                            () => _showLyrics = true,
-                                          ),
+                                      onLyricsTap: _openLyrics,
                                     )
                                   : _MobileLayout(
                                       metadata: metadata,
@@ -146,20 +171,72 @@ class _NowPlayingPageState extends State<NowPlayingPage> {
                                       adjustedIconSize: baseIconSize,
                                       adjustedMiniIconSize: miniIconSize,
                                       isLargeScreen: isLargeScreen,
-                                      onLyricsTap: () => setState(
-                                            () => _showLyrics = true,
-                                          ),
+                                      onLyricsTap: _openLyrics,
                                     ),
                             ),
                           ],
                         ),
                 ),
+                if (_showLyrics)
+                  AnimatedBuilder(
+                    animation: _lyricsTransitionController,
+                    builder: (context, child) {
+                      final progress = CurvedAnimation(
+                        parent: _lyricsTransitionController,
+                        curve: Curves.easeInOutCubic,
+                      ).value;
+                      final size = lerpDouble(artworkSize, 58, progress)!;
+                      return Positioned(
+                        left: lerpDouble(artworkLeft, compactLeft, progress),
+                        top: lerpDouble(artworkTop, compactTop, progress),
+                        child: IgnorePointer(
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(
+                              lerpDouble(16, 10, progress)!,
+                            ),
+                            child: SongArtworkWidget(
+                              metadata: metadata,
+                              size: size,
+                              borderRadius: 16,
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
               ],
+                );
+              },
             );
           },
         ),
       ),
     );
+  }
+
+  double _artworkSize(Size size) {
+    final isLandscape = size.width > size.height;
+    if (size.width > 800) return size.height * 0.38;
+    if (isLandscape) return size.height * 0.45;
+    if (size.width < 360) return size.width * 0.75;
+    if (size.width < 600) return size.width * 0.80;
+    return size.width * 0.65;
+  }
+
+  double _artworkTop(Size size) {
+    const appBarHeight = 78.0;
+    return appBarHeight + ((size.height - appBarHeight) * 0.18);
+  }
+
+  void _openLyrics() {
+    setState(() => _showLyrics = true);
+    _lyricsTransitionController.forward(from: 0);
+  }
+
+  void _closeLyrics() {
+    _lyricsTransitionController.reverse().whenCompleteOrCancel(() {
+      if (mounted) setState(() => _showLyrics = false);
+    });
   }
 
   Widget _buildLyricsView({
@@ -227,7 +304,7 @@ class _NowPlayingPageState extends State<NowPlayingPage> {
               IconButton(
                 icon: const Icon(FluentIcons.chevron_down_24_regular),
                 tooltip: 'Close lyrics',
-                onPressed: () => setState(() => _showLyrics = false),
+                onPressed: _closeLyrics,
               ),
               const SizedBox(width: 4),
               ClipRRect(
