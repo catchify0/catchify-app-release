@@ -444,36 +444,18 @@ class _NowPlayingPageState extends State<NowPlayingPage>
     MediaItem metadata,
   ) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(14, 8, 14, 10),
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          color: colorScheme.surfaceContainerHigh.withValues(alpha: 0.82),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: colorScheme.outlineVariant.withValues(alpha: 0.42),
-          ),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
+      padding: const EdgeInsets.fromLTRB(18, 10, 18, 12),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
           IconButton(
             iconSize: 24,
             icon: const Icon(FluentIcons.chevron_down_24_regular),
-            style: IconButton.styleFrom(
-              backgroundColor: colorScheme.surfaceContainerHigh.withValues(
-                alpha: 0.8,
-              ),
-              foregroundColor: colorScheme.onSurfaceVariant,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(14),
-              ),
-              padding: const EdgeInsets.all(10),
-              minimumSize: const Size(
-                AppTokens.minInteractiveSize,
-                AppTokens.minInteractiveSize,
-              ),
+            color: colorScheme.onSurfaceVariant,
+            padding: const EdgeInsets.all(10),
+            constraints: const BoxConstraints(
+              minWidth: AppTokens.minInteractiveSize,
+              minHeight: AppTokens.minInteractiveSize,
             ),
             onPressed: () => Navigator.pop(context),
           ),
@@ -495,19 +477,11 @@ class _NowPlayingPageState extends State<NowPlayingPage>
             iconSize: 22,
             icon: const Icon(Icons.radio),
             tooltip: context.l10n?.startRadio ?? 'Start Radio',
-            style: IconButton.styleFrom(
-              backgroundColor: colorScheme.surfaceContainerHigh.withValues(
-                alpha: 0.8,
-              ),
-              foregroundColor: colorScheme.onSurfaceVariant,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(14),
-              ),
-              padding: const EdgeInsets.all(10),
-              minimumSize: const Size(
-                AppTokens.minInteractiveSize,
-                AppTokens.minInteractiveSize,
-              ),
+            color: colorScheme.onSurfaceVariant,
+            padding: const EdgeInsets.all(10),
+            constraints: const BoxConstraints(
+              minWidth: AppTokens.minInteractiveSize,
+              minHeight: AppTokens.minInteractiveSize,
             ),
             onPressed: () {
               final song = mediaItemToMap(metadata);
@@ -519,9 +493,7 @@ class _NowPlayingPageState extends State<NowPlayingPage>
               unawaited(audioHandler.startSongRadio(song));
             },
           ),
-            ],
-          ),
-        ),
+        ],
       ),
     );
   }
