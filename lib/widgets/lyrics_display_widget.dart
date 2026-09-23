@@ -63,7 +63,6 @@ class _SyncedLyricsWidgetState extends State<SyncedLyricsWidget> {
 
   // Gap threshold: lines more than 3 seconds apart get extra spacing.
   static const int _gapThresholdMs = 3000;
-  static const double _verticalPadding = 28;
 
   @override
   void initState() {
@@ -245,155 +244,99 @@ class _SyncedLyricsWidgetState extends State<SyncedLyricsWidget> {
   }
 
   Widget _buildList(BuildContext context) {
-    final textColor = Theme.of(context).colorScheme.onSecondaryContainer;
     final colorScheme = Theme.of(context).colorScheme;
-    final accentColor = colorScheme.primary;
+    // Active line = fully opaque (white in dark, black in light)
+    // Inactive lines = same but dimmed to 42% — matches Youtify reference
+    final activeColor = colorScheme.onSurface;
+    final inactiveColor = colorScheme.onSurface.withValues(alpha: 0.42);
+    final dotColor = colorScheme.onSurface.withValues(alpha: 0.20);
 
     return Stack(
       children: [
-        // Gradient fade mask at top and bottom
-        ShaderMask(
-          shaderCallback: (rect) => LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Colors.transparent,
-              Colors.white,
-              Colors.white,
-              Colors.transparent,
-            ],
-            stops: const [0.0, 0.08, 0.88, 1.0],
-          ).createShader(rect),
-          blendMode: BlendMode.dstIn,
-          child: NotificationListener<ScrollNotification>(
-            onNotification: (notification) {
-              _onScrollNotification(notification);
-              return false;
-            },
-            child: ListView.builder(
-              controller: _scrollController,
-              padding: const EdgeInsets.only(
-                top: _verticalPadding,
-                bottom: _verticalPadding + 32,
-                left: 20,
-                right: 20,
-              ),
-              physics: const BouncingScrollPhysics(),
-              itemCount: _lines.length,
-              // No itemExtent — dynamic height so active line never clips
-              itemBuilder: (context, index) {
-                final isCurrent = index == _currentLineIndex;
-                final showGap = _hasGapBefore(index);
+        NotificationListener<ScrollNotification>(
+          onNotification: (notification) {
+            _onScrollNotification(notification);
+            return false;
+          },
+          child: ListView.builder(
+            controller: _scrollController,
+            padding: const EdgeInsets.only(
+              top: 24,
+              bottom: 80,
+              left: 24,
+              right: 24,
+            ),
+            physics: const BouncingScrollPhysics(),
+            itemCount: _lines.length,
+            itemBuilder: (context, index) {
+              final isCurrent = index == _currentLineIndex;
+              final showGap = _hasGapBefore(index);
 
-                return RepaintBoundary(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      // Extra spacing for paragraph / instrumental break
-                      if (showGap)
-                        Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 6),
-                          child: Row(
-                            children: [
-                              Container(
-                                width: 4,
-                                height: 4,
-                                margin: const EdgeInsets.only(right: 6),
-                                decoration: BoxDecoration(
-                                  color: textColor.withValues(alpha: 0.20),
-                                  shape: BoxShape.circle,
-                                ),
-                              ),
-                              Container(
-                                width: 4,
-                                height: 4,
-                                margin: const EdgeInsets.only(right: 6),
-                                decoration: BoxDecoration(
-                                  color: textColor.withValues(alpha: 0.15),
-                                  shape: BoxShape.circle,
-                                ),
-                              ),
-                              Container(
-                                width: 4,
-                                height: 4,
-                                decoration: BoxDecoration(
-                                  color: textColor.withValues(alpha: 0.10),
-                                  shape: BoxShape.circle,
-                                ),
-                              ),
-                            ],
-                          ),
+              return RepaintBoundary(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Instrumental / paragraph break dots
+                    if (showGap)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        child: Row(
+                          children: [
+                            _dot(dotColor),
+                            const SizedBox(width: 7),
+                            _dot(dotColor.withValues(alpha: 0.14)),
+                            const SizedBox(width: 7),
+                            _dot(dotColor.withValues(alpha: 0.09)),
+                          ],
                         ),
-                      GestureDetector(
-                        key: _rowKeys[index],
-                        behavior: HitTestBehavior.opaque,
-                        onTap: () {
-                          final ms = _lines[index].timeInMs;
-                          _scrollPauseTimer?.cancel();
-                          setState(() {
-                            _currentLineIndex = index;
-                            _isUserScrolling = false;
-                          });
-                          _scrollToLine(index, force: true);
-                          audioHandler.seek(Duration(milliseconds: ms));
-                        },
-                        child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 250),
+                      ),
+
+                    GestureDetector(
+                      key: _rowKeys[index],
+                      behavior: HitTestBehavior.opaque,
+                      onTap: () {
+                        final ms = _lines[index].timeInMs;
+                        _scrollPauseTimer?.cancel();
+                        setState(() {
+                          _currentLineIndex = index;
+                          _isUserScrolling = false;
+                        });
+                        _scrollToLine(index, force: true);
+                        audioHandler.seek(Duration(milliseconds: ms));
+                      },
+                      child: Padding(
+                        // Uniform vertical spacing — no indent shift on active line
+                        padding: const EdgeInsets.symmetric(vertical: 10),
+                        child: AnimatedDefaultTextStyle(
+                          duration: const Duration(milliseconds: 280),
                           curve: Curves.easeOut,
-                          padding: EdgeInsets.only(
-                            top: isCurrent ? 6 : 2,
-                            bottom: isCurrent ? 10 : 6,
-                            left: isCurrent ? 12 : 0,
+                          style: TextStyle(
+                            fontFamilyFallback: const ['AnekTamil'],
+                            // Active: slightly larger; inactive: comfortable reading size
+                            fontSize: isCurrent ? 23.0 : 21.0,
+                            fontWeight: isCurrent
+                                ? FontWeight.w700
+                                : FontWeight.w500,
+                            color: isCurrent ? activeColor : inactiveColor,
+                            height: 1.45,
                           ),
-                          decoration: isCurrent
-                              ? BoxDecoration(
-                                  border: Border(
-                                    left: BorderSide(
-                                      color: accentColor,
-                                      width: 3,
-                                    ),
-                                  ),
-                                )
-                              : null,
-                          child: AnimatedDefaultTextStyle(
-                            duration: const Duration(milliseconds: 250),
-                            curve: Curves.easeOut,
-                            style: isCurrent
-                                ? TextStyle(
-                                    fontFamilyFallback: const ['AnekTamil'],
-                                    fontSize: 18.5,
-                                    fontWeight: FontWeight.w800,
-                                    color: textColor,
-                                    height: 1.4,
-                                    letterSpacing: -0.2,
-                                  )
-                                : TextStyle(
-                                    fontFamilyFallback: const ['AnekTamil'],
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w500,
-                                    color: textColor.withValues(alpha: 0.40),
-                                    height: 1.4,
-                                  ),
-                            child: Text(
-                              _lines[index].text,
-                              textAlign: TextAlign.left,
-                              // No clipping on the active line; others get 2-line cap
-                              maxLines: isCurrent ? null : 2,
-                              overflow: isCurrent
-                                  ? TextOverflow.visible
-                                  : TextOverflow.ellipsis,
-                            ),
+                          child: Text(
+                            _lines[index].text,
+                            textAlign: TextAlign.left,
+                            // Allow full wrap — no maxLines cap
                           ),
                         ),
                       ),
-                    ],
-                  ),
-                );
-              },
-            ),
+                    ),
+                  ],
+                ),
+              );
+            },
           ),
         ),
+
+        // "Sync paused" chip when user is manually scrolling
         if (_isUserScrolling)
           Positioned(
             bottom: 12,
@@ -405,7 +348,8 @@ class _SyncedLyricsWidgetState extends State<SyncedLyricsWidget> {
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                   decoration: BoxDecoration(
-                    color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.92),
+                    color: colorScheme.surfaceContainerHighest
+                        .withValues(alpha: 0.92),
                     borderRadius: BorderRadius.circular(20),
                     boxShadow: [
                       BoxShadow(
@@ -418,11 +362,7 @@ class _SyncedLyricsWidgetState extends State<SyncedLyricsWidget> {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(
-                        Icons.sync,
-                        size: 14,
-                        color: colorScheme.primary,
-                      ),
+                      Icon(Icons.sync, size: 14, color: colorScheme.primary),
                       const SizedBox(width: 6),
                       Text(
                         'Sync paused \u2022 Tap to resume',
@@ -442,6 +382,12 @@ class _SyncedLyricsWidgetState extends State<SyncedLyricsWidget> {
       ],
     );
   }
+
+  Widget _dot(Color color) => Container(
+        width: 5,
+        height: 5,
+        decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+      );
 }
 
 /// Displays plain (non-synced) lyrics as scrollable text
