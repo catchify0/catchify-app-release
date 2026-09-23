@@ -27,18 +27,21 @@ import 'package:flutter/material.dart';
 import 'package:catchify/constants/app_tokens.dart';
 import 'package:catchify/extensions/l10n.dart';
 import 'package:catchify/main.dart';
-import 'package:catchify/screens/lyrics_full_screen_page.dart';
+import 'package:catchify/services/common_services.dart';
 import 'package:catchify/utilities/flutter_toast.dart';
 import 'package:catchify/utilities/mediaitem.dart';
+import 'package:catchify/utilities/async_loader.dart';
+import 'package:catchify/widgets/lyrics_display_widget.dart';
 import 'package:catchify/widgets/now_playing/bottom_actions_row.dart';
 import 'package:catchify/widgets/now_playing/now_playing_artwork.dart';
 import 'package:catchify/widgets/now_playing/now_playing_controls.dart';
+import 'package:catchify/widgets/playback_icon_button.dart';
+import 'package:catchify/widgets/position_slider.dart';
 import 'package:catchify/widgets/queue_list_view.dart';
+import 'package:catchify/widgets/song_artwork.dart';
 
-/// Now Playing page — hosts both the normal artwork/controls view and the
-/// inline full-screen lyrics view. Switching between the two is animated
-/// with a cross-fade so it feels like a seamless in-page transition rather
-/// than a separate route push.
+/// Now Playing page — hosts the normal artwork/controls view and the
+/// compact in-page lyrics mode without pushing a separate route.
 class NowPlayingPage extends StatefulWidget {
   const NowPlayingPage({super.key});
 
@@ -48,6 +51,29 @@ class NowPlayingPage extends StatefulWidget {
 
 class _NowPlayingPageState extends State<NowPlayingPage> {
   bool _showLyrics = false;
+  Future<String?>? _lyricsFuture;
+  String? _lyricsKey;
+
+  String _songKey(MediaItem metadata) =>
+      metadata.id.isNotEmpty
+          ? metadata.id
+          : '${metadata.artist ?? ''} - ${metadata.title}';
+
+  void _loadLyrics(MediaItem metadata) {
+    final key = _songKey(metadata);
+    if (key == _lyricsKey) return;
+
+    _lyricsKey = key;
+    final ytid =
+        metadata.extras?['ytid']?.toString() ??
+        (metadata.id.isNotEmpty ? metadata.id : null);
+    _lyricsFuture = getSongLyrics(
+      metadata.artist,
+      metadata.title,
+      duration: metadata.duration?.inSeconds,
+      ytid: ytid,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -96,19 +122,30 @@ class _NowPlayingPageState extends State<NowPlayingPage> {
                   ),
                 ),
 
-                // Cross-fade switcher between normal view and lyrics view
+                // Keep the lyrics mode inside NowPlayingPage. The scale
+                // origin at the top makes the artwork feel like it docks
+                // into the compact header instead of navigating away.
                 AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 350),
+                  duration: const Duration(milliseconds: 420),
+                  switchInCurve: Curves.easeOutCubic,
+                  switchOutCurve: Curves.easeInCubic,
                   transitionBuilder: (child, animation) => FadeTransition(
                     opacity: animation,
-                    child: child,
+                    child: ScaleTransition(
+                      alignment: Alignment.topCenter,
+                      scale: Tween<double>(begin: 0.96, end: 1).animate(
+                        CurvedAnimation(
+                          parent: animation,
+                          curve: Curves.easeOutCubic,
+                        ),
+                      ),
+                      child: child,
+                    ),
                   ),
                   child: _showLyrics
-                      ? LyricsFullScreenPage(
+                      ? _buildLyricsView(
                           key: const ValueKey('lyrics'),
                           metadata: metadata,
-                          onClose: () =>
-                              setState(() => _showLyrics = false),
                         )
                       : Column(
                           key: const ValueKey('normal'),
@@ -143,6 +180,160 @@ class _NowPlayingPageState extends State<NowPlayingPage> {
             );
           },
         ),
+      ),
+    );
+  }
+
+  Widget _buildLyricsView({
+    required Key key,
+    required MediaItem metadata,
+  }) {
+    _loadLyrics(metadata);
+    final colorScheme = Theme.of(context).colorScheme;
+    final size = MediaQuery.sizeOf(context);
+    final future = _lyricsFuture;
+    final songId =
+        metadata.extras?['ytid']?.toString() ??
+        (metadata.id.isNotEmpty ? metadata.id : null);
+
+    return Column(
+      key: key,
+      children: [
+        _buildLyricsHeader(context, colorScheme, metadata),
+        Expanded(
+          child: future == null
+              ? const Center(child: CircularProgressIndicator())
+              : AsyncLoader<String?>(
+                  key: ValueKey(_lyricsKey),
+                  future: future,
+                  emptyWidget: _buildLyricsUnavailable(colorScheme),
+                  errorBuilder: (_, __, ___) =>
+                      _buildLyricsUnavailable(colorScheme),
+                  builder: (context, lyrics) {
+                    if (lyrics == null || lyrics.isEmpty) {
+                      return _buildLyricsUnavailable(colorScheme);
+                    }
+                    return LyricsDisplayWidget(
+                      key: ValueKey(songId ?? metadata.id),
+                      lyrics: lyrics,
+                      positionDataStream: audioHandler.positionDataStream,
+                      songId: songId,
+                    );
+                  },
+                ),
+        ),
+        _buildLyricsMiniControls(colorScheme, size),
+      ],
+    );
+  }
+
+  Widget _buildLyricsHeader(
+    BuildContext context,
+    ColorScheme colorScheme,
+    MediaItem metadata,
+  ) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 10),
+      child: Row(
+        children: [
+          IconButton(
+            icon: const Icon(FluentIcons.chevron_down_24_regular),
+            tooltip: 'Close lyrics',
+            onPressed: () => setState(() => _showLyrics = false),
+          ),
+          const SizedBox(width: 6),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(10),
+            child: SongArtworkWidget(
+              metadata: metadata,
+              size: 58,
+              borderRadius: 10,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  metadata.title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    color: colorScheme.onSurface,
+                  ),
+                ),
+                if (metadata.artist != null && metadata.artist!.isNotEmpty)
+                  Text(
+                    metadata.artist!,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: colorScheme.onSurface.withValues(alpha: 0.55),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLyricsUnavailable(ColorScheme colorScheme) {
+    return Center(
+      child: Text(
+        context.l10n?.lyricsNotAvailable ?? 'Lyrics not available',
+        style: TextStyle(
+          color: colorScheme.onSurface.withValues(alpha: 0.55),
+          fontWeight: FontWeight.w500,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLyricsMiniControls(ColorScheme colorScheme, Size size) {
+    final miniSize = size.width < 360 ? 20.0 : 22.0;
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+      decoration: BoxDecoration(
+        color: colorScheme.surface,
+        border: Border(
+          top: BorderSide(
+            color: colorScheme.outlineVariant.withValues(alpha: 0.3),
+          ),
+        ),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const PositionSlider(),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              IconButton(
+                iconSize: miniSize,
+                icon: const Icon(FluentIcons.previous_24_filled),
+                onPressed: audioHandler.skipToPrevious,
+              ),
+              const SizedBox(width: 16),
+              buildPlaybackIconButton(
+                size.width < 360 ? 36 : 40,
+                colorScheme.onPrimaryContainer,
+                colorScheme.primaryContainer,
+              ),
+              const SizedBox(width: 16),
+              IconButton(
+                iconSize: miniSize,
+                icon: const Icon(FluentIcons.next_24_filled),
+                onPressed: audioHandler.skipToNext,
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }

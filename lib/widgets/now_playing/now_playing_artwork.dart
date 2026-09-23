@@ -29,7 +29,7 @@ import 'package:catchify/services/settings_manager.dart';
 import 'package:catchify/widgets/song_artwork.dart';
 
 /// Displays the now-playing artwork with volume gesture support.
-/// Lyrics are now shown in a dedicated full-screen lyrics page.
+/// Lyrics mode is hosted by [NowPlayingPage].
 class NowPlayingArtwork extends StatefulWidget {
   const NowPlayingArtwork({
     super.key,
