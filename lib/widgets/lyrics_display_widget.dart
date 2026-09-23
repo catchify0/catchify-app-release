@@ -136,18 +136,19 @@ class _SyncedLyricsWidgetState extends State<SyncedLyricsWidget> {
             // Inactive line — dimmed
             textStyle: TextStyle(
               fontFamilyFallback: const ['AnekTamil'],
-              fontSize: 20,
-              fontWeight: FontWeight.w500,
+              fontSize: 21,
+              fontWeight: FontWeight.w600,
               color: inactiveColor,
               height: 1.45,
             ),
-            // Active / playing line — full opacity, bolder, slightly larger
+            // Active / playing line — full opacity, bolder, larger with tight tracking
             activeStyle: TextStyle(
               fontFamilyFallback: const ['AnekTamil'],
-              fontSize: 24,
+              fontSize: 25,
               fontWeight: FontWeight.w800,
               color: activeColor,
               height: 1.45,
+              letterSpacing: -0.25,
             ),
             // Translation style (not used, but required param)
             translationStyle: TextStyle(
@@ -157,7 +158,7 @@ class _SyncedLyricsWidgetState extends State<SyncedLyricsWidget> {
               color: inactiveColor,
               height: 1.4,
             ),
-            lineGap: 22,
+            lineGap: 24,
             translationLineGap: 8,
             lineTextAlign: TextAlign.left,
             contentAlignment: CrossAxisAlignment.start,
@@ -193,9 +194,7 @@ class _SyncedLyricsWidgetState extends State<SyncedLyricsWidget> {
         );
 
         // Top + bottom fade so lyrics dissolve gracefully into the
-        // header above and the controls card below.
-        // Uses zero-cost gradient overlays instead of ShaderMask (which invokes
-        // expensive saveLayer on every frame during scrolling).
+        // header above and the controls below.
         return Stack(
           children: [
             lyricView,
@@ -204,7 +203,7 @@ class _SyncedLyricsWidgetState extends State<SyncedLyricsWidget> {
               top: 0,
               left: 0,
               right: 0,
-              height: 28,
+              height: 32,
               child: IgnorePointer(
                 child: DecoratedBox(
                   decoration: BoxDecoration(
@@ -225,7 +224,7 @@ class _SyncedLyricsWidgetState extends State<SyncedLyricsWidget> {
               bottom: 0,
               left: 0,
               right: 0,
-              height: 48,
+              height: 52,
               child: IgnorePointer(
                 child: DecoratedBox(
                   decoration: BoxDecoration(
@@ -256,28 +255,77 @@ class PlainLyricsWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textColor = Theme.of(context).colorScheme.onSecondaryContainer;
+    final colorScheme = Theme.of(context).colorScheme;
+    final textColor = colorScheme.onSurface;
     final cleanLyricsText = LrcParser.cleanLyrics(lyrics);
 
-    return SingleChildScrollView(
+    final content = SingleChildScrollView(
       padding: const EdgeInsets.only(
         top: 28,
         bottom: 50,
-        left: 20,
-        right: 20,
+        left: 24,
+        right: 24,
       ),
       physics: const BouncingScrollPhysics(),
       child: Text(
         cleanLyricsText.isNotEmpty ? cleanLyricsText : lyrics,
         style: TextStyle(
           fontFamilyFallback: const ['AnekTamil'],
-          fontSize: 16,
-          fontWeight: FontWeight.w500,
-          color: textColor.withValues(alpha: 0.90),
-          height: 1.8,
+          fontSize: 18,
+          fontWeight: FontWeight.w600,
+          color: textColor.withValues(alpha: 0.88),
+          height: 1.75,
         ),
         textAlign: TextAlign.left,
       ),
+    );
+
+    return Stack(
+      children: [
+        content,
+        // Top fade
+        Positioned(
+          top: 0,
+          left: 0,
+          right: 0,
+          height: 32,
+          child: IgnorePointer(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    colorScheme.surface,
+                    colorScheme.surface.withValues(alpha: 0.0),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+        // Bottom fade
+        Positioned(
+          bottom: 0,
+          left: 0,
+          right: 0,
+          height: 52,
+          child: IgnorePointer(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.bottomCenter,
+                  end: Alignment.topCenter,
+                  colors: [
+                    colorScheme.surface,
+                    colorScheme.surface.withValues(alpha: 0.0),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

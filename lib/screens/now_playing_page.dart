@@ -391,13 +391,13 @@ class _NowPlayingPageState extends State<NowPlayingPage>
     MediaItem metadata,
   ) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(18, 8, 12, 4),
+      padding: const EdgeInsets.fromLTRB(18, 8, 14, 6),
       child: Row(
         children: [
           // Placeholder slot — actual artwork is rendered by the parent
           // Stack via AnimatedBuilder (see _artworkOverlayVisible block).
           const SizedBox(width: 58, height: 58),
-          const SizedBox(width: 12),
+          const SizedBox(width: 14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -408,10 +408,10 @@ class _NowPlayingPageState extends State<NowPlayingPage>
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    fontSize: 15,
+                    fontSize: 15.5,
                     fontWeight: FontWeight.w700,
                     color: colorScheme.onSurface,
-                    letterSpacing: -0.1,
+                    letterSpacing: -0.2,
                   ),
                 ),
                 if (metadata.artist != null && metadata.artist!.isNotEmpty) ...
@@ -422,8 +422,9 @@ class _NowPlayingPageState extends State<NowPlayingPage>
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
-                        fontSize: 12,
-                        color: colorScheme.onSurface.withValues(alpha: 0.55),
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w500,
+                        color: colorScheme.onSurfaceVariant,
                         letterSpacing: 0.1,
                       ),
                     ),
@@ -431,41 +432,40 @@ class _NowPlayingPageState extends State<NowPlayingPage>
               ],
             ),
           ),
-          // Lyrics label chip
+          const SizedBox(width: 8),
+          // Lyrics pill badge
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+            padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
             decoration: BoxDecoration(
-              color: colorScheme.primary.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(8),
+              color: colorScheme.primary.withValues(alpha: 0.14),
+              borderRadius: BorderRadius.circular(20),
             ),
             child: Text(
               'LYRICS',
               style: TextStyle(
-                fontSize: 9,
+                fontSize: 9.5,
                 fontWeight: FontWeight.w800,
-                letterSpacing: 1.1,
+                letterSpacing: 1.2,
                 color: colorScheme.primary,
               ),
             ),
           ),
-          // Close button — styled
-          const SizedBox(width: 4),
+          const SizedBox(width: 8),
+          // Circular dismiss button
           IconButton(
             icon: Icon(
               FluentIcons.dismiss_24_regular,
               color: colorScheme.onSurfaceVariant,
             ),
-            iconSize: 20,
+            iconSize: 18,
             tooltip: 'Close lyrics',
             style: IconButton.styleFrom(
-              backgroundColor:
-                  colorScheme.surfaceContainerHigh.withValues(alpha: 0.8),
+              backgroundColor: colorScheme.surfaceContainerHighest
+                  .withValues(alpha: 0.65),
               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
               padding: const EdgeInsets.all(8),
-              minimumSize: const Size(36, 36),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
+              minimumSize: const Size(38, 38),
+              shape: const CircleBorder(),
             ),
             onPressed: _closeLyrics,
           ),
@@ -518,7 +518,7 @@ class _NowPlayingPageState extends State<NowPlayingPage>
     required double miniIconSize,
   }) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -529,30 +529,30 @@ class _NowPlayingPageState extends State<NowPlayingPage>
               children: [
                 Container(
                   padding:
-                      const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
                     color: colorScheme.surfaceContainerHighest
-                        .withValues(alpha: 0.5),
-                    borderRadius: BorderRadius.circular(6),
+                        .withValues(alpha: 0.6),
+                    borderRadius: BorderRadius.circular(12),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(
                         Icons.lyrics_outlined,
-                        size: 9,
+                        size: 11,
                         color: colorScheme.onSurfaceVariant
-                            .withValues(alpha: 0.55),
+                            .withValues(alpha: 0.65),
                       ),
-                      const SizedBox(width: 3),
+                      const SizedBox(width: 4),
                       Text(
                         'lrclib',
                         style: TextStyle(
-                          fontSize: 9,
-                          fontWeight: FontWeight.w600,
-                          letterSpacing: 0.3,
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 0.4,
                           color: colorScheme.onSurfaceVariant
-                              .withValues(alpha: 0.55),
+                              .withValues(alpha: 0.65),
                         ),
                       ),
                     ],
@@ -565,10 +565,10 @@ class _NowPlayingPageState extends State<NowPlayingPage>
                   tooltip: 'Copy lyrics',
                   onPressed: _copyLyrics,
                 ),
-                const SizedBox(width: 4),
+                const SizedBox(width: 6),
                 _buildMiniActionButton(
                   colorScheme: colorScheme,
-                  icon: Icons.share_rounded,
+                  icon: FluentIcons.share_24_regular,
                   tooltip: 'Share lyrics',
                   onPressed: _shareLyrics,
                 ),
@@ -602,14 +602,14 @@ class _NowPlayingPageState extends State<NowPlayingPage>
       icon: Icon(icon),
       iconSize: 16,
       tooltip: tooltip,
-      color: colorScheme.onSurfaceVariant.withValues(alpha: 0.75),
+      color: colorScheme.onSurfaceVariant.withValues(alpha: 0.8),
       style: IconButton.styleFrom(
+        backgroundColor: colorScheme.surfaceContainerHighest
+            .withValues(alpha: 0.45),
         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-        padding: const EdgeInsets.all(6),
-        minimumSize: const Size(30, 30),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
+        padding: const EdgeInsets.all(7),
+        minimumSize: const Size(32, 32),
+        shape: const CircleBorder(),
       ),
       onPressed: onPressed,
     );
