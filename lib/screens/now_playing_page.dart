@@ -364,7 +364,7 @@ class _NowPlayingPageState extends State<NowPlayingPage>
 
   Widget _buildLyricsMiniControls(ColorScheme colorScheme, Size size) {
     final miniSize = size.width < 360 ? 20.0 : 22.0;
-    return Container(
+    return Padding(
       padding: const EdgeInsets.fromLTRB(24, 0, 24, 18),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -564,10 +564,6 @@ class _DesktopLayout extends StatelessWidget {
         Expanded(
           child: DecoratedBox(
             decoration: BoxDecoration(
-              color: colorScheme.surfaceContainerLow.withValues(alpha: 0.72),
-              borderRadius: const BorderRadius.horizontal(
-                left: Radius.circular(28),
-              ),
               border: Border(
                 left: BorderSide(
                   color: colorScheme.outlineVariant.withValues(alpha: 0.35),
