@@ -66,7 +66,7 @@ class _NowPlayingPageState extends State<NowPlayingPage>
       vsync: this,
       duration: const Duration(milliseconds: 520),
       reverseDuration: const Duration(milliseconds: 380),
-    );
+    ),
   }
 
   @override
@@ -220,7 +220,7 @@ class _NowPlayingPageState extends State<NowPlayingPage>
                             ),
                           );
                         },
-                      );
+                      ),
                   ],
                 );
               },
