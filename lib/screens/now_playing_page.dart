@@ -518,35 +518,21 @@ class _NowPlayingPageState extends State<NowPlayingPage>
     required double miniIconSize,
   }) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-      child: Container(
-        decoration: BoxDecoration(
-          color: colorScheme.surfaceContainerHigh.withValues(alpha: 0.88),
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(
-            color: colorScheme.outlineVariant.withValues(alpha: 0.35),
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: colorScheme.shadow.withValues(alpha: 0.06),
-              blurRadius: 14,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        padding: const EdgeInsets.fromLTRB(16, 10, 16, 14),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Attribution row — minimal lrclib chip + copy/share
-            Row(
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Attribution row — minimal lrclib chip + copy/share
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4),
+            child: Row(
               children: [
                 Container(
                   padding:
                       const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
                   decoration: BoxDecoration(
                     color: colorScheme.surfaceContainerHighest
-                        .withValues(alpha: 0.72),
+                        .withValues(alpha: 0.5),
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Row(
@@ -588,19 +574,19 @@ class _NowPlayingPageState extends State<NowPlayingPage>
                 ),
               ],
             ),
-            const SizedBox(height: 4),
-            // Position slider — identical to NowPlayingControls
-            const PositionSlider(),
-            const SizedBox(height: 4),
-            // Prev / Play / Next — reuse the exact same widget used in
-            // normal Now Playing so the buttons are pixel-identical.
-            PlayerControlButtons(
-              metadata: metadata,
-              iconSize: baseIconSize,
-              miniIconSize: miniIconSize,
-            ),
-          ],
-        ),
+          ),
+          const SizedBox(height: 2),
+          // Position slider — identical to NowPlayingControls
+          const PositionSlider(),
+          const SizedBox(height: 4),
+          // Prev / Play / Next — reuse the exact same widget used in
+          // normal Now Playing so the buttons are pixel-identical.
+          PlayerControlButtons(
+            metadata: metadata,
+            iconSize: baseIconSize,
+            miniIconSize: miniIconSize,
+          ),
+        ],
       ),
     );
   }
