@@ -117,28 +117,35 @@ class _SyncedLyricsWidgetState extends State<SyncedLyricsWidget> {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final activeColor = colorScheme.onSurface;
-    final inactiveColor = colorScheme.onSurface.withValues(alpha: 0.42);
+    final inactiveColor = colorScheme.onSurface.withValues(alpha: 0.38);
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        return LyricView(
+        // The active line is anchored at 38 % from the top.
+        // Without bottom padding the last lyric line scrolls UP to that
+        // anchor, leaving ~62 % of the viewport empty.
+        // We fill that dead zone with virtual padding so the last line
+        // stays at the bottom and never over-scrolls.
+        final bottomPadding = constraints.maxHeight * 0.62;
+
+        final lyricView = LyricView(
           controller: _controller,
           width: constraints.maxWidth,
           height: constraints.maxHeight,
           style: LyricStyle(
-            // Inactive line — dim (Youtify reference)
+            // Inactive line — dimmed
             textStyle: TextStyle(
               fontFamilyFallback: const ['AnekTamil'],
-              fontSize: 21,
+              fontSize: 20,
               fontWeight: FontWeight.w500,
               color: inactiveColor,
               height: 1.45,
             ),
-            // Active/playing line — full opacity bold (Youtify reference)
+            // Active / playing line — full opacity, bolder, slightly larger
             activeStyle: TextStyle(
               fontFamilyFallback: const ['AnekTamil'],
-              fontSize: 23,
-              fontWeight: FontWeight.w700,
+              fontSize: 24,
+              fontWeight: FontWeight.w800,
               color: activeColor,
               height: 1.45,
             ),
@@ -154,15 +161,17 @@ class _SyncedLyricsWidgetState extends State<SyncedLyricsWidget> {
             translationLineGap: 8,
             lineTextAlign: TextAlign.left,
             contentAlignment: CrossAxisAlignment.start,
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 24,
-              vertical: 20,
+            contentPadding: EdgeInsets.only(
+              left: 24,
+              right: 24,
+              top: 20,
+              // Key fix: virtual space so the last line doesn't float up.
+              bottom: bottomPadding,
             ),
-            // Left anchor — active line sits at 38% from top
+            // Active line sits at 38 % from top
             selectionAnchorPosition: 0.38,
             activeAnchorPosition: 0.38,
             selectionAlignment: MainAxisAlignment.start,
-            // No fade (fadeRange: null = no fade) — clean Youtify look
             selectedColor: activeColor,
             selectedTranslationColor: inactiveColor,
             // Smooth scroll
@@ -181,6 +190,24 @@ class _SyncedLyricsWidgetState extends State<SyncedLyricsWidget> {
             activeAutoResumeDuration: const Duration(seconds: 5),
             selectionAutoResumeMode: SelectionAutoResumeMode.afterSelecting,
           ),
+        );
+
+        // Top + bottom fade so lyrics dissolve gracefully into the
+        // header above and the controls card below.
+        return ShaderMask(
+          shaderCallback: (rect) => LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: const [
+              Colors.transparent,
+              Colors.white,
+              Colors.white,
+              Colors.transparent,
+            ],
+            stops: const [0.0, 0.08, 0.82, 1.0],
+          ).createShader(rect),
+          blendMode: BlendMode.dstIn,
+          child: lyricView,
         );
       },
     );

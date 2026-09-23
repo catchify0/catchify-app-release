@@ -301,7 +301,29 @@ class _NowPlayingPageState extends State<NowPlayingPage>
         _buildLyricsHeader(context, colorScheme, metadata),
         Expanded(
           child: future == null
-              ? const Center(child: CircularProgressIndicator())
+              ? Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      SizedBox(
+                        width: 26,
+                        height: 26,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: colorScheme.primary,
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+                      Text(
+                        'Fetching lyrics…',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: colorScheme.onSurface.withValues(alpha: 0.4),
+                        ),
+                      ),
+                    ],
+                  ),
+                )
               : AsyncLoader<String?>(
                   key: ValueKey(_lyricsKey),
                   future: future,
@@ -423,11 +445,36 @@ class _NowPlayingPageState extends State<NowPlayingPage>
 
   Widget _buildLyricsUnavailable(ColorScheme colorScheme) {
     return Center(
-      child: Text(
-        context.l10n?.lyricsNotAvailable ?? 'Lyrics not available',
-        style: TextStyle(
-          color: colorScheme.onSurface.withValues(alpha: 0.55),
-          fontWeight: FontWeight.w500,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 40),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              FluentIcons.music_note_2_24_regular,
+              size: 44,
+              color: colorScheme.onSurface.withValues(alpha: 0.22),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              context.l10n?.lyricsNotAvailable ?? 'Lyrics not available',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: colorScheme.onSurface.withValues(alpha: 0.45),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Synced lyrics could not be found for this track.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 13,
+                color: colorScheme.onSurface.withValues(alpha: 0.28),
+              ),
+            ),
+          ],
         ),
       ),
     );
