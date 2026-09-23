@@ -546,13 +546,13 @@ class _NowPlayingPageState extends State<NowPlayingPage>
                       ),
                       const SizedBox(width: 4),
                       Text(
-                        'lrclib',
+                        'powered by lrclib',
                         style: TextStyle(
                           fontSize: 10,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: 0.4,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 0.3,
                           color: colorScheme.onSurfaceVariant
-                              .withValues(alpha: 0.65),
+                              .withValues(alpha: 0.70),
                         ),
                       ),
                     ],
