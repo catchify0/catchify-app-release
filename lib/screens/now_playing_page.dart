@@ -70,13 +70,12 @@ class _NowPlayingPageState extends State<NowPlayingPage>
     super.initState();
     _lyricsTransitionController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 320),
-      reverseDuration: const Duration(milliseconds: 300),
+      duration: const Duration(milliseconds: 300),
+      reverseDuration: const Duration(milliseconds: 280),
     );
     _artworkCurve = CurvedAnimation(
       parent: _lyricsTransitionController,
-      curve: Curves.fastOutSlowIn,
-      reverseCurve: Curves.fastOutSlowIn.flipped,
+      curve: Curves.easeInOutCubic,
     );
   }
 
@@ -147,54 +146,76 @@ class _NowPlayingPageState extends State<NowPlayingPage>
                   fit: StackFit.expand,
                   clipBehavior: Clip.none,
                   children: [
-                    // Keep lyrics inside NowPlayingPage and switch cleanly
-                    AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 300),
-                      switchInCurve: Curves.easeOutCubic,
-                      switchOutCurve: Curves.easeInCubic,
-                      layoutBuilder: (currentChild, _) =>
-                          currentChild ?? const SizedBox.shrink(),
-                      transitionBuilder: (child, animation) =>
-                          FadeTransition(
-                            opacity: animation,
+                    // Normal Now Playing view (fades out as lyrics open, fades in as lyrics close)
+                    AnimatedBuilder(
+                      animation: _artworkCurve,
+                      builder: (context, child) {
+                        final progress = _artworkCurve.value;
+                        final opacity = (1.0 - progress).clamp(0.0, 1.0);
+                        if (opacity <= 0.0) return const SizedBox.shrink();
+                        return IgnorePointer(
+                          ignoring: progress > 0.5,
+                          child: Opacity(
+                            opacity: opacity,
                             child: child,
                           ),
-                      child: _showLyrics
-                          ? _buildLyricsView(
-                              key: const ValueKey('lyrics'),
-                              metadata: metadata,
-                            )
-                          : Column(
-                              key: const ValueKey('normal'),
-                              children: [
-                                _buildAppBar(
-                                  context,
-                                  colorScheme,
-                                  metadata,
-                                ),
-                                Expanded(
-                                  child: isLargeScreen
-                                      ? _DesktopLayout(
-                                          metadata: metadata,
-                                          size: size,
-                                          adjustedIconSize: baseIconSize,
-                                          adjustedMiniIconSize: miniIconSize,
-                                          onLyricsTap: _openLyrics,
-                                          artworkVisible: !_artworkOverlayVisible,
-                                        )
-                                      : _MobileLayout(
-                                          metadata: metadata,
-                                          size: size,
-                                          adjustedIconSize: baseIconSize,
-                                          adjustedMiniIconSize: miniIconSize,
-                                          isLargeScreen: isLargeScreen,
-                                          onLyricsTap: _openLyrics,
-                                          artworkVisible: !_artworkOverlayVisible,
-                                        ),
-                                ),
-                              ],
-                            ),
+                        );
+                      },
+                      child: Column(
+                        key: const ValueKey('normal'),
+                        children: [
+                          _buildAppBar(
+                            context,
+                            colorScheme,
+                            metadata,
+                          ),
+                          Expanded(
+                            child: isLargeScreen
+                                ? _DesktopLayout(
+                                    metadata: metadata,
+                                    size: size,
+                                    adjustedIconSize: baseIconSize,
+                                    adjustedMiniIconSize: miniIconSize,
+                                    onLyricsTap: _openLyrics,
+                                    artworkVisible: !_artworkOverlayVisible,
+                                  )
+                                : _MobileLayout(
+                                    metadata: metadata,
+                                    size: size,
+                                    adjustedIconSize: baseIconSize,
+                                    adjustedMiniIconSize: miniIconSize,
+                                    isLargeScreen: isLargeScreen,
+                                    onLyricsTap: _openLyrics,
+                                    artworkVisible: !_artworkOverlayVisible,
+                                  ),
+                          ),
+                        ],
+                      ),
                     ),
+
+                    // Lyrics view (fades in as lyrics open, fades out as lyrics close)
+                    if (_showLyrics)
+                      AnimatedBuilder(
+                        animation: _artworkCurve,
+                        builder: (context, child) {
+                          final progress = _artworkCurve.value;
+                          final opacity = progress.clamp(0.0, 1.0);
+                          if (opacity <= 0.0) return const SizedBox.shrink();
+                          return IgnorePointer(
+                            ignoring: progress < 0.5,
+                            child: Opacity(
+                              opacity: opacity,
+                              child: child,
+                            ),
+                          );
+                        },
+                        child: _buildLyricsView(
+                          key: const ValueKey('lyrics'),
+                          metadata: metadata,
+                        ),
+                      ),
+
+                    // Floating artwork animation (smoothly flies between center and 58x58 slot)
                     if (_artworkOverlayVisible)
                       AnimatedBuilder(
                         animation: _artworkCurve,
@@ -287,18 +308,16 @@ class _NowPlayingPageState extends State<NowPlayingPage>
       _showLyrics = true;
       _artworkOverlayVisible = true;
     });
-    _lyricsTransitionController.forward(from: 0);
+    _lyricsTransitionController.forward();
   }
 
   void _closeLyrics() {
-    // Parallel close: switch views immediately while reversing the
-    // floating artwork. Eliminates the previous 860ms serial delay.
-    setState(() {
-      _showLyrics = false;
-    });
+    // Both views smoothly cross-fade while the artwork flies back to center.
+    // When the reverse animation finishes at progress 0.0, clean up overlay.
     _lyricsTransitionController.reverse().whenCompleteOrCancel(() {
-      if (mounted && !_showLyrics) {
+      if (mounted && _lyricsTransitionController.value == 0.0) {
         setState(() {
+          _showLyrics = false;
           _artworkOverlayVisible = false;
         });
       }
