@@ -59,6 +59,9 @@ class _NowPlayingPageState extends State<NowPlayingPage>
   // so the artwork doesn't pop-out before the normal view has finished sliding in.
   bool _artworkOverlayVisible = false;
   late final AnimationController _lyricsTransitionController;
+  // Cached CurvedAnimation — avoids allocating a new instance every
+  // AnimatedBuilder frame (which would never be disposed).
+  late final CurvedAnimation _artworkCurve;
   Future<String?>? _lyricsFuture;
   String? _lyricsKey;
 
@@ -67,13 +70,20 @@ class _NowPlayingPageState extends State<NowPlayingPage>
     super.initState();
     _lyricsTransitionController = AnimationController(
       vsync: this,
+      // Forward: artwork shrinks to 58×58 header slot (520ms).
+      // AnimatedSwitcher uses 480ms so content is ready before artwork lands.
       duration: const Duration(milliseconds: 520),
       reverseDuration: const Duration(milliseconds: 380),
+    );
+    _artworkCurve = CurvedAnimation(
+      parent: _lyricsTransitionController,
+      curve: Curves.easeInOutCubic,
     );
   }
 
   @override
   void dispose() {
+    _artworkCurve.dispose();
     _lyricsTransitionController.dispose();
     super.dispose();
   }
@@ -141,7 +151,9 @@ class _NowPlayingPageState extends State<NowPlayingPage>
                     // Keep lyrics inside NowPlayingPage and slide them into
                     // place without changing the parent's size.
                     AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 420),
+                      // 480ms: content is almost ready when the 520ms artwork
+                      // animation finishes, so no gap between the two.
+                      duration: const Duration(milliseconds: 480),
                       switchInCurve: Curves.easeOutCubic,
                       switchOutCurve: Curves.easeInCubic,
                       // Do not retain the outgoing player behind lyrics.
@@ -149,17 +161,20 @@ class _NowPlayingPageState extends State<NowPlayingPage>
                       layoutBuilder: (currentChild, _) =>
                           currentChild ?? const SizedBox.shrink(),
                       transitionBuilder: (child, animation) =>
-                          SlideTransition(
-                            position: Tween<Offset>(
-                              begin: const Offset(0, 0.035),
-                              end: Offset.zero,
-                            ).animate(
-                              CurvedAnimation(
-                                parent: animation,
-                                curve: Curves.easeOutCubic,
+                          FadeTransition(
+                            opacity: animation,
+                            child: SlideTransition(
+                              position: Tween<Offset>(
+                                begin: const Offset(0, 0.03),
+                                end: Offset.zero,
+                              ).animate(
+                                CurvedAnimation(
+                                  parent: animation,
+                                  curve: Curves.easeOutCubic,
+                                ),
                               ),
+                              child: child,
                             ),
-                            child: child,
                           ),
                       child: _showLyrics
                           ? _buildLyricsView(
@@ -197,12 +212,9 @@ class _NowPlayingPageState extends State<NowPlayingPage>
                       ),
                     if (_artworkOverlayVisible)
                       AnimatedBuilder(
-                        animation: _lyricsTransitionController,
+                        animation: _artworkCurve,
                         builder: (context, child) {
-                          final progress = CurvedAnimation(
-                            parent: _lyricsTransitionController,
-                            curve: Curves.easeInOutCubic,
-                          ).value;
+                          final progress = _artworkCurve.value;
                           final size = lerpDouble(artworkSize, 58, progress)!;
                           return Positioned(
                             left: lerpDouble(
