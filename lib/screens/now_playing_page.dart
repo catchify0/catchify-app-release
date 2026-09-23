@@ -102,45 +102,23 @@ class _NowPlayingPageState extends State<NowPlayingPage> {
 
             return Stack(
               children: [
-                // Background radial gradient — always visible
-                Positioned(
-                  top: -size.height * 0.12,
-                  left: -size.width * 0.2,
-                  right: -size.width * 0.2,
-                  height: size.height * 0.7,
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      gradient: RadialGradient(
-                        colors: [
-                          colorScheme.primary.withValues(alpha: 0.22),
-                          colorScheme.primary.withValues(alpha: 0.05),
-                          Colors.transparent,
-                        ],
-                        radius: 0.85,
-                      ),
-                    ),
-                  ),
-                ),
-
-                // Keep the lyrics mode inside NowPlayingPage. The scale
-                // origin at the top makes the artwork feel like it docks
-                // into the compact header instead of navigating away.
+                // Keep the lyrics mode inside NowPlayingPage and slide it
+                // into place instead of fading between separate surfaces.
                 AnimatedSwitcher(
                   duration: const Duration(milliseconds: 420),
                   switchInCurve: Curves.easeOutCubic,
                   switchOutCurve: Curves.easeInCubic,
-                  transitionBuilder: (child, animation) => FadeTransition(
-                    opacity: animation,
-                    child: ScaleTransition(
-                      alignment: Alignment.topCenter,
-                      scale: Tween<double>(begin: 0.96, end: 1).animate(
-                        CurvedAnimation(
-                          parent: animation,
-                          curve: Curves.easeOutCubic,
-                        ),
+                  transitionBuilder: (child, animation) => SlideTransition(
+                    position: Tween<Offset>(
+                      begin: const Offset(0, 0.035),
+                      end: Offset.zero,
+                    ).animate(
+                      CurvedAnimation(
+                        parent: animation,
+                        curve: Curves.easeOutCubic,
                       ),
-                      child: child,
                     ),
+                    child: child,
                   ),
                   child: _showLyrics
                       ? _buildLyricsView(
@@ -233,52 +211,64 @@ class _NowPlayingPageState extends State<NowPlayingPage> {
     MediaItem metadata,
   ) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 10),
-      child: Row(
-        children: [
-          IconButton(
-            icon: const Icon(FluentIcons.chevron_down_24_regular),
-            tooltip: 'Close lyrics',
-            onPressed: () => setState(() => _showLyrics = false),
+      padding: const EdgeInsets.fromLTRB(14, 8, 14, 10),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: colorScheme.surfaceContainerHigh.withValues(alpha: 0.88),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: colorScheme.outlineVariant.withValues(alpha: 0.45),
           ),
-          const SizedBox(width: 6),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(10),
-            child: SongArtworkWidget(
-              metadata: metadata,
-              size: 58,
-              borderRadius: 10,
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  metadata.title,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
-                    color: colorScheme.onSurface,
-                  ),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
+          child: Row(
+            children: [
+              IconButton(
+                icon: const Icon(FluentIcons.chevron_down_24_regular),
+                tooltip: 'Close lyrics',
+                onPressed: () => setState(() => _showLyrics = false),
+              ),
+              const SizedBox(width: 4),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(10),
+                child: SongArtworkWidget(
+                  metadata: metadata,
+                  size: 58,
+                  borderRadius: 10,
                 ),
-                if (metadata.artist != null && metadata.artist!.isNotEmpty)
-                  Text(
-                    metadata.artist!,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: colorScheme.onSurface.withValues(alpha: 0.55),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      metadata.title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        color: colorScheme.onSurface,
+                      ),
                     ),
-                  ),
-              ],
-            ),
+                    if (metadata.artist != null && metadata.artist!.isNotEmpty)
+                      Text(
+                        metadata.artist!,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: colorScheme.onSurface.withValues(alpha: 0.55),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -298,12 +288,13 @@ class _NowPlayingPageState extends State<NowPlayingPage> {
   Widget _buildLyricsMiniControls(ColorScheme colorScheme, Size size) {
     final miniSize = size.width < 360 ? 20.0 : 22.0;
     return Container(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+      padding: const EdgeInsets.fromLTRB(14, 8, 14, 12),
       decoration: BoxDecoration(
-        color: colorScheme.surface,
+        color: colorScheme.surfaceContainerLow.withValues(alpha: 0.94),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
         border: Border(
           top: BorderSide(
-            color: colorScheme.outlineVariant.withValues(alpha: 0.3),
+            color: colorScheme.outlineVariant.withValues(alpha: 0.45),
           ),
         ),
       ),
@@ -344,10 +335,20 @@ class _NowPlayingPageState extends State<NowPlayingPage> {
     MediaItem metadata,
   ) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
+      padding: const EdgeInsets.fromLTRB(14, 8, 14, 10),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: colorScheme.surfaceContainerHigh.withValues(alpha: 0.82),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: colorScheme.outlineVariant.withValues(alpha: 0.42),
+          ),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
           IconButton(
             iconSize: 24,
             icon: const Icon(FluentIcons.chevron_down_24_regular),
@@ -409,7 +410,9 @@ class _NowPlayingPageState extends State<NowPlayingPage> {
               unawaited(audioHandler.startSongRadio(song));
             },
           ),
-        ],
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -475,7 +478,22 @@ class _DesktopLayout extends StatelessWidget {
             ),
           ),
         ),
-        const Expanded(child: QueueWidget()),
+        Expanded(
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              color: colorScheme.surfaceContainerLow.withValues(alpha: 0.72),
+              borderRadius: const BorderRadius.horizontal(
+                left: Radius.circular(28),
+              ),
+              border: Border(
+                left: BorderSide(
+                  color: colorScheme.outlineVariant.withValues(alpha: 0.35),
+                ),
+              ),
+            ),
+            child: const QueueWidget(),
+          ),
+        ),
       ],
     );
   }
@@ -513,10 +531,10 @@ class _MobileLayout extends StatelessWidget {
 
   Widget _buildPortraitLayout(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
+      padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Column(
         children: [
-          const SizedBox(height: 8),
+          const SizedBox(height: 4),
           Expanded(
             flex: 5,
             child: Center(
@@ -564,7 +582,7 @@ class _MobileLayout extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(width: 24),
+          const SizedBox(width: 20),
           Expanded(
             flex: 5,
             child: Column(
