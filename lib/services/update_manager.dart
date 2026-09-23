@@ -44,6 +44,27 @@ const String releasesUrl =
 const String downloadUrlKey = 'url';
 const String downloadUrlArm64Key = 'arm64url';
 
+String? _extractIpaUrl(
+  Map<String, dynamic> releasesResponse,
+  Map<String, dynamic> checkMap,
+) {
+  final assets = releasesResponse['assets'];
+  if (assets is List) {
+    for (final asset in assets) {
+      if (asset is Map<String, dynamic>) {
+        final name = asset['name']?.toString().toLowerCase() ?? '';
+        if (name.endsWith('.ipa')) {
+          final url = asset['browser_download_url']?.toString();
+          if (url != null && url.isNotEmpty) return url;
+        }
+      }
+    }
+  }
+  final ipa = checkMap['ipaUrl']?.toString();
+  if (ipa != null && ipa.isNotEmpty) return ipa;
+  return null;
+}
+
 Future<void> checkAppUpdates({bool manual = false}) async {
   try {
     final response = await http.get(Uri.parse(checkUrl));
@@ -186,10 +207,11 @@ Future<void> checkAppUpdates({bool manual = false}) async {
                 Navigator.pop(context);
                 try {
                   if (Platform.isIOS) {
+                    final ipaUrl = _extractIpaUrl(releasesResponse, map);
                     final releaseHtmlUrl =
                         releasesResponse['html_url']?.toString() ??
                             'https://github.com/catchify0/catchify0.github.io/releases/latest';
-                    await launchURL(Uri.parse(releaseHtmlUrl));
+                    await launchURL(Uri.parse(ipaUrl ?? releaseHtmlUrl));
                     return;
                   }
                   final url = await getDownloadUrl(map);

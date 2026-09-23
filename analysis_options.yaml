@@ -1,5 +1,7 @@
 analyzer:
   exclude:
+    - tools/**
+    - .agents/**
     - packages/**
     - scripts/**
     - test/**

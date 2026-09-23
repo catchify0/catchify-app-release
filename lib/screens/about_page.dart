@@ -22,6 +22,7 @@
 import 'package:fluentui_system_icons/fluentui_system_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:catchify/constants/version.dart';
+import 'package:catchify/services/update_manager.dart';
 import 'package:catchify/utilities/url_launcher.dart';
 import 'package:catchify/extensions/l10n.dart';
 import 'package:catchify/widgets/mini_player_bottom_space.dart';
@@ -86,6 +87,90 @@ class AboutPage extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 24),
+            // Updates Card
+            DecoratedBox(
+              decoration: BoxDecoration(
+                color: colorScheme.surfaceContainerLow.withValues(alpha: 0.9),
+                borderRadius: BorderRadius.circular(22),
+                border: Border.all(
+                  color: colorScheme.outlineVariant.withValues(alpha: 0.4),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: colorScheme.shadow.withValues(alpha: 0.08),
+                    blurRadius: 18,
+                    offset: const Offset(0, 6),
+                  ),
+                ],
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(6),
+                          decoration: BoxDecoration(
+                            color: colorScheme.primaryContainer.withValues(alpha: 0.6),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Icon(
+                            FluentIcons.arrow_sync_circle_24_regular,
+                            size: 16,
+                            color: colorScheme.primary,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Updates & Release Channel',
+                          style: TextStyle(
+                            color: colorScheme.onSurface,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      'Catchify updates are published directly via GitHub Releases. Check for the latest release or view release notes.',
+                      style: TextStyle(
+                        color: colorScheme.onSurfaceVariant,
+                        fontSize: 12,
+                        height: 1.35,
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _ContactButton(
+                            icon: FluentIcons.arrow_sync_24_regular,
+                            label: 'Check Updates',
+                            onPressed: () => checkAppUpdates(manual: true),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: _ContactButton(
+                            icon: FluentIcons.open_24_regular,
+                            label: 'Releases',
+                            onPressed: () => launchURL(
+                              Uri.parse(
+                                'https://github.com/catchify0/catchify0.github.io/releases/latest',
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
             // Open Source & License Card
             DecoratedBox(
               decoration: BoxDecoration(
