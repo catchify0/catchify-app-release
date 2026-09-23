@@ -31,16 +31,22 @@ import 'package:catchify/widgets/playback_icon_button.dart';
 import 'package:catchify/widgets/position_slider.dart';
 import 'package:catchify/widgets/song_artwork.dart';
 
-/// Full-screen lyrics page — Youtify style.
+/// Inline full-screen lyrics view shown inside NowPlayingPage.
 ///
-/// Layout:
-///  - Top    : back chevron + small artwork thumbnail + title + artist
-///  - Middle : full-height [LyricsDisplayWidget] (synced or plain)
-///  - Bottom : seek bar + prev / play-pause / next
+/// This is NOT a route — it is a plain widget that NowPlayingPage fades in
+/// over the normal artwork/controls view using AnimatedSwitcher.
+/// Call [onClose] to cross-fade back to the normal view.
 class LyricsFullScreenPage extends StatefulWidget {
-  const LyricsFullScreenPage({super.key, required this.metadata});
+  const LyricsFullScreenPage({
+    super.key,
+    required this.metadata,
+    required this.onClose,
+  });
 
   final MediaItem metadata;
+
+  /// Called when the back button is tapped — parent handles the fade-out.
+  final VoidCallback onClose;
 
   @override
   State<LyricsFullScreenPage> createState() => _LyricsFullScreenPageState();
@@ -84,56 +90,54 @@ class _LyricsFullScreenPageState extends State<LyricsFullScreenPage> {
     final colorScheme = Theme.of(context).colorScheme;
     final size = MediaQuery.sizeOf(context);
 
-    return Scaffold(
-      backgroundColor: colorScheme.surface,
-      body: SafeArea(
-        child: StreamBuilder<MediaItem?>(
-          stream: audioHandler.mediaItem,
-          builder: (context, snap) {
-            final metadata = snap.data ?? widget.metadata;
-            // Schedule fetch after build to avoid side-effects in build().
-            // Only triggers a real re-fetch when song changes.
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              if (mounted) _fetchIfNeeded(metadata);
-            });
+    // No Scaffold — lives inside NowPlayingPage's Scaffold.
+    return StreamBuilder<MediaItem?>(
+      stream: audioHandler.mediaItem,
+      builder: (context, snap) {
+        final metadata = snap.data ?? widget.metadata;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) _fetchIfNeeded(metadata);
+        });
 
-            final future = _lyricsFuture;
-            if (future == null) {
-              return const Center(child: CircularProgressIndicator());
-            }
+        final future = _lyricsFuture;
+        if (future == null) {
+          return const Center(child: CircularProgressIndicator());
+        }
 
-            return Column(
-              children: [
-                _TopBar(metadata: metadata),
-                Expanded(
-                  child: AsyncLoader<String?>(
-                    key: ValueKey(_cachedKey),
-                    future: future,
-                    emptyWidget: _emptyLyrics(context, colorScheme),
-                    errorBuilder: (_, __, ___) =>
-                        _emptyLyrics(context, colorScheme),
-                    builder: (context, lyrics) {
-                      if (lyrics == null || lyrics.isEmpty) {
-                        return _emptyLyrics(context, colorScheme);
-                      }
-                      final songId =
-                          metadata.extras?['ytid']?.toString() ??
-                          (metadata.id.isNotEmpty ? metadata.id : null);
-                      return LyricsDisplayWidget(
-                        key: ValueKey(songId ?? metadata.id),
-                        lyrics: lyrics,
-                        positionDataStream: audioHandler.positionDataStream,
-                        songId: songId,
-                      );
-                    },
-                  ),
-                ),
-                _BottomControls(colorScheme: colorScheme, size: size),
-              ],
-            );
-          },
-        ),
-      ),
+        return Column(
+          children: [
+            // Top bar: back button + small artwork + title + artist
+            _TopBar(metadata: metadata, onClose: widget.onClose),
+
+            // Full-height lyrics
+            Expanded(
+              child: AsyncLoader<String?>(
+                key: ValueKey(_cachedKey),
+                future: future,
+                emptyWidget: _emptyLyrics(context, colorScheme),
+                errorBuilder: (_, __, ___) => _emptyLyrics(context, colorScheme),
+                builder: (context, lyrics) {
+                  if (lyrics == null || lyrics.isEmpty) {
+                    return _emptyLyrics(context, colorScheme);
+                  }
+                  final songId =
+                      metadata.extras?['ytid']?.toString() ??
+                      (metadata.id.isNotEmpty ? metadata.id : null);
+                  return LyricsDisplayWidget(
+                    key: ValueKey(songId ?? metadata.id),
+                    lyrics: lyrics,
+                    positionDataStream: audioHandler.positionDataStream,
+                    songId: songId,
+                  );
+                },
+              ),
+            ),
+
+            // Bottom mini controls: seek bar + prev / play-pause / next
+            _BottomControls(colorScheme: colorScheme, size: size),
+          ],
+        );
+      },
     );
   }
 
@@ -167,8 +171,9 @@ class _LyricsFullScreenPageState extends State<LyricsFullScreenPage> {
 // ---------------------------------------------------------------------------
 
 class _TopBar extends StatelessWidget {
-  const _TopBar({required this.metadata});
+  const _TopBar({required this.metadata, required this.onClose});
   final MediaItem metadata;
+  final VoidCallback onClose;
 
   @override
   Widget build(BuildContext context) {
@@ -190,7 +195,7 @@ class _TopBar extends StatelessWidget {
               ),
               padding: const EdgeInsets.all(8),
             ),
-            onPressed: () => Navigator.of(context).pop(),
+            onPressed: onClose,  // calls parent setState — no Navigator needed
           ),
           const SizedBox(width: 12),
           ClipRRect(

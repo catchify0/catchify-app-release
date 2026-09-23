@@ -25,7 +25,6 @@ import 'package:flutter/material.dart';
 import 'package:catchify/constants/app_tokens.dart';
 import 'package:catchify/extensions/l10n.dart';
 import 'package:catchify/main.dart';
-import 'package:catchify/screens/lyrics_full_screen_page.dart';
 import 'package:catchify/services/common_services.dart';
 import 'package:catchify/services/settings_manager.dart';
 import 'package:catchify/utilities/flutter_bottom_sheet.dart';
@@ -41,11 +40,14 @@ class BottomActionsRow extends StatefulWidget {
     required this.metadata,
     required this.iconSize,
     required this.isLargeScreen,
+    required this.onLyricsTap,
   });
   final dynamic audioId;
   final MediaItem metadata;
   final double iconSize;
   final bool isLargeScreen;
+  /// Called when the lyrics icon is tapped — parent handles the view switch.
+  final VoidCallback onLyricsTap;
 
   @override
   State<BottomActionsRow> createState() => _BottomActionsRowState();
@@ -161,12 +163,7 @@ class _BottomActionsRowState extends State<BottomActionsRow> {
               icon: FluentIcons.text_quote_24_regular,
               colorScheme: colorScheme,
               size: responsiveIconSize,
-              onPressed: () => Navigator.of(context).push(
-                MaterialPageRoute<void>(
-                  builder: (_) =>
-                      LyricsFullScreenPage(metadata: widget.metadata),
-                ),
-              ),
+              onPressed: widget.onLyricsTap,
               tooltip: l10n.lyrics,
             ),
           ],
