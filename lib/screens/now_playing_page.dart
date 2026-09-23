@@ -1,4 +1,4 @@
-﻿/*
+/*
  *     Copyright (C) 2026 Thamodharan Ganesan
  *
  *     Catchify is free software: you can redistribute it and/or modify
@@ -37,7 +37,6 @@ import 'package:catchify/widgets/lyrics_display_widget.dart';
 import 'package:catchify/widgets/now_playing/bottom_actions_row.dart';
 import 'package:catchify/widgets/now_playing/now_playing_artwork.dart';
 import 'package:catchify/widgets/now_playing/now_playing_controls.dart';
-import 'package:catchify/widgets/playback_icon_button.dart';
 import 'package:catchify/widgets/position_slider.dart';
 import 'package:catchify/widgets/queue_list_view.dart';
 import 'package:catchify/widgets/song_artwork.dart';
@@ -55,6 +54,10 @@ class NowPlayingPage extends StatefulWidget {
 class _NowPlayingPageState extends State<NowPlayingPage>
     with SingleTickerProviderStateMixin {
   bool _showLyrics = false;
+  // Tracks whether the floating artwork overlay should be in the tree.
+  // Stays true throughout the close animation (after _showLyrics becomes false)
+  // so the artwork doesn't pop-out before the normal view has finished sliding in.
+  bool _artworkOverlayVisible = false;
   late final AnimationController _lyricsTransitionController;
   Future<String?>? _lyricsFuture;
   String? _lyricsKey;
@@ -126,8 +129,10 @@ class _NowPlayingPageState extends State<NowPlayingPage>
                 final artworkSize = _artworkSize(size);
                 final artworkLeft = (constraints.maxWidth - artworkSize) / 2;
                 final artworkTop = _artworkTop(size);
-                final compactLeft = 18.0;
-                final compactTop = 8.0 + 4;
+                const compactLeft = 18.0;
+                // Must match the top padding of _buildLyricsHeader (fromLTRB(18,8,18,4))
+                // so the animated artwork lands exactly on the 58×58 SizedBox slot.
+                const compactTop = 8.0;
 
                 return Stack(
                   fit: StackFit.expand,
@@ -190,7 +195,7 @@ class _NowPlayingPageState extends State<NowPlayingPage>
                               ],
                             ),
                       ),
-                    if (_showLyrics)
+                    if (_artworkOverlayVisible)
                       AnimatedBuilder(
                         animation: _lyricsTransitionController,
                         builder: (context, child) {
@@ -246,13 +251,26 @@ class _NowPlayingPageState extends State<NowPlayingPage>
   }
 
   void _openLyrics() {
-    setState(() => _showLyrics = true);
+    setState(() {
+      _showLyrics = true;
+      _artworkOverlayVisible = true;
+    });
     _lyricsTransitionController.forward(from: 0);
   }
 
   void _closeLyrics() {
+    // Reverse the artwork animation. _showLyrics stays true during the
+    // reverse so the lyrics header (with 58×58 slot) remains visible.
+    // Only after the animation fully completes do we hide both the lyrics
+    // view and the artwork overlay atomically — eliminating any flicker
+    // between the disappearing overlay and the appearing NowPlayingArtwork.
     _lyricsTransitionController.reverse().whenCompleteOrCancel(() {
-      if (mounted) setState(() => _showLyrics = false);
+      if (mounted) {
+        setState(() {
+          _showLyrics = false;
+          _artworkOverlayVisible = false;
+        });
+      }
     });
   }
 
@@ -263,6 +281,15 @@ class _NowPlayingPageState extends State<NowPlayingPage>
     _loadLyrics(metadata);
     final colorScheme = Theme.of(context).colorScheme;
     final size = MediaQuery.sizeOf(context);
+    final screenWidth = size.width;
+    // Use the same icon-size logic as the normal NowPlaying build() method
+    // so the PlayerControlButtons look pixel-identical in lyrics mode.
+    final baseIconSize = screenWidth < 360
+        ? 36.0
+        : screenWidth < 400
+        ? 40.0
+        : 44.0;
+    final miniIconSize = screenWidth < 360 ? 18.0 : 22.0;
     final future = _lyricsFuture;
     final songId =
         metadata.extras?['ytid']?.toString() ??
@@ -295,7 +322,12 @@ class _NowPlayingPageState extends State<NowPlayingPage>
                   },
                 ),
         ),
-        _buildLyricsMiniControls(colorScheme, size),
+        _buildLyricsMiniControls(
+          colorScheme: colorScheme,
+          metadata: metadata,
+          baseIconSize: baseIconSize,
+          miniIconSize: miniIconSize,
+        ),
       ],
     );
   }
@@ -306,43 +338,82 @@ class _NowPlayingPageState extends State<NowPlayingPage>
     MediaItem metadata,
   ) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(18, 8, 18, 4),
+      padding: const EdgeInsets.fromLTRB(18, 8, 12, 4),
       child: Row(
         children: [
-          // The artwork is rendered once by the parent transition layer.
+          // Placeholder slot — actual artwork is rendered by the parent
+          // Stack via AnimatedBuilder (see _artworkOverlayVisible block).
           const SizedBox(width: 58, height: 58),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
                   metadata.title,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    fontSize: 16,
+                    fontSize: 15,
                     fontWeight: FontWeight.w700,
                     color: colorScheme.onSurface,
+                    letterSpacing: -0.1,
                   ),
                 ),
-                if (metadata.artist != null && metadata.artist!.isNotEmpty)
-                  Text(
-                    metadata.artist!,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: colorScheme.onSurface.withValues(alpha: 0.62),
+                if (metadata.artist != null && metadata.artist!.isNotEmpty) ...
+                  [
+                    const SizedBox(height: 2),
+                    Text(
+                      metadata.artist!,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: colorScheme.onSurface.withValues(alpha: 0.55),
+                        letterSpacing: 0.1,
+                      ),
                     ),
-                  ),
+                  ],
               ],
             ),
           ),
+          // Lyrics label chip
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+            decoration: BoxDecoration(
+              color: colorScheme.primary.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(
+              'LYRICS',
+              style: TextStyle(
+                fontSize: 9,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 1.1,
+                color: colorScheme.primary,
+              ),
+            ),
+          ),
+          // Close button — styled
+          const SizedBox(width: 4),
           IconButton(
-            icon: const Icon(Icons.close),
+            icon: Icon(
+              FluentIcons.dismiss_24_regular,
+              color: colorScheme.onSurfaceVariant,
+            ),
+            iconSize: 20,
             tooltip: 'Close lyrics',
-            color: colorScheme.onSurface,
+            style: IconButton.styleFrom(
+              backgroundColor:
+                  colorScheme.surfaceContainerHigh.withValues(alpha: 0.8),
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              padding: const EdgeInsets.all(8),
+              minimumSize: const Size(36, 36),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
             onPressed: _closeLyrics,
           ),
         ],
@@ -362,66 +433,121 @@ class _NowPlayingPageState extends State<NowPlayingPage>
     );
   }
 
-  Widget _buildLyricsMiniControls(ColorScheme colorScheme, Size size) {
-    final miniSize = size.width < 360 ? 20.0 : 22.0;
+  Widget _buildLyricsMiniControls({
+    required ColorScheme colorScheme,
+    required MediaItem metadata,
+    required double baseIconSize,
+    required double miniIconSize,
+  }) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 0, 24, 18),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Row(
-            children: [
-              Text(
-                'Powered by LrcLib',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: colorScheme.onSurface.withValues(alpha: 0.58),
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+      child: Container(
+        decoration: BoxDecoration(
+          color: colorScheme.surfaceContainerHigh.withValues(alpha: 0.88),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(
+            color: colorScheme.outlineVariant.withValues(alpha: 0.35),
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: colorScheme.shadow.withValues(alpha: 0.06),
+              blurRadius: 14,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        padding: const EdgeInsets.fromLTRB(16, 10, 16, 14),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Attribution row — minimal lrclib chip + copy/share
+            Row(
+              children: [
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: colorScheme.surfaceContainerHighest
+                        .withValues(alpha: 0.72),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.lyrics_outlined,
+                        size: 9,
+                        color: colorScheme.onSurfaceVariant
+                            .withValues(alpha: 0.55),
+                      ),
+                      const SizedBox(width: 3),
+                      Text(
+                        'lrclib',
+                        style: TextStyle(
+                          fontSize: 9,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 0.3,
+                          color: colorScheme.onSurfaceVariant
+                              .withValues(alpha: 0.55),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              const Spacer(),
-              IconButton(
-                icon: const Icon(Icons.copy_rounded),
-                tooltip: 'Copy lyrics',
-                color: colorScheme.onSurface.withValues(alpha: 0.72),
-                onPressed: _copyLyrics,
-              ),
-              IconButton(
-                icon: const Icon(Icons.share_rounded),
-                tooltip: 'Share lyrics',
-                color: colorScheme.onSurface.withValues(alpha: 0.72),
-                onPressed: _shareLyrics,
-              ),
-            ],
-          ),
-          const PositionSlider(),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              IconButton(
-                iconSize: miniSize,
-                icon: const Icon(FluentIcons.previous_24_regular),
-                color: colorScheme.onSurface.withValues(alpha: 0.72),
-                onPressed: audioHandler.skipToPrevious,
-              ),
-              const SizedBox(width: 16),
-              buildPlaybackIconButton(
-                size.width < 360 ? 52 : 60,
-                colorScheme.primary,
-                colorScheme.onSurface,
-                padding: const EdgeInsets.all(18),
-                useRoundedMaterialGlyphs: true,
-              ),
-              const SizedBox(width: 16),
-              IconButton(
-                iconSize: miniSize,
-                icon: const Icon(FluentIcons.next_24_regular),
-                color: colorScheme.onSurface.withValues(alpha: 0.72),
-                onPressed: audioHandler.skipToNext,
-              ),
-            ],
-          ),
-        ],
+                const Spacer(),
+                _buildMiniActionButton(
+                  colorScheme: colorScheme,
+                  icon: Icons.copy_rounded,
+                  tooltip: 'Copy lyrics',
+                  onPressed: _copyLyrics,
+                ),
+                const SizedBox(width: 4),
+                _buildMiniActionButton(
+                  colorScheme: colorScheme,
+                  icon: Icons.share_rounded,
+                  tooltip: 'Share lyrics',
+                  onPressed: _shareLyrics,
+                ),
+              ],
+            ),
+            const SizedBox(height: 4),
+            // Position slider — identical to NowPlayingControls
+            const PositionSlider(),
+            const SizedBox(height: 4),
+            // Prev / Play / Next — reuse the exact same widget used in
+            // normal Now Playing so the buttons are pixel-identical.
+            PlayerControlButtons(
+              metadata: metadata,
+              iconSize: baseIconSize,
+              miniIconSize: miniIconSize,
+            ),
+          ],
+        ),
       ),
+    );
+  }
+
+  /// Tiny icon-only action button (copy / share) for lyrics mode.
+  Widget _buildMiniActionButton({
+    required ColorScheme colorScheme,
+    required IconData icon,
+    required String tooltip,
+    required VoidCallback onPressed,
+  }) {
+    return IconButton(
+      icon: Icon(icon),
+      iconSize: 16,
+      tooltip: tooltip,
+      color: colorScheme.onSurfaceVariant.withValues(alpha: 0.75),
+      style: IconButton.styleFrom(
+        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+        padding: const EdgeInsets.all(6),
+        minimumSize: const Size(30, 30),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+      ),
+      onPressed: onPressed,
     );
   }
 
