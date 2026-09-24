@@ -2241,17 +2241,45 @@ Future<List<Map<String, dynamic>>> getTrendingSongsForYou({
   return liveSongs.take(limit).toList();
 }
 
+final Map<String, Future<List<Map<String, dynamic>>>> _quickPicksInFlight = {};
+
 Future<List<Map<String, dynamic>>> getQuickPicksSongs({
   bool forceRefresh = false,
   int limit = 16,
-}) async {
+}) {
   String? rawLang;
   try {
     rawLang = contentLanguagePreference;
   } catch (_) {}
   rawLang ??= 'en';
   final prefLang = artistLanguageCodeToName[rawLang] ?? rawLang;
+  final inFlightKey = '$prefLang|$forceRefresh|$limit';
 
+  final existing = _quickPicksInFlight[inFlightKey];
+  if (existing != null) {
+    return existing;
+  }
+
+  late final Future<List<Map<String, dynamic>>> tracked;
+  tracked = _loadQuickPicksSongs(
+    prefLang: prefLang,
+    forceRefresh: forceRefresh,
+    limit: limit,
+  ).whenComplete(() {
+    if (identical(_quickPicksInFlight[inFlightKey], tracked)) {
+      _quickPicksInFlight.remove(inFlightKey);
+    }
+  });
+
+  _quickPicksInFlight[inFlightKey] = tracked;
+  return tracked;
+}
+
+Future<List<Map<String, dynamic>>> _loadQuickPicksSongs({
+  required String prefLang,
+  required bool forceRefresh,
+  required int limit,
+}) async {
   final cacheKey = 'ytm_quick_picks_songs_v3_$prefLang';
   var liveSongs = <Map<String, dynamic>>[];
 
@@ -2272,7 +2300,7 @@ Future<List<Map<String, dynamic>>> getQuickPicksSongs({
       final isRegional = prefLang.toLowerCase() != 'english';
       String? seedId;
 
-      // 1. For regional language, prioritize language category songs or top trending songs as seed
+      // 1. For regional language, prioritize language category songs directly
       if (isRegional) {
         try {
           final catShelves = await getLanguageCategoryShelves(
@@ -2283,88 +2311,89 @@ Future<List<Map<String, dynamic>>> getQuickPicksSongs({
           if (catSongs.isNotEmpty) {
             for (final s in catSongs) {
               final ytid = s['ytid']?.toString();
-              if (ytid != null && ytid.length == 11) {
+              if (seedId == null && ytid != null && ytid.length == 11) {
                 seedId = ytid;
-                break;
               }
-            }
-            // Also seed liveSongs with pure studio songs of this language
-            for (final s in catSongs) {
-              if (liveSongs.length >= limit) break;
-              liveSongs.add(Map<String, dynamic>.from(s));
+              if (liveSongs.length < limit) {
+                liveSongs.add(Map<String, dynamic>.from(s));
+              }
             }
           }
         } catch (_) {}
       }
 
-      // 2. If seedId still null, check recent songs or liked songs
-      if (seedId == null || seedId.isEmpty) {
-        if (Hive.isBoxOpen('user')) {
-          try {
-            final box = Hive.box('user');
-            final recents = box.get('recentSongs', defaultValue: <dynamic>[]);
-            if (recents is List && recents.isNotEmpty) {
-              for (final item in recents.reversed) {
-                if (item is Map &&
-                    item['ytid'] != null &&
-                    item['ytid'].toString().length == 11) {
-                  seedId = item['ytid'].toString();
-                  break;
+      // If category already supplied sufficient songs (e.g. 16), skip expensive radio network call!
+      if (liveSongs.length < limit) {
+        // 2. If seedId still null, check recent songs or liked songs
+        if (seedId == null || seedId.isEmpty) {
+          if (Hive.isBoxOpen('user')) {
+            try {
+              final box = Hive.box('user');
+              final recents = box.get('recentSongs', defaultValue: <dynamic>[]);
+              if (recents is List && recents.isNotEmpty) {
+                for (final item in recents.reversed) {
+                  if (item is Map &&
+                      item['ytid'] != null &&
+                      item['ytid'].toString().length == 11) {
+                    seedId = item['ytid'].toString();
+                    break;
+                  }
                 }
               }
-            }
 
-            if (seedId == null || seedId.isEmpty) {
-              final liked = box.get('likedSongs', defaultValue: <dynamic>[]);
-              if (liked is List && liked.isNotEmpty) {
-                final lastLiked = liked.last;
-                if (lastLiked is Map &&
-                    lastLiked['ytid'] != null &&
-                    lastLiked['ytid'].toString().length == 11) {
-                  seedId = lastLiked['ytid'].toString();
+              if (seedId == null || seedId.isEmpty) {
+                final liked = box.get('likedSongs', defaultValue: <dynamic>[]);
+                if (liked is List && liked.isNotEmpty) {
+                  final lastLiked = liked.last;
+                  if (lastLiked is Map &&
+                      lastLiked['ytid'] != null &&
+                      lastLiked['ytid'].toString().length == 11) {
+                    seedId = lastLiked['ytid'].toString();
+                  }
                 }
               }
+            } catch (_) {}
+          }
+        }
+
+        // 3. If still null, fetch top trending song of the language
+        if (seedId == null || seedId.isEmpty) {
+          final trending = await getTrendingSongsForYou(limit: 5);
+          if (trending.isNotEmpty && trending.first['ytid'] != null) {
+            seedId = trending.first['ytid'].toString();
+          }
+        }
+
+        // 4. Fetch YouTube Music radio automix tracks only for remaining needed slots
+        if (seedId != null && seedId.isNotEmpty) {
+          final needed = limit - liveSongs.length;
+          final radioTracks = await ytMusicClient.music
+              .getRadioSongs(seedId, limit: needed)
+              .timeout(const Duration(seconds: 4))
+              .catchError((_) => <Video>[]);
+
+          for (var i = 0; i < radioTracks.length; i++) {
+            final track = radioTracks[i];
+            final layout = returnSongLayout(i, track);
+            if (!liveSongs.any((s) => s['ytid'] == layout['ytid'])) {
+              liveSongs.add(layout);
             }
-          } catch (_) {}
-        }
-      }
-
-      // 3. If still null, fetch top trending song of the language
-      if (seedId == null || seedId.isEmpty) {
-        final trending = await getTrendingSongsForYou(limit: 5);
-        if (trending.isNotEmpty && trending.first['ytid'] != null) {
-          seedId = trending.first['ytid'].toString();
-        }
-      }
-
-      // 4. Fetch YouTube Music radio automix tracks from seed
-      if (seedId != null && seedId.isNotEmpty) {
-        final radioTracks = await ytMusicClient.music
-            .getRadioSongs(seedId, limit: limit)
-            .timeout(const Duration(seconds: 6))
-            .catchError((_) => <Video>[]);
-
-        for (var i = 0; i < radioTracks.length; i++) {
-          final track = radioTracks[i];
-          final layout = returnSongLayout(i, track);
-          if (!liveSongs.any((s) => s['ytid'] == layout['ytid'])) {
-            liveSongs.add(layout);
+            if (liveSongs.length >= limit) break;
           }
-          if (liveSongs.length >= limit) break;
         }
-      }
 
-      // 5. Fallback: if radio returned fewer, supplement with language trending songs
-      if (liveSongs.length < 8) {
-        final trending = await getTrendingSongsForYou(
-          forceRefresh: forceRefresh,
-          limit: limit,
-        );
-        for (final s in trending) {
-          if (!liveSongs.any((x) => x['ytid'] == s['ytid'])) {
-            liveSongs.add(Map<String, dynamic>.from(s));
+        // 5. Fallback: if radio returned fewer, supplement with language trending songs
+        if (liveSongs.length < 8) {
+          final trending = await getTrendingSongsForYou(
+            forceRefresh: forceRefresh,
+            limit: limit,
+          );
+          for (final s in trending) {
+            if (!liveSongs.any((x) => x['ytid'] == s['ytid'])) {
+              liveSongs.add(Map<String, dynamic>.from(s));
+            }
+            if (liveSongs.length >= limit) break;
           }
-          if (liveSongs.length >= limit) break;
         }
       }
 
