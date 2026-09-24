@@ -24,13 +24,11 @@ import 'package:catchify/constants/app_constants.dart';
 import 'package:catchify/extensions/l10n.dart';
 import 'package:catchify/main.dart';
 import 'package:catchify/services/data_manager.dart';
-import 'package:catchify/services/playlists_manager.dart';
 import 'package:catchify/services/settings_manager.dart';
+import 'package:catchify/theme/app_text_styles.dart';
 import 'package:catchify/theme/app_themes.dart';
 import 'package:catchify/utilities/flutter_bottom_sheet.dart';
 import 'package:catchify/utilities/flutter_toast.dart';
-import 'package:catchify/utilities/language_utils.dart';
-import 'package:catchify/theme/app_text_styles.dart';
 import 'package:catchify/widgets/accent_color_picker.dart';
 import 'package:catchify/widgets/bottom_sheet_bar.dart';
 import 'package:catchify/widgets/custom_bar.dart';
@@ -103,69 +101,7 @@ class _ThemeSettingsPageState extends State<ThemeSettingsPage> {
     );
   }
 
-  void _showLanguagePicker(BuildContext context) {
-    final availableLanguages = appLanguages.toList();
 
-    showCustomBottomSheet(
-      context,
-      ListView.builder(
-        shrinkWrap: true,
-        physics: const BouncingScrollPhysics(),
-        padding: commonListViewBottomPadding,
-        itemCount: availableLanguages.length,
-        itemBuilder: (context, index) {
-          final language = availableLanguages[index];
-          final isSelected = languageSetting.languageCode == language;
-
-          return BottomSheetBar(
-            getLanguageDisplayName(context, language),
-            () {
-              addOrUpdateData<String>('settings', 'languageCode', language);
-              Catchify.updateAppState(context, newLocale: Locale(language));
-              setState(() {});
-              Navigator.pop(context);
-            },
-            isSelected,
-            icon: FluentIcons.translate_24_regular,
-          );
-        },
-      ),
-    );
-  }
-
-  void _showMusicLanguagePicker(BuildContext context) {
-    final languages = artistLanguageCodeToName.entries.toList();
-
-    showCustomBottomSheet(
-      context,
-      ListView.builder(
-        shrinkWrap: true,
-        physics: const BouncingScrollPhysics(),
-        padding: commonListViewBottomPadding,
-        itemCount: languages.length,
-        itemBuilder: (context, index) {
-          final entry = languages[index];
-          final code = entry.key;
-          final name = entry.value;
-          final isSelected =
-              (contentLanguagePreference ?? 'en').toLowerCase() ==
-              code.toLowerCase();
-
-          return BottomSheetBar(
-            name,
-            () {
-              setContentLanguagePreference(code);
-              setState(() {});
-              Navigator.pop(context);
-              showToast(context, context.l10n!.settingChangedMsg);
-            },
-            isSelected,
-            icon: FluentIcons.music_note_2_24_regular,
-          );
-        },
-      ),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -335,46 +271,6 @@ class _ThemeSettingsPageState extends State<ThemeSettingsPage> {
               },
             ),
 
-            const SizedBox(height: 16),
-
-            // Section 2: Languages
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
-              child: Text(
-                'LANGUAGES',
-                style: AppTextStyles.categoryHeader.copyWith(
-                  color: colorScheme.primary,
-                ),
-              ),
-            ),
-            CustomBar(
-              context.l10n?.language ?? 'App Language',
-              FluentIcons.translate_24_regular,
-              borderRadius: commonCustomBarRadiusFirst,
-              trailing: Text(
-                languageSetting.languageCode.toUpperCase(),
-                style: TextStyle(
-                  color: colorScheme.primary,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              onTap: () => _showLanguagePicker(context),
-            ),
-            CustomBar(
-              context.l10n?.chooseYourLanguage ?? 'Music Language',
-              FluentIcons.music_note_2_24_regular,
-              borderRadius: commonCustomBarRadiusLast,
-              trailing: Text(
-                artistLanguageCodeToName[contentLanguagePreference ?? 'en'] ??
-                    contentLanguagePreference ??
-                    'English',
-                style: TextStyle(
-                  color: colorScheme.primary,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              onTap: () => _showMusicLanguagePicker(context),
-            ),
 
             const SizedBox(height: 24),
             const MiniPlayerBottomSpace(),
