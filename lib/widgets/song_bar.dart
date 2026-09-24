@@ -22,11 +22,13 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:audio_service/audio_service.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:fluentui_system_icons/fluentui_system_icons.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:catchify/constants/app_tokens.dart';
 import 'package:catchify/extensions/l10n.dart';
 import 'package:catchify/main.dart';
 import 'package:catchify/services/common_services.dart';
@@ -558,67 +560,87 @@ class _SongBarState extends State<SongBar> {
                     0
         : null;
 
-    return Material(
-      color: widget.backgroundColor ?? colorScheme.surfaceContainerLow,
-      borderRadius: widget.borderRadius,
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: _handleSongTap,
-        child: Padding(
-          padding:
-              widget.barPadding ??
-              const EdgeInsetsDirectional.symmetric(
-                vertical: 10,
-                horizontal: 12,
-              ),
-          child: Row(
-            children: [
-              if (widget.rank != null) ...[
-                SizedBox(
-                  width: 28,
-                  child: Text(
-                    '${widget.rank}',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: colorScheme.primary,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w800,
+    final activeRadius = widget.borderRadius == BorderRadius.zero
+        ? BorderRadius.circular(AppTokens.radiusControl)
+        : widget.borderRadius;
+
+    return StreamBuilder<MediaItem?>(
+      stream: audioHandler.mediaItem,
+      builder: (context, mediaSnapshot) {
+        final currentId = mediaSnapshot.data?.id;
+        final isCurrentSong =
+            currentId != null && currentId.isNotEmpty && currentId == _ytid;
+
+        return Material(
+          color: widget.backgroundColor ??
+              (isCurrentSong
+                  ? colorScheme.primary.withValues(alpha: 0.08)
+                  : colorScheme.surfaceContainerLow),
+          borderRadius: activeRadius,
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
+            onTap: _handleSongTap,
+            borderRadius: activeRadius,
+            splashColor: colorScheme.primary.withValues(alpha: 0.12),
+            highlightColor: colorScheme.primary.withValues(alpha: 0.06),
+            child: Padding(
+              padding:
+                  widget.barPadding ??
+                  const EdgeInsetsDirectional.symmetric(
+                    vertical: 10,
+                    horizontal: 12,
+                  ),
+              child: Row(
+                children: [
+                  if (widget.rank != null) ...[
+                    SizedBox(
+                      width: 28,
+                      child: Text(
+                        '${widget.rank}',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: colorScheme.primary,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                  ],
+
+                  _buildAlbumArt(colorScheme),
+                  const SizedBox(width: 14),
+
+                  Expanded(
+                    child: _SongInfo(
+                      title: _songTitle,
+                      artist: _songArtist,
+                      plays: _plays,
+                      colorScheme: colorScheme,
+                      isCurrentSong: isCurrentSong,
                     ),
                   ),
-                ),
-                const SizedBox(width: 10),
-              ],
 
-              _buildAlbumArt(colorScheme),
-              const SizedBox(width: 14),
-
-              Expanded(
-                child: _SongInfo(
-                  title: _songTitle,
-                  artist: _songArtist,
-                  plays: _plays,
-                  colorScheme: colorScheme,
-                ),
+                  OverflowMenuButton<String>(
+                    onSelected: (value) => _handleSongMenuAction(
+                      context: context,
+                      value: value,
+                      song: widget.song,
+                      ytid: _ytid,
+                      songLikeStatus: _songLikeStatus,
+                      songOfflineStatus: _songOfflineStatus,
+                      songDownloadStatus: _songDownloadStatus,
+                      onRemove: widget.onRemove,
+                      onRename: () => _handleRenameSong(context),
+                    ),
+                    itemBuilder: (context) => _buildMenuItems(context, colorScheme),
+                  ),
+                ],
               ),
-
-              OverflowMenuButton<String>(
-                onSelected: (value) => _handleSongMenuAction(
-                  context: context,
-                  value: value,
-                  song: widget.song,
-                  ytid: _ytid,
-                  songLikeStatus: _songLikeStatus,
-                  songOfflineStatus: _songOfflineStatus,
-                  songDownloadStatus: _songDownloadStatus,
-                  onRemove: widget.onRemove,
-                  onRename: () => _handleRenameSong(context),
-                ),
-                itemBuilder: (context) => _buildMenuItems(context, colorScheme),
-              ),
-            ],
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 
@@ -769,26 +791,44 @@ class _SongInfo extends StatelessWidget {
     required this.artist,
     this.plays,
     required this.colorScheme,
+    this.isCurrentSong = false,
   });
 
   final String title;
   final String artist;
   final int? plays;
   final ColorScheme colorScheme;
+  final bool isCurrentSong;
 
   @override
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        Text(
-          title,
-          overflow: TextOverflow.ellipsis,
-          style: TextStyle(
-            fontWeight: FontWeight.w600,
-            fontSize: 15,
-            color: colorScheme.onSurface,
-          ),
+        Row(
+          children: [
+            if (isCurrentSong) ...[
+              Icon(
+                FluentIcons.speaker_2_24_filled,
+                size: 14,
+                color: colorScheme.primary,
+              ),
+              const SizedBox(width: 5),
+            ],
+            Expanded(
+              child: Text(
+                title,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontWeight: isCurrentSong ? FontWeight.w700 : FontWeight.w600,
+                  fontSize: 15,
+                  color: isCurrentSong
+                      ? colorScheme.primary
+                      : colorScheme.onSurface,
+                ),
+              ),
+            ),
+          ],
         ),
         const SizedBox(height: 2),
         Row(

@@ -129,8 +129,6 @@ class _PositionSliderState extends State<PositionSlider> {
     );
   }
 
-  static const _textStyle = TextStyle(fontSize: 15);
-
   Widget _buildPositionRow(BuildContext context, PositionData positionData) {
     final currentSeconds = _isDragging
         ? _dragValue.toInt()
@@ -142,14 +140,24 @@ class _PositionSliderState extends State<PositionSlider> {
 
     final positionText = formatDuration(displaySeconds);
     final durationText = formatDuration(maxSeconds);
+    final timeStyle = TextStyle(
+      fontSize: 12.5,
+      fontWeight: FontWeight.w600,
+      fontFeatures: const [FontFeature.tabularFigures()],
+      color: Theme.of(context)
+          .colorScheme
+          .onSurfaceVariant
+          .withValues(alpha: 0.85),
+      letterSpacing: 0.2,
+    );
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 22),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(positionText, style: _textStyle),
-          Text(durationText, style: _textStyle),
+          Text(positionText, style: timeStyle),
+          Text(durationText, style: timeStyle),
         ],
       ),
     );

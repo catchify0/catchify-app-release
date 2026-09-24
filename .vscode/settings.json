@@ -1,0 +1,4 @@
+{
+  "dart.flutterSdkPath": "tools/flutter",
+  "dart.sdkPath": "tools/flutter/bin/cache/dart-sdk"
+}

@@ -438,9 +438,16 @@ class QueueTile extends StatelessWidget {
       ),
       child: Material(
         color: isCurrentSong
-            ? colorScheme.primaryContainer.withValues(alpha: 0.45)
+            ? colorScheme.primary.withValues(alpha: 0.08)
             : Colors.transparent,
-        borderRadius: BorderRadius.circular(14),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(14),
+          side: isCurrentSong
+              ? BorderSide(
+                  color: colorScheme.primary.withValues(alpha: 0.28),
+                )
+              : BorderSide.none,
+        ),
         child: InkWell(
           onTap: onTap,
           borderRadius: BorderRadius.circular(14),
@@ -491,12 +498,21 @@ class QueueTile extends StatelessWidget {
                 ),
                 const SizedBox(width: 8),
                 if (isCurrentSong) ...[
-                  Icon(
-                    FluentIcons.music_note_2_24_regular,
-                    color: colorScheme.primary,
-                    size: 16,
+                  DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: colorScheme.primary.withValues(alpha: 0.14),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(4),
+                      child: Icon(
+                        FluentIcons.speaker_2_24_filled,
+                        color: colorScheme.primary,
+                        size: 13,
+                      ),
+                    ),
                   ),
-                  const SizedBox(width: 6),
+                  const SizedBox(width: 8),
                 ],
                 ReorderableDragStartListener(
                   index: index,

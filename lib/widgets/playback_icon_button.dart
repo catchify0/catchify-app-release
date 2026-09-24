@@ -100,9 +100,14 @@ Widget buildPlaybackIconButton(
           shape: BoxShape.circle,
           boxShadow: [
             BoxShadow(
-              color: backgroundColor.withValues(alpha: 0.35),
-              blurRadius: 14,
-              offset: const Offset(0, 4),
+              color: backgroundColor.withValues(alpha: 0.36),
+              blurRadius: 18,
+              offset: const Offset(0, 6),
+            ),
+            BoxShadow(
+              color: backgroundColor.withValues(alpha: 0.18),
+              blurRadius: 6,
+              offset: const Offset(0, 2),
             ),
           ],
         ),

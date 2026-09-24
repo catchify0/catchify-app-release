@@ -46,7 +46,6 @@ import 'package:catchify/widgets/listening_recap_card.dart';
 import 'package:catchify/widgets/loading_skeleton.dart';
 import 'package:catchify/widgets/mini_player_bottom_space.dart';
 import 'package:catchify/widgets/section_header.dart';
-import 'package:catchify/widgets/catchify_brand_icon.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -265,67 +264,39 @@ class _HomePageState extends State<HomePage> {
       appBar: AppBar(
         toolbarHeight: 84,
         titleSpacing: AppTokens.pagePadding,
-        title: Row(
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
-            DecoratedBox(
-              decoration: BoxDecoration(
-                borderRadius: AppTokens.borderRadiusControl,
-                boxShadow: [
-                  BoxShadow(
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.primary.withValues(alpha: 0.24),
-                    blurRadius: 14,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: ClipRRect(
-                borderRadius: AppTokens.borderRadiusControl,
-                child: const CatchifyBrandIcon(
-                  size: 38,
-                  fit: BoxFit.cover,
-                  semanticLabel: 'Catchify',
-                ),
+            Text(
+              'Catchify',
+              style: TextStyle(
+                fontFamily: 'paytoneOne',
+                fontSize: 18,
+                fontWeight: FontWeight.w400,
+                letterSpacing: 0.1,
+                color: Theme.of(context).colorScheme.primary,
               ),
             ),
-            const SizedBox(width: 12),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  'Catchify',
-                  style: TextStyle(
-                    fontFamily: 'paytoneOne',
-                    fontSize: 18,
-                    fontWeight: FontWeight.w400,
-                    letterSpacing: 0.1,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
-                ),
-                const SizedBox(height: 3),
-                Text(
-                  DateFormat(
-                    'EEEE, d MMMM',
-                  ).format(DateTime.now()).toUpperCase(),
-                  style: TextStyle(
-                    fontSize: 11.5,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 0.8,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  _getGreeting(),
-                  style: AppTextStyles.pageTitle.copyWith(
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: -0.6,
-                  ),
-                ),
-              ],
+            const SizedBox(height: 3),
+            Text(
+              DateFormat(
+                'EEEE, d MMMM',
+              ).format(DateTime.now()).toUpperCase(),
+              style: TextStyle(
+                fontSize: 11.5,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.8,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              _getGreeting(),
+              style: AppTextStyles.pageTitle.copyWith(
+                fontWeight: FontWeight.w800,
+                letterSpacing: -0.6,
+              ),
             ),
           ],
         ),

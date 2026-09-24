@@ -168,21 +168,34 @@ class _BottomNavigationPageState extends State<BottomNavigationPage> {
                   ),
                 ),
                 bottomNavigationBar: !isLargeScreen
-                    ? NavigationBar(
-                        selectedIndex: _getCurrentIndex(items, isOfflineMode),
-                        labelBehavior:
-                            NavigationDestinationLabelBehavior.alwaysShow,
-                        onDestinationSelected: (index) =>
-                            _onTabTapped(index, items),
-                        destinations: items
-                            .map(
-                              (item) => NavigationDestination(
-                                icon: Icon(item.icon),
-                                selectedIcon: Icon(item.selectedIcon),
-                                label: item.label,
-                              ),
-                            )
-                            .toList(),
+                    ? DecoratedBox(
+                        decoration: BoxDecoration(
+                          border: Border(
+                            top: BorderSide(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .outlineVariant
+                                  .withValues(alpha: 0.28),
+                              width: 0.8,
+                            ),
+                          ),
+                        ),
+                        child: NavigationBar(
+                          selectedIndex: _getCurrentIndex(items, isOfflineMode),
+                          labelBehavior:
+                              NavigationDestinationLabelBehavior.alwaysShow,
+                          onDestinationSelected: (index) =>
+                              _onTabTapped(index, items),
+                          destinations: items
+                              .map(
+                                (item) => NavigationDestination(
+                                  icon: Icon(item.icon),
+                                  selectedIcon: Icon(item.selectedIcon),
+                                  label: item.label,
+                                ),
+                              )
+                              .toList(),
+                        ),
                       )
                     : null,
               );

@@ -160,26 +160,32 @@ class _Chip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+    return DecoratedBox(
       decoration: BoxDecoration(
         color: color,
         borderRadius: BorderRadius.circular(999),
+        border: Border.all(
+          color: onColor.withValues(alpha: 0.14),
+          width: 0.8,
+        ),
       ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 14, color: onColor),
-          const SizedBox(width: 6),
-          Text(
-            label,
-            style: theme.textTheme.labelMedium?.copyWith(
-              color: onColor,
-              fontWeight: FontWeight.w600,
-              letterSpacing: 0.2,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 14, color: onColor),
+            const SizedBox(width: 6),
+            Text(
+              label,
+              style: theme.textTheme.labelMedium?.copyWith(
+                color: onColor,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.2,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

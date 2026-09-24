@@ -112,11 +112,11 @@ class _CustomSearchBarState extends State<CustomSearchBar> {
           return RoundedRectangleBorder(
             side: BorderSide(
               color: focused
-                  ? colorScheme.primary.withValues(alpha: 0.72)
-                  : colorScheme.outlineVariant.withValues(alpha: 0.75),
-              width: focused ? 1.5 : 1,
+                  ? colorScheme.primary
+                  : colorScheme.outlineVariant.withValues(alpha: 0.45),
+              width: focused ? 1.6 : 0.9,
             ),
-            borderRadius: AppTokens.borderRadiusLarge,
+            borderRadius: BorderRadius.circular(AppTokens.radiusPill),
           );
         }),
         constraints: const BoxConstraints(

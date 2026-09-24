@@ -124,10 +124,36 @@ class _NowPlayingPageState extends State<NowPlayingPage>
         : 44.0;
     final miniIconSize = screenWidth < 360 ? 18.0 : 22.0;
 
-    return Scaffold(
-      backgroundColor: colorScheme.surface,
-      body: SafeArea(
-        child: StreamBuilder<MediaItem?>(
+    return ValueListenableBuilder<String>(
+      valueListenable: playerGradientStyle,
+      builder: (context, gradientStyle, _) {
+        final isPureBlackStyle = gradientStyle == 'pure_black';
+        final isBlurredStyle = gradientStyle == 'blurred';
+
+        return Scaffold(
+          backgroundColor: isPureBlackStyle ? Colors.black : colorScheme.surface,
+          body: DecoratedBox(
+            decoration: BoxDecoration(
+              color: isPureBlackStyle ? Colors.black : colorScheme.surface,
+              gradient: isPureBlackStyle
+                  ? null
+                  : LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        colorScheme.primary.withValues(
+                          alpha: isBlurredStyle ? 0.35 : 0.22,
+                        ),
+                        colorScheme.surface.withValues(
+                          alpha: isBlurredStyle ? 0.9 : 1.0,
+                        ),
+                        colorScheme.surface,
+                      ],
+                      stops: const [0.0, 0.48, 1.0],
+                    ),
+            ),
+            child: SafeArea(
+              child: StreamBuilder<MediaItem?>(
           stream: audioHandler.mediaItem,
           builder: (context, snapshot) {
             if (snapshot.data == null || !snapshot.hasData) {
@@ -312,11 +338,13 @@ class _NowPlayingPageState extends State<NowPlayingPage>
                 );
               },
             );
-          },
+            },
+          ),
         ),
       ),
     );
-  }
+  },
+);
 
   double _artworkSize(Size size) {
     final isLandscape = size.width > size.height;

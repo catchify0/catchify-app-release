@@ -106,16 +106,20 @@ class CustomBar extends StatelessWidget {
                         width: AppTokens.settingIconContainerSize,
                         height: AppTokens.settingIconContainerSize,
                         decoration: BoxDecoration(
-                          color: colorScheme.surfaceContainerHighest.withValues(
-                            alpha: 0.72,
-                          ),
+                          color: enabled
+                              ? effectiveIconColor.withValues(alpha: 0.12)
+                              : colorScheme.surfaceContainerHighest
+                                  .withValues(alpha: 0.5),
                           borderRadius: BorderRadius.circular(
-                            AppTokens.radiusSmall,
+                            AppTokens.radiusControl,
                           ),
                           border: Border.all(
-                            color: colorScheme.outlineVariant.withValues(
-                              alpha: 0.4,
-                            ),
+                            color: enabled
+                                ? effectiveIconColor.withValues(alpha: 0.2)
+                                : colorScheme.outlineVariant.withValues(
+                                    alpha: 0.3,
+                                  ),
+                            width: 0.8,
                           ),
                         ),
                         child: Icon(

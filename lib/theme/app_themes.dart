@@ -268,6 +268,8 @@ ThemeData getAppTheme(ColorScheme colorScheme) {
         ),
       ),
       showDragHandle: false,
+      dragHandleColor: effectiveColorScheme.onSurfaceVariant.withValues(alpha: 0.4),
+      dragHandleSize: const Size(36, 4.5),
     ),
     inputDecorationTheme: base.inputDecorationTheme.copyWith(
       filled: true,
@@ -279,7 +281,24 @@ ThemeData getAppTheme(ColorScheme colorScheme) {
                 : colorScheme.surfaceContainerHigh),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(AppTokens.radiusMedium),
-        borderSide: BorderSide.none,
+        borderSide: BorderSide(
+          color: effectiveColorScheme.outlineVariant.withValues(alpha: 0.25),
+          width: 0.8,
+        ),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(AppTokens.radiusMedium),
+        borderSide: BorderSide(
+          color: effectiveColorScheme.outlineVariant.withValues(alpha: 0.25),
+          width: 0.8,
+        ),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(AppTokens.radiusMedium),
+        borderSide: BorderSide(
+          color: effectiveColorScheme.primary,
+          width: 1.5,
+        ),
       ),
       contentPadding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
     ),
@@ -329,19 +348,19 @@ ThemeData getAppTheme(ColorScheme colorScheme) {
       surfaceTintColor: Colors.transparent,
       elevation: 0,
       height: 76,
-      indicatorColor: effectiveColorScheme.primary.withValues(alpha: 0.16),
+      indicatorColor: effectiveColorScheme.primary.withValues(alpha: 0.18),
       indicatorShape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppTokens.radiusMedium),
+        borderRadius: BorderRadius.circular(AppTokens.radiusPill),
       ),
       iconTheme: WidgetStateProperty.resolveWith((states) {
         if (states.contains(WidgetState.selected)) {
           return IconThemeData(
-            color: effectiveColorScheme.onPrimaryContainer,
+            color: effectiveColorScheme.primary,
             size: AppTokens.iconNav,
           );
         }
         return IconThemeData(
-          color: effectiveColorScheme.onSurfaceVariant,
+          color: effectiveColorScheme.onSurfaceVariant.withValues(alpha: 0.72),
           size: AppTokens.iconNav,
         );
       }),
@@ -349,14 +368,15 @@ ThemeData getAppTheme(ColorScheme colorScheme) {
         if (states.contains(WidgetState.selected)) {
           return TextStyle(
             fontFamily: 'AnekTamil',
-            color: effectiveColorScheme.onSurface,
+            color: effectiveColorScheme.primary,
             fontSize: 12,
-            fontWeight: FontWeight.w600,
+            fontWeight: FontWeight.w700,
+            letterSpacing: -0.1,
           );
         }
         return TextStyle(
           fontFamily: 'AnekTamil',
-          color: effectiveColorScheme.onSurfaceVariant,
+          color: effectiveColorScheme.onSurfaceVariant.withValues(alpha: 0.72),
           fontSize: 12,
           fontWeight: FontWeight.w500,
         );
@@ -365,27 +385,28 @@ ThemeData getAppTheme(ColorScheme colorScheme) {
     navigationRailTheme: base.navigationRailTheme.copyWith(
       backgroundColor: bgColor,
       elevation: 0,
-      indicatorColor: effectiveColorScheme.primary.withValues(alpha: 0.16),
+      indicatorColor: effectiveColorScheme.primary.withValues(alpha: 0.18),
       indicatorShape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppTokens.radiusMedium),
+        borderRadius: BorderRadius.circular(AppTokens.radiusPill),
       ),
       selectedIconTheme: IconThemeData(
-        color: effectiveColorScheme.onPrimaryContainer,
+        color: effectiveColorScheme.primary,
         size: AppTokens.iconNav,
       ),
       unselectedIconTheme: IconThemeData(
-        color: effectiveColorScheme.onSurfaceVariant,
+        color: effectiveColorScheme.onSurfaceVariant.withValues(alpha: 0.72),
         size: AppTokens.iconNav,
       ),
       selectedLabelTextStyle: TextStyle(
         fontFamily: 'AnekTamil',
-        color: effectiveColorScheme.onSurface,
+        color: effectiveColorScheme.primary,
         fontSize: 12,
-        fontWeight: FontWeight.w600,
+        fontWeight: FontWeight.w700,
+        letterSpacing: -0.1,
       ),
       unselectedLabelTextStyle: TextStyle(
         fontFamily: 'AnekTamil',
-        color: effectiveColorScheme.onSurfaceVariant,
+        color: effectiveColorScheme.onSurfaceVariant.withValues(alpha: 0.72),
         fontSize: 12,
         fontWeight: FontWeight.w500,
       ),
