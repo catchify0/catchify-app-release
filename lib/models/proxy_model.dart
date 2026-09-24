@@ -42,3 +42,56 @@ class ProxyInfo {
   @override
   int get hashCode => address.hashCode ^ country.hashCode;
 }
+
+enum ProxyMode {
+  off,
+  auto,
+  countryMatch,
+  custom,
+}
+
+extension ProxyModeExtension on ProxyMode {
+  String get displayName {
+    switch (this) {
+      case ProxyMode.off:
+        return 'Off';
+      case ProxyMode.auto:
+        return 'Smart Auto (On Error)';
+      case ProxyMode.countryMatch:
+        return 'Country Matched';
+      case ProxyMode.custom:
+        return 'Custom Proxy';
+    }
+  }
+
+  String get description {
+    switch (this) {
+      case ProxyMode.off:
+        return 'Direct connection only (fastest, default).';
+      case ProxyMode.auto:
+        return 'Direct by default; automatically engages proxy only when playback fails or is geo-blocked.';
+      case ProxyMode.countryMatch:
+        return 'Routes requests through a proxy matching your selected Music Region.';
+      case ProxyMode.custom:
+        return 'Routes all traffic through your own specified HTTP/SOCKS5 proxy server.';
+    }
+  }
+}
+
+class ProxyStatus {
+  const ProxyStatus({
+    required this.mode,
+    this.isActive = false,
+    this.address,
+    this.country,
+    this.latencyMs,
+    this.message,
+  });
+
+  final ProxyMode mode;
+  final bool isActive;
+  final String? address;
+  final String? country;
+  final int? latencyMs;
+  final String? message;
+}

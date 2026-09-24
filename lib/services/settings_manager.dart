@@ -23,6 +23,7 @@ import 'package:audio_service/audio_service.dart';
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:catchify/main.dart' show logger;
+import 'package:catchify/models/proxy_model.dart';
 import 'package:catchify/screens/playlist_page.dart';
 import 'package:catchify/screens/user_songs_page.dart';
 import 'package:catchify/utilities/language_utils.dart';
@@ -109,9 +110,42 @@ final externalRecommendations = ValueNotifier<bool>(
   _readBoolSetting('externalRecommendations', false),
 );
 
-final useProxy = ValueNotifier<bool>(
-  _readBoolSetting('useProxy', false),
+ProxyMode _initProxyMode() {
+  final raw = _readStringSetting('proxyMode', '');
+  if (raw.isNotEmpty) {
+    return ProxyMode.values.firstWhere(
+      (m) => m.name == raw,
+      orElse: () => ProxyMode.off,
+    );
+  }
+  return _readBoolSetting('useProxy', false) ? ProxyMode.auto : ProxyMode.off;
+}
+
+final proxyModeNotifier = ValueNotifier<ProxyMode>(_initProxyMode());
+final customProxyNotifier = ValueNotifier<String>(
+  _readStringSetting('customProxy', ''),
 );
+
+final useProxy = ValueNotifier<bool>(
+  proxyModeNotifier.value != ProxyMode.off,
+);
+
+void setProxyMode(ProxyMode mode) {
+  proxyModeNotifier.value = mode;
+  useProxy.value = mode != ProxyMode.off;
+  if (Hive.isBoxOpen('settings')) {
+    Hive.box('settings').put('proxyMode', mode.name);
+    Hive.box('settings').put('useProxy', mode != ProxyMode.off);
+  }
+}
+
+void setCustomProxyAddress(String address) {
+  final clean = address.trim();
+  customProxyNotifier.value = clean;
+  if (Hive.isBoxOpen('settings')) {
+    Hive.box('settings').put('customProxy', clean);
+  }
+}
 
 final audioQualitySetting = ValueNotifier<String>(
   _readStringSetting('audioQuality', 'high'),
@@ -381,7 +415,9 @@ void reloadSettingsFromStorage() {
     'externalRecommendations',
     false,
   );
-  useProxy.value = _readBoolSetting('useProxy', false);
+  proxyModeNotifier.value = _initProxyMode();
+  customProxyNotifier.value = _readStringSetting('customProxy', '');
+  useProxy.value = proxyModeNotifier.value != ProxyMode.off;
   audioQualitySetting.value = _readStringSetting('audioQuality', 'high');
   streamingQualityWifi.value = _readStringSetting(
     'streamingQualityWifi',

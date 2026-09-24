@@ -26,11 +26,12 @@ import 'dart:math';
 
 import 'package:http/http.dart' as http;
 import 'package:http/io_client.dart';
+import 'package:flutter/foundation.dart';
 import 'package:catchify/constants/clients.dart';
 import 'package:catchify/main.dart';
 import 'package:catchify/models/proxy_model.dart';
 import 'package:catchify/services/settings_manager.dart';
-import 'package:youtube_explode_dart/youtube_explode_dart.dart';
+import 'package:youtube_music_explode_dart/youtube_music_explode_dart.dart';
 
 class _ProxyResources {
   _ProxyResources(this.httpClient, this.ioClient);
@@ -79,24 +80,22 @@ class ProxyManager {
   ProxyManager._internal() {
     _defaultYt = YoutubeExplode();
     _sharedYt = _defaultYt;
-    if (useProxy.value) {
-      _initSharedProxyClient();
-    }
-    useProxy.addListener(() async {
-      if (useProxy.value) {
-        await _initSharedProxyClient();
-      } else {
-        if (_sharedYt != _defaultYt) {
-          try {
-            _sharedYt?.close();
-          } catch (_) {}
-          _sharedYt = _defaultYt;
-        }
-        _sharedProxyAddress = null;
-        _closeAllProxyResources();
+    _defaultMusicYt = YoutubeMusicExplode();
+    _sharedMusicYt = _defaultMusicYt;
+
+    proxyModeNotifier.addListener(_onProxyConfigChanged);
+    customProxyNotifier.addListener(_onProxyConfigChanged);
+    contentCountryPreferenceNotifier.addListener(() {
+      if (proxyModeNotifier.value == ProxyMode.countryMatch) {
+        _onProxyConfigChanged();
       }
     });
+
+    if (proxyModeNotifier.value != ProxyMode.off) {
+      _onProxyConfigChanged();
+    }
   }
+
   // Timeout constants
   static const int _validateDirectTimeout = 5;
   static const int _proxyRefreshIntervalMinutes = 60;
@@ -118,6 +117,24 @@ class ProxyManager {
   /// proxy-backed client. Use [getClientSync] to access.
   YoutubeExplode? _sharedYt;
 
+  /// Default non-proxy YoutubeMusicExplode instance (long-lived)
+  late final YoutubeMusicExplode _defaultMusicYt;
+
+  /// Currently active shared YoutubeMusicExplode for YouTube Music browse endpoints.
+  YoutubeMusicExplode? _sharedMusicYt;
+
+  final ValueNotifier<ProxyStatus> proxyStatusNotifier =
+      ValueNotifier<ProxyStatus>(
+        ProxyStatus(
+          mode: proxyModeNotifier.value,
+          message: proxyModeNotifier.value == ProxyMode.off
+              ? 'Direct connection (Disabled)'
+              : proxyModeNotifier.value == ProxyMode.auto
+                  ? 'Standby (Auto-failover on error)'
+                  : 'Idle',
+        ),
+      );
+
   Future<void>? _fetchingProxiesFuture;
   Completer<void>? _initializationCompletion;
   bool _hasFetched = false;
@@ -137,6 +154,110 @@ class ProxyManager {
   final Map<String, _ProxyResources> _proxyResources = {};
 
   String? _sharedProxyAddress;
+
+  void _updateStatus({
+    bool? isActive,
+    String? address,
+    String? country,
+    int? latencyMs,
+    String? message,
+  }) {
+    final current = proxyStatusNotifier.value;
+    proxyStatusNotifier.value = ProxyStatus(
+      mode: proxyModeNotifier.value,
+      isActive: isActive ?? current.isActive,
+      address: address ?? current.address,
+      country: country ?? current.country,
+      latencyMs: latencyMs ?? current.latencyMs,
+      message: message ?? current.message,
+    );
+  }
+
+  ProxyInfo? _parseCustomProxy(String raw) {
+    var clean = raw.trim();
+    if (clean.isEmpty) return null;
+    clean = clean.replaceAll('http://', '').replaceAll('https://', '');
+    if (clean.endsWith('/')) {
+      clean = clean.substring(0, clean.length - 1);
+    }
+    final parts = clean.split(':');
+    if (parts.length != 2) return null;
+    final port = int.tryParse(parts[1]);
+    if (port == null || port < 1 || port > 65535) return null;
+    return ProxyInfo(
+      source: 'custom',
+      address: clean,
+      country: 'Custom',
+      isSsl: true,
+    );
+  }
+
+  Future<void> _onProxyConfigChanged() async {
+    final mode = proxyModeNotifier.value;
+    _updateStatus(
+      isActive: false,
+      message: mode == ProxyMode.off
+          ? 'Direct connection (Disabled)'
+          : mode == ProxyMode.auto
+              ? 'Standby (Auto-failover on error)'
+              : 'Configuring proxy...',
+    );
+
+    if (mode == ProxyMode.off) {
+      if (_sharedYt != _defaultYt) {
+        try {
+          _sharedYt?.close();
+        } catch (_) {}
+        _sharedYt = _defaultYt;
+      }
+      if (_sharedMusicYt != _defaultMusicYt) {
+        try {
+          _sharedMusicYt?.close();
+        } catch (_) {}
+        _sharedMusicYt = _defaultMusicYt;
+      }
+      _sharedProxyAddress = null;
+      _closeAllProxyResources();
+      return;
+    }
+
+    if (mode == ProxyMode.custom) {
+      final custom = _parseCustomProxy(customProxyNotifier.value);
+      if (custom != null) {
+        final res = _ensureProxyResources(custom);
+        _sharedYt = YoutubeExplode(
+          httpClient: YoutubeHttpClient(_NonClosingClient(res.ioClient)),
+        );
+        _sharedMusicYt = YoutubeMusicExplode(
+          httpClient: YoutubeHttpClient(_NonClosingClient(res.ioClient)),
+        );
+        _sharedProxyAddress = custom.address;
+        _updateStatus(
+          isActive: true,
+          address: custom.address,
+          country: 'Custom',
+          message: 'Connected to custom proxy: ${custom.address}',
+        );
+      }
+      return;
+    }
+
+    if (mode == ProxyMode.countryMatch) {
+      final targetCountry = contentCountryPreference;
+      await _initSharedProxyClient(preferredCountry: targetCountry);
+      return;
+    }
+
+    if (mode == ProxyMode.auto) {
+      // In auto mode, stay on direct connection (0ms) until a failure occurs!
+      _sharedYt = _defaultYt;
+      _sharedMusicYt = _defaultMusicYt;
+      _updateStatus(
+        isActive: false,
+        message: 'Standby (Direct 0ms; Auto-failover ready)',
+      );
+    }
+  }
 
   Future<void> _fetchProxies() async {
     if (!useProxy.value) return;
@@ -231,7 +352,10 @@ class ProxyManager {
   }
 
   /// Initialize a shared YoutubeExplode client that uses a working proxy.
-  Future<void> _initSharedProxyClient({int timeoutSeconds = 5}) async {
+  Future<void> _initSharedProxyClient({
+    String? preferredCountry,
+    int timeoutSeconds = 5,
+  }) async {
     if (_initializationCompletion != null) {
       return _initializationCompletion!.future;
     }
@@ -242,7 +366,7 @@ class ProxyManager {
       if (_proxiesByCountry.isEmpty) await _fetchProxies();
 
       do {
-        final proxy = await _getRandomProxy();
+        final proxy = await _getRandomProxy(preferredCountry: preferredCountry);
         if (proxy == null) break;
         try {
           final res = _ensureProxyResources(
@@ -252,15 +376,30 @@ class ProxyManager {
           final ytClient = YoutubeExplode(
             httpClient: YoutubeHttpClient(_NonClosingClient(res.ioClient)),
           );
+          final musicClient = YoutubeMusicExplode(
+            httpClient: YoutubeHttpClient(_NonClosingClient(res.ioClient)),
+          );
 
           if (_sharedYt != null && _sharedYt != _defaultYt) {
             try {
               _sharedYt?.close();
             } catch (_) {}
           }
+          if (_sharedMusicYt != null && _sharedMusicYt != _defaultMusicYt) {
+            try {
+              _sharedMusicYt?.close();
+            } catch (_) {}
+          }
           _sharedYt = ytClient;
+          _sharedMusicYt = musicClient;
           _sharedProxyAddress = proxy.address;
           _workingProxies.add(proxy);
+          _updateStatus(
+            isActive: true,
+            address: proxy.address,
+            country: proxy.country,
+            message: 'Connected: ${proxy.country} (${proxy.address})',
+          );
           break;
         } catch (e, stackTrace) {
           logger.log(
@@ -286,6 +425,10 @@ class ProxyManager {
 
   /// Returns the currently active YoutubeExplode client. Never null.
   YoutubeExplode getClientSync() => _sharedYt ?? _defaultYt;
+
+  /// Returns the currently active YoutubeMusicExplode client. Never null.
+  YoutubeMusicExplode getMusicClientSync() =>
+      _sharedMusicYt ?? _defaultMusicYt;
 
   Future<StreamManifest?> _validateDirect(
     String songId,
@@ -544,6 +687,12 @@ class ProxyManager {
         } catch (_) {}
       }
       _sharedYt = _defaultYt;
+      if (_sharedMusicYt != null && _sharedMusicYt != _defaultMusicYt) {
+        try {
+          _sharedMusicYt?.close();
+        } catch (_) {}
+      }
+      _sharedMusicYt = _defaultMusicYt;
       _sharedProxyAddress = null;
     }
 
@@ -552,12 +701,35 @@ class ProxyManager {
     );
   }
 
-  Future<StreamManifest?> getSongManifest(String songId) async {
-    if (!useProxy.value) {
+  Future<StreamManifest?> getSongManifest(
+    String songId, {
+    String? preferredCountry,
+  }) async {
+    final mode = proxyModeNotifier.value;
+    if (mode == ProxyMode.off) {
       return _validateDirect(songId, _validateDirectTimeout);
     }
-    var manifest = await _validateDirect(songId, _validateDirectTimeout);
-    if (manifest != null) return manifest;
+
+    if (mode == ProxyMode.auto) {
+      final direct = await _validateDirect(songId, _validateDirectTimeout);
+      if (direct != null) {
+        _updateStatus(
+          isActive: false,
+          message: 'Direct streaming (0ms delay)',
+        );
+        return direct;
+      }
+      logger.log(
+        '[SMART_AUTO_PROXY] Direct streaming failed for $songId, activating proxy failover',
+      );
+      _updateStatus(
+        isActive: true,
+        message: 'Auto-failover engaged',
+      );
+    }
+
+    final targetCountry = preferredCountry ??
+        (mode == ProxyMode.countryMatch ? contentCountryPreference : null);
 
     if (DateTime.now().difference(_lastFetched).inMinutes >=
         _proxyRefreshIntervalMinutes) {
@@ -566,22 +738,160 @@ class ProxyManager {
 
     _maybeCleanupProxies();
 
-    manifest = await _tryProxies(songId);
+    final manifest = await _tryProxies(
+      songId,
+      preferredCountry: targetCountry,
+    );
     return manifest;
   }
 
-  Future<StreamManifest?> _tryProxies(String songId) async {
-    if (!useProxy.value) return null;
+  Future<StreamManifest?> _tryProxies(
+    String songId, {
+    String? preferredCountry,
+  }) async {
+    final mode = proxyModeNotifier.value;
+    if (mode == ProxyMode.off) return null;
+
+    if (mode == ProxyMode.custom) {
+      final customAddr = customProxyNotifier.value.trim();
+      if (customAddr.isNotEmpty) {
+        final customProxy = _parseCustomProxy(customAddr);
+        if (customProxy != null) {
+          final manifest = await _validateProxy(customProxy, songId, 6);
+          if (manifest != null) {
+            _updateStatus(
+              isActive: true,
+              address: customProxy.address,
+              country: 'Custom',
+              message: 'Custom proxy active',
+            );
+            return manifest;
+          }
+        }
+      }
+      return null;
+    }
+
     StreamManifest? manifest;
     var attempts = 0;
     const maxAttempts = 5;
     do {
       if (attempts++ >= maxAttempts) break;
-      final proxy = await _getRandomProxy();
+      final proxy = await _getRandomProxy(preferredCountry: preferredCountry);
       if (proxy == null) break;
       manifest = await _validateProxy(proxy, songId, 5);
+      if (manifest != null) {
+        _updateStatus(
+          isActive: true,
+          address: proxy.address,
+          country: proxy.country,
+          message: 'Active: ${proxy.country} (${proxy.address})',
+        );
+      }
     } while (manifest == null);
     return manifest;
+  }
+
+  /// Tests a proxy connection and returns latency and status.
+  Future<Map<String, dynamic>> testProxyConnection({
+    ProxyMode? mode,
+    String? customAddress,
+    String? preferredCountry,
+  }) async {
+    final targetMode = mode ?? proxyModeNotifier.value;
+    final stopwatch = Stopwatch()..start();
+
+    if (targetMode == ProxyMode.off) {
+      try {
+        final res = await http
+            .get(Uri.parse('https://www.youtube.com/generate_204'))
+            .timeout(const Duration(seconds: 5));
+        stopwatch.stop();
+        return {
+          'success': res.statusCode == 204 || res.statusCode == 200,
+          'latencyMs': stopwatch.elapsedMilliseconds,
+          'type': 'Direct',
+          'message':
+              'Direct connection healthy (${stopwatch.elapsedMilliseconds}ms)',
+        };
+      } catch (e) {
+        return {
+          'success': false,
+          'latencyMs': null,
+          'type': 'Direct',
+          'message': 'Direct connection failed: $e',
+        };
+      }
+    }
+
+    ProxyInfo? targetProxy;
+    if (targetMode == ProxyMode.custom) {
+      final addr = (customAddress ?? customProxyNotifier.value).trim();
+      targetProxy = _parseCustomProxy(addr);
+      if (targetProxy == null) {
+        return {
+          'success': false,
+          'message': 'Invalid custom proxy address (format: host:port)',
+        };
+      }
+    } else {
+      final country = preferredCountry ?? contentCountryPreference;
+      if (!_hasFetched) await _fetchProxies();
+      targetProxy = await _getRandomProxy(
+        preferredCountry: targetMode == ProxyMode.countryMatch ? country : null,
+      );
+      if (targetProxy == null) {
+        return {
+          'success': false,
+          'message':
+              'No working proxy candidate found${targetMode == ProxyMode.countryMatch ? ' for $country' : ''}',
+        };
+      }
+    }
+
+    try {
+      final res = _ensureProxyResources(targetProxy, timeoutSeconds: 6);
+      final response = await res.ioClient
+          .get(Uri.parse('https://www.youtube.com/generate_204'))
+          .timeout(const Duration(seconds: 6));
+      stopwatch.stop();
+
+      final isSuccess =
+          response.statusCode == 204 || response.statusCode == 200;
+      if (isSuccess) {
+        _workingProxies.add(targetProxy);
+        _updateStatus(
+          isActive: true,
+          address: targetProxy.address,
+          country: targetProxy.country,
+          latencyMs: stopwatch.elapsedMilliseconds,
+          message:
+              'Connected to ${targetProxy.country} (${stopwatch.elapsedMilliseconds}ms)',
+        );
+        return {
+          'success': true,
+          'latencyMs': stopwatch.elapsedMilliseconds,
+          'address': targetProxy.address,
+          'country': targetProxy.country,
+          'message':
+              'Proxy OK: ${targetProxy.country} (${stopwatch.elapsedMilliseconds}ms)',
+        };
+      } else {
+        return {
+          'success': false,
+          'latencyMs': stopwatch.elapsedMilliseconds,
+          'message': 'Proxy returned status ${response.statusCode}',
+        };
+      }
+    } catch (e) {
+      stopwatch.stop();
+      _discardProxy(targetProxy, reason: 'test connection failed');
+      return {
+        'success': false,
+        'latencyMs': null,
+        'message': 'Connection timed out or failed',
+      };
+    }
   }
 
   /// Performs an HTTP GET request that respects current proxy settings.
@@ -618,6 +928,18 @@ class ProxyManager {
   }
 
   void _closeAllProxyResources() {
+    if (_sharedYt != _defaultYt) {
+      try {
+        _sharedYt?.close();
+      } catch (_) {}
+      _sharedYt = _defaultYt;
+    }
+    if (_sharedMusicYt != _defaultMusicYt) {
+      try {
+        _sharedMusicYt?.close();
+      } catch (_) {}
+      _sharedMusicYt = _defaultMusicYt;
+    }
     for (final res in _proxyResources.values) {
       try {
         res.close();

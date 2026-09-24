@@ -29,7 +29,7 @@ import 'package:catchify/utilities/app_utils.dart';
 import 'package:catchify/utilities/formatter.dart';
 import 'package:youtube_music_explode_dart/youtube_music_explode_dart.dart';
 
-final ytMusicClient = YoutubeMusicExplode();
+YoutubeMusicExplode get ytMusicClient => ProxyManager().getMusicClientSync();
 final Map<String, Future<void>> _artistCatalogOperationTails = {};
 
 Future<List<Map<String, dynamic>>> searchVerifiedArtists(

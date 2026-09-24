@@ -21,7 +21,9 @@ import 'package:fluentui_system_icons/fluentui_system_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:catchify/constants/app_constants.dart';
+import 'package:catchify/constants/app_tokens.dart';
 import 'package:catchify/extensions/l10n.dart';
+import 'package:catchify/models/proxy_model.dart';
 import 'package:catchify/services/data_manager.dart';
 import 'package:catchify/services/settings_manager.dart';
 import 'package:catchify/utilities/flutter_bottom_sheet.dart';
@@ -29,6 +31,7 @@ import 'package:catchify/utilities/flutter_toast.dart';
 import 'package:catchify/widgets/bottom_sheet_bar.dart';
 import 'package:catchify/widgets/custom_bar.dart';
 import 'package:catchify/widgets/mini_player_bottom_space.dart';
+import 'package:catchify/widgets/proxy_settings_sheet.dart';
 
 class PlaybackSettingsPage extends StatefulWidget {
   const PlaybackSettingsPage({super.key});
@@ -265,35 +268,64 @@ class _PlaybackSettingsPageState extends State<PlaybackSettingsPage> {
                         );
                       },
                     ),
-                    ValueListenableBuilder<bool>(
-                      valueListenable: useProxy,
-                      builder: (_, value, __) {
+                    ValueListenableBuilder<ProxyMode>(
+                      valueListenable: proxyModeNotifier,
+                      builder: (context, mode, _) {
                         return CustomBar(
-                          context.l10n!.useProxy,
+                          'Proxy & Regional Routing',
                           FluentIcons.shield_keyhole_24_regular,
                           description: isOffline
                               ? 'Available when Offline Mode is disabled'
-                              : context.l10n!.useProxyDescription,
+                              : mode == ProxyMode.off
+                                  ? 'Disabled (Tap to configure)'
+                                  : '${mode.displayName} (Tap to configure)',
                           enabled: !isOffline,
                           borderRadius: commonCustomBarRadiusLast,
-                          trailing: SettingSwitch(
-                            semanticLabel: context.l10n!.useProxy,
-                            value: value,
-                            onChanged: isOffline
-                                ? null
-                                : (v) {
-                                    addOrUpdateData<bool>(
-                                      'settings',
-                                      'useProxy',
-                                      v,
-                                    );
-                                    useProxy.value = v;
-                                    showToast(
-                                      context,
-                                      context.l10n!.settingChangedMsg,
-                                    );
-                                  },
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: mode == ProxyMode.off
+                                      ? colorScheme.surfaceContainerHighest
+                                      : colorScheme.primary.withValues(
+                                          alpha: 0.15,
+                                        ),
+                                  borderRadius: BorderRadius.circular(
+                                    AppTokens.radiusPill,
+                                  ),
+                                ),
+                                child: Text(
+                                  mode.displayName,
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                    color: mode == ProxyMode.off
+                                        ? colorScheme.onSurfaceVariant
+                                        : colorScheme.primary,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 4),
+                              Icon(
+                                FluentIcons.chevron_right_24_regular,
+                                size: 18,
+                                color: colorScheme.onSurfaceVariant,
+                              ),
+                            ],
                           ),
+                          onTap: isOffline
+                              ? null
+                              : () {
+                                  showCustomBottomSheet(
+                                    context,
+                                    const ProxySettingsSheet(),
+                                  );
+                                },
                         );
                       },
                     ),

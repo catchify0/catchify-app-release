@@ -29,6 +29,7 @@ import 'package:http/http.dart' as http;
 import 'package:catchify/constants/clients.dart';
 import 'package:catchify/main.dart' show logger;
 import 'package:catchify/models/lyric_line.dart';
+import 'package:catchify/models/proxy_model.dart';
 import 'package:catchify/services/artist_service.dart' show ytMusicClient;
 import 'package:catchify/services/data_manager.dart';
 import 'package:catchify/services/download_manager.dart';
@@ -96,7 +97,10 @@ const Duration _cacheValidationDuration = Duration(hours: 1);
 
 /// Fetches a stream manifest for a song, honoring proxy settings.
 Future<StreamManifest?> _fetchStreamManifest(String songId) async {
-  if (useProxy.value) {
+  final mode = proxyModeNotifier.value;
+
+  // In Country Match or Custom mode, use proxy directly
+  if (mode == ProxyMode.countryMatch || mode == ProxyMode.custom) {
     try {
       final proxyManifest = await ProxyManager()
           .getSongManifest(songId)
@@ -111,6 +115,7 @@ Future<StreamManifest?> _fetchStreamManifest(String songId) async {
     }
   }
 
+  // Direct connection first (used by default in Off and Smart Auto modes)
   try {
     return await ytClient.videos.streams
         .getManifest(songId, ytClients: customClients)
@@ -121,9 +126,35 @@ Future<StreamManifest?> _fetchStreamManifest(String songId) async {
       error: e,
       stackTrace: stackTrace,
     );
-    return ytClient.videos.streams
-        .getManifest(songId)
-        .timeout(_manifestTimeout);
+    try {
+      return await ytClient.videos.streams
+          .getManifest(songId)
+          .timeout(_manifestTimeout);
+    } catch (directErr, directSt) {
+      // Smart Auto-Proxy failover:
+      // If direct connection fails (geo-blocked or 403) and auto mode is enabled:
+      if (mode == ProxyMode.auto || useProxy.value) {
+        logger.log(
+          '[SMART_AUTO_PROXY] Direct stream failed for $songId. Auto-engaging proxy fallback...',
+          error: directErr,
+          stackTrace: directSt,
+        );
+        try {
+          final autoManifest = await ProxyManager()
+              .getSongManifest(songId)
+              .timeout(_manifestTimeout);
+          if (autoManifest != null) {
+            logger.log(
+              '[SMART_AUTO_PROXY] Successfully resolved stream manifest via proxy for $songId!',
+            );
+            return autoManifest;
+          }
+        } catch (proxyErr) {
+          logger.log('[SMART_AUTO_PROXY] Proxy fallback failed: $proxyErr');
+        }
+      }
+      rethrow;
+    }
   }
 }
 
