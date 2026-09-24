@@ -30,6 +30,7 @@ import 'package:catchify/constants/app_tokens.dart';
 import 'package:catchify/extensions/l10n.dart';
 import 'package:catchify/main.dart';
 import 'package:catchify/services/common_services.dart';
+import 'package:catchify/services/settings_manager.dart';
 import 'package:catchify/utilities/flutter_toast.dart';
 import 'package:catchify/utilities/mediaitem.dart';
 import 'package:catchify/utilities/async_loader.dart';
@@ -338,13 +339,14 @@ class _NowPlayingPageState extends State<NowPlayingPage>
                 );
               },
             );
-            },
-          ),
+          },
         ),
       ),
+    ),
+  );
+      },
     );
-  },
-);
+  }
 
   double _artworkSize(Size size) {
     final isLandscape = size.width > size.height;

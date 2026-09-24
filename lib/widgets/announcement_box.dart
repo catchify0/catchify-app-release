@@ -154,6 +154,7 @@ class AnnouncementBox extends StatelessWidget {
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 }

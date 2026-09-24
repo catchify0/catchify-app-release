@@ -47,6 +47,17 @@ void main() {
         'as',
         'sa',
         'kok',
+        'es',
+        'ko',
+        'ja',
+        'fr',
+        'de',
+        'pt',
+        'id',
+        'it',
+        'tr',
+        'ru',
+        'ar',
       ];
 
       for (final code in supportedCodes) {
@@ -60,24 +71,20 @@ void main() {
 
     test('unsupported UI-only languages deterministically fall back to en', () {
       final unsupportedUiOnly = [
-        'fr',
-        'de',
-        'es',
-        'ja',
-        'ko',
-        'ru',
         'zh',
-        'pt',
-        'it',
-        'tr',
         'uk',
         'pl',
         'sv',
         'hu',
-        'id',
         'el',
         'et',
         'he',
+        'nl',
+        'cs',
+        'ro',
+        'da',
+        'fi',
+        'no',
       ];
 
       for (final code in unsupportedUiOnly) {
@@ -200,7 +207,7 @@ void main() {
     });
 
     test('unsupported content languages safely follow English policy', () {
-      expect(shouldUseNativeHomeFeed('fr'), isTrue);
+      expect(shouldUseNativeHomeFeed('zh'), isTrue);
       expect(shouldUseNativeHomeFeed('invalid_language'), isTrue);
     });
   });

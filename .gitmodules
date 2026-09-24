@@ -1,0 +1,3 @@
+[submodule ".agents/skills/ytmusicapi"]
+	path = .agents/skills/ytmusicapi
+	url = https://github.com/sigma67/ytmusicapi.git

@@ -36,6 +36,7 @@ const commonCustomBarRadius = BorderRadius.all(Radius.circular(AppTokens.radiusL
 const commonCustomBarRadiusFirst = BorderRadius.vertical(
   top: Radius.circular(AppTokens.radiusLarge),
 );
+const commonCustomBarRadiusMiddle = BorderRadius.zero;
 const commonCustomBarRadiusLast = BorderRadius.vertical(
   bottom: Radius.circular(AppTokens.radiusLarge),
 );
