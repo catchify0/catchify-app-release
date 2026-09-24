@@ -31,6 +31,7 @@ import 'package:catchify/services/settings_manager.dart';
 import 'package:catchify/utilities/flutter_bottom_sheet.dart'
     show closeCurrentBottomSheet;
 import 'package:catchify/widgets/mini_player.dart';
+import 'package:catchify/widgets/pill_navigation_bar.dart';
 
 class BottomNavigationPage extends StatefulWidget {
   const BottomNavigationPage({required this.child, super.key});
@@ -168,34 +169,11 @@ class _BottomNavigationPageState extends State<BottomNavigationPage> {
                   ),
                 ),
                 bottomNavigationBar: !isLargeScreen
-                    ? DecoratedBox(
-                        decoration: BoxDecoration(
-                          border: Border(
-                            top: BorderSide(
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .outlineVariant
-                                  .withValues(alpha: 0.28),
-                              width: 0.8,
-                            ),
-                          ),
-                        ),
-                        child: NavigationBar(
-                          selectedIndex: _getCurrentIndex(items, isOfflineMode),
-                          labelBehavior:
-                              NavigationDestinationLabelBehavior.alwaysShow,
-                          onDestinationSelected: (index) =>
-                              _onTabTapped(index, items),
-                          destinations: items
-                              .map(
-                                (item) => NavigationDestination(
-                                  icon: Icon(item.icon),
-                                  selectedIcon: Icon(item.selectedIcon),
-                                  label: item.label,
-                                ),
-                              )
-                              .toList(),
-                        ),
+                    ? PillNavigationBar(
+                        selectedIndex: _getCurrentIndex(items, isOfflineMode),
+                        onDestinationSelected: (index) =>
+                            _onTabTapped(index, items),
+                        items: items,
                       )
                     : null,
               );
@@ -232,8 +210,8 @@ class _BottomNavigationPageState extends State<BottomNavigationPage> {
 
     items.addAll([
       _NavigationItem(
-        icon: FluentIcons.book_24_regular,
-        selectedIcon: FluentIcons.book_24_filled,
+        icon: Icons.library_music_outlined,
+        selectedIcon: Icons.library_music_rounded,
         label: context.l10n?.library ?? 'Library',
         route: '/library',
         shellIndex: 2,
@@ -304,18 +282,15 @@ class _BottomNavigationPageState extends State<BottomNavigationPage> {
   }
 }
 
-class _NavigationItem {
+class _NavigationItem extends PillNavigationItem {
   const _NavigationItem({
-    required this.icon,
-    required this.selectedIcon,
-    required this.label,
+    required super.icon,
+    required super.selectedIcon,
+    required super.label,
     required this.route,
     required this.shellIndex,
   });
 
-  final IconData icon;
-  final IconData selectedIcon;
-  final String label;
   final String route;
   final int shellIndex;
 }
