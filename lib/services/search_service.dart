@@ -21,7 +21,7 @@
 import 'dart:async';
 
 import 'package:hive/hive.dart';
-import 'package:catchify/main.dart' show logger;
+import 'package:catchify/main.dart' show isNetworkError, logger;
 import 'package:catchify/services/artist_service.dart' show ytMusicClient;
 import 'package:catchify/utilities/formatter.dart' show returnSongLayout;
 import 'package:catchify/services/common_services.dart';
@@ -438,7 +438,9 @@ class SearchService {
       final raw = await fetchSongsList(query).timeout(const Duration(seconds: 7));
       return raw.whereType<Map>().map(Map<String, dynamic>.from).toList();
     } catch (e, st) {
-      logger.log('Error in _safeFetchSongs', error: e, stackTrace: st);
+      if (!isNetworkError(e)) {
+        logger.log('Error in _safeFetchSongs', error: e, stackTrace: st);
+      }
       return [];
     }
   }
@@ -448,7 +450,9 @@ class SearchService {
       final raw = await searchArtists(query).timeout(const Duration(seconds: 7));
       return raw.whereType<Map>().map(Map<String, dynamic>.from).toList();
     } catch (e, st) {
-      logger.log('Error in _safeFetchArtists', error: e, stackTrace: st);
+      if (!isNetworkError(e)) {
+        logger.log('Error in _safeFetchArtists', error: e, stackTrace: st);
+      }
       return [];
     }
   }
@@ -458,7 +462,9 @@ class SearchService {
       final raw = await getPlaylists(query: query, type: 'album').timeout(const Duration(seconds: 7));
       return raw.whereType<Map>().map(Map<String, dynamic>.from).toList();
     } catch (e, st) {
-      logger.log('Error in _safeFetchAlbums', error: e, stackTrace: st);
+      if (!isNetworkError(e)) {
+        logger.log('Error in _safeFetchAlbums', error: e, stackTrace: st);
+      }
       return [];
     }
   }
@@ -468,7 +474,9 @@ class SearchService {
       final raw = await getPlaylists(query: query, type: 'playlist').timeout(const Duration(seconds: 7));
       return raw.whereType<Map>().map(Map<String, dynamic>.from).toList();
     } catch (e, st) {
-      logger.log('Error in _safeFetchPlaylists', error: e, stackTrace: st);
+      if (!isNetworkError(e)) {
+        logger.log('Error in _safeFetchPlaylists', error: e, stackTrace: st);
+      }
       return [];
     }
   }
@@ -485,7 +493,9 @@ class SearchService {
       }
       return videos;
     } catch (e, st) {
-      logger.log('Error in _safeFetchVideos', error: e, stackTrace: st);
+      if (!isNetworkError(e)) {
+        logger.log('Error in _safeFetchVideos', error: e, stackTrace: st);
+      }
       return [];
     }
   }

@@ -27,7 +27,7 @@ import 'package:flutter/widgets.dart';
 import 'package:hive/hive.dart';
 import 'package:http/http.dart' as http;
 import 'package:catchify/constants/clients.dart';
-import 'package:catchify/main.dart' show logger;
+import 'package:catchify/main.dart' show isNetworkError, logger;
 import 'package:catchify/models/lyric_line.dart';
 import 'package:catchify/models/proxy_model.dart';
 import 'package:catchify/services/artist_service.dart' show ytMusicClient;
@@ -107,6 +107,10 @@ Future<StreamManifest?> _fetchStreamManifest(String songId) async {
           .timeout(_manifestTimeout);
       if (proxyManifest != null) return proxyManifest;
     } catch (e, stackTrace) {
+      if (isNetworkError(e)) {
+        logger.log('Proxy manifest fetch failed for $songId: network offline');
+        return null;
+      }
       logger.log(
         'Proxy failed to fetch manifest for $songId, falling back to direct connection',
         error: e,
@@ -121,6 +125,10 @@ Future<StreamManifest?> _fetchStreamManifest(String songId) async {
         .getManifest(songId, ytClients: customClients)
         .timeout(_manifestTimeout);
   } catch (e, stackTrace) {
+    if (isNetworkError(e)) {
+      logger.log('Network offline or host lookup failed for $songId');
+      return null;
+    }
     logger.log(
       'Failed to fetch manifest with customClients for $songId, retrying with default client fallback',
       error: e,
@@ -131,6 +139,9 @@ Future<StreamManifest?> _fetchStreamManifest(String songId) async {
           .getManifest(songId)
           .timeout(_manifestTimeout);
     } catch (directErr, directSt) {
+      if (isNetworkError(directErr)) {
+        return null;
+      }
       // Smart Auto-Proxy failover:
       // If direct connection fails (geo-blocked or 403) and auto mode is enabled:
       if (mode == ProxyMode.auto || useProxy.value) {
@@ -233,11 +244,13 @@ Future<List> fetchSongsList(String searchQuery) async {
     try {
       searchResults = await ytMusicClient.music.searchSongs(searchQuery);
     } catch (e, stackTrace) {
-      logger.log(
-        'Error in ytMusicClient.searchSongs for "$searchQuery"',
-        error: e,
-        stackTrace: stackTrace,
-      );
+      if (!isNetworkError(e)) {
+        logger.log(
+          'Error in ytMusicClient.searchSongs for "$searchQuery"',
+          error: e,
+          stackTrace: stackTrace,
+        );
+      }
     }
 
     // 2. If empty, retry with formatted/sanitized title
@@ -800,11 +813,13 @@ Future<List<String>> getSearchSuggestions(String query) async {
         .timeout(const Duration(seconds: 4));
     return ytmSuggestions;
   } catch (e, stackTrace) {
-    logger.log(
-      'Error in getSearchSuggestions',
-      error: e,
-      stackTrace: stackTrace,
-    );
+    if (!isNetworkError(e)) {
+      logger.log(
+        'Error in getSearchSuggestions',
+        error: e,
+        stackTrace: stackTrace,
+      );
+    }
     return <String>[];
   }
 }

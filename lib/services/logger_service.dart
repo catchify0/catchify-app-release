@@ -28,6 +28,30 @@ import 'package:flutter/services.dart';
 import 'package:catchify/extensions/l10n.dart';
 import 'package:path_provider/path_provider.dart';
 
+bool isNetworkError(dynamic error) {
+  if (error == null) return false;
+  if (error is SocketException || error is HttpException) return true;
+  if (error is PlatformException &&
+      (error.code == '-1009' ||
+          (error.message?.toLowerCase().contains('offline') ?? false))) {
+    return true;
+  }
+  final str = error.toString().toLowerCase();
+  return str.contains('-1009') ||
+      str.contains('offline') ||
+      str.contains('failed host lookup') ||
+      str.contains('socketexception') ||
+      str.contains('network is unreachable') ||
+      str.contains('connection refused') ||
+      str.contains('connection reset') ||
+      str.contains('connection closed') ||
+      str.contains('connection abort') ||
+      str.contains('timed out') ||
+      str.contains('nodename nor servname provided') ||
+      str.contains('no route to host') ||
+      str.contains('clientexception with socketexception');
+}
+
 class Logger {
   static const int _maxLogEntries = 500;
   static const int _maxLogFileBytes = 1024 * 1024;
@@ -59,8 +83,10 @@ class Logger {
     // Check if error is not null, otherwise use an empty string
     final errorMessage = error != null ? ' ${_sanitize(error.toString())}' : '';
 
-    // Check if stackTrace is not null, otherwise use an empty string
-    final stackTraceMessage = stackTrace != null ? '$stackTrace' : '';
+    final isNetErr = isNetworkError(error) || isNetworkError(errorLocation);
+
+    // Suppress heavy stack traces for expected network/offline errors to avoid dumping AOT snapshot crash-like markers
+    final stackTraceMessage = (stackTrace != null && !isNetErr) ? '$stackTrace' : '';
 
     final cleanLocation = _sanitize(errorLocation);
     final logMessage = stackTraceMessage.isNotEmpty

@@ -22,7 +22,7 @@
 import 'dart:async';
 
 import 'package:catchify/constants/artist_constants.dart';
-import 'package:catchify/main.dart' show logger;
+import 'package:catchify/main.dart' show isNetworkError, logger;
 import 'package:catchify/services/data_manager.dart';
 import 'package:catchify/services/proxy_manager.dart';
 import 'package:catchify/utilities/app_utils.dart';
@@ -61,11 +61,13 @@ Future<List<Map<String, dynamic>>> searchVerifiedArtists(
     }
     return artists;
   } catch (e, stackTrace) {
-    logger.log(
-      'Error while searching YouTube Music artists for "$normalizedQuery"',
-      error: e,
-      stackTrace: stackTrace,
-    );
+    if (!isNetworkError(e)) {
+      logger.log(
+        'Error while searching YouTube Music artists for "$normalizedQuery"',
+        error: e,
+        stackTrace: stackTrace,
+      );
+    }
     return [];
   }
 }

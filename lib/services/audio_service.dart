@@ -991,6 +991,24 @@ class CatchifyAudioHandler extends BaseAudioHandler {
     }
   }
 
+  bool _isSongAvailableOffline(Map song) {
+    final audioPath = song['audioPath']?.toString();
+    if (audioPath != null && audioPath.isNotEmpty && File(audioPath).existsSync()) {
+      return true;
+    }
+    final ytid = canonicalSongId(song);
+    if (ytid != null && ytid.isNotEmpty) {
+      final offline = getOfflineSongByYtid(ytid);
+      if (offline.isNotEmpty) {
+        final path = offline['audioPath']?.toString();
+        if (path != null && path.isNotEmpty && File(path).existsSync()) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
   bool _canRetryPlayback() =>
       hasNext ||
       (repeatNotifier.value == AudioServiceRepeatMode.all &&
@@ -1003,6 +1021,24 @@ class CatchifyAudioHandler extends BaseAudioHandler {
       '[PLAYER] stream_error: $_lastError (consecutive: $_consecutiveErrors)',
       error: _lastError,
     );
+
+    if (isNetworkError(_lastError)) {
+      // The device appears to be offline or network connection was lost.
+      // Do NOT rapidly cascade-skip through online tracks in the queue.
+      // Only skip if the next track is downloaded/offline-ready.
+      final nextIdx = _currentQueueIndex + 1;
+      final hasOfflineNext = nextIdx < _queueList.length &&
+          _isSongAvailableOffline(_queueList[nextIdx]);
+      if (hasOfflineNext) {
+        logger.log('[PLAYER] Network offline, but next track is available offline. Skipping to next.');
+        Future.delayed(_errorRetryDelay, skipToNext);
+      } else {
+        logger.log('[PLAYER] Network offline and next track requires internet. Pausing playback.');
+        _consecutiveErrors = 0;
+        pause();
+      }
+      return;
+    }
 
     if (_consecutiveErrors >= _maxConsecutiveErrors) {
       logger.log('[PLAYER] Max consecutive errors ($_maxConsecutiveErrors) reached. Stopping playback.');
@@ -2666,10 +2702,11 @@ class CatchifyAudioHandler extends BaseAudioHandler {
 
       return true;
     } catch (e, stackTrace) {
+      final isNetOffline = isNetworkError(e);
       logger.log(
         'Error setting audio source',
         error: e,
-        stackTrace: stackTrace,
+        stackTrace: isNetOffline ? null : stackTrace,
       );
 
       if (isOffline) {
@@ -2690,7 +2727,9 @@ class CatchifyAudioHandler extends BaseAudioHandler {
         );
       }
 
-      if (allowOnlineRetry) {
+      // If offline, do NOT evict the cached stream URL (the URL itself is fine,
+      // only the network is down), and do NOT attempt fetchSongStreamUrl (which would stall).
+      if (allowOnlineRetry && !isNetOffline) {
         if (offlineMode.value) {
           _lastError = e.toString();
           return false;

@@ -25,7 +25,7 @@ import 'package:flutter/widgets.dart';
 import 'package:hive/hive.dart';
 import 'package:catchify/extensions/l10n.dart';
 import 'package:catchify/main.dart'
-    show appStartupStopwatch, checkAndLogColdStartPerf, homeCacheMs, logger;
+    show appStartupStopwatch, checkAndLogColdStartPerf, homeCacheMs, isNetworkError, logger;
 import 'package:catchify/services/artist_service.dart';
 import 'package:catchify/services/backend_home_feed_service.dart';
 import 'package:catchify/services/data_manager.dart';
@@ -938,11 +938,13 @@ Future<List> getPlaylists({
           if (retryAlbums.isNotEmpty) return retryAlbums;
         }
       } catch (e, st) {
-        logger.log(
-          'Error in ytMusicClient.searchAlbums for "$query":',
-          error: e,
-          stackTrace: st,
-        );
+        if (!isNetworkError(e)) {
+          logger.log(
+            'Error in ytMusicClient.searchAlbums for "$query":',
+            error: e,
+            stackTrace: st,
+          );
+        }
       }
       return [];
     } else if (type == 'playlist') {
@@ -958,11 +960,13 @@ Future<List> getPlaylists({
           if (retryPlaylists.isNotEmpty) return retryPlaylists;
         }
       } catch (e, st) {
-        logger.log(
-          'Error in ytMusicClient.searchPlaylists for "$query":',
-          error: e,
-          stackTrace: st,
-        );
+        if (!isNetworkError(e)) {
+          logger.log(
+            'Error in ytMusicClient.searchPlaylists for "$query":',
+            error: e,
+            stackTrace: st,
+          );
+        }
       }
       return [];
     }

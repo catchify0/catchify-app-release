@@ -39,6 +39,7 @@ import 'package:catchify/services/download_manager.dart';
 import 'package:catchify/services/io_service.dart';
 import 'package:catchify/services/listening_stats_service.dart';
 import 'package:catchify/services/logger_service.dart';
+export 'package:catchify/services/logger_service.dart' show isNetworkError;
 import 'package:catchify/services/playlist_sharing.dart';
 import 'package:catchify/services/playlists_manager.dart';
 import 'package:catchify/services/router_service.dart';
