@@ -90,7 +90,7 @@ class PillNavigationBar extends StatelessWidget {
         bottom: bottomPadding > 0 ? bottomPadding : 10,
       ),
       child: SizedBox(
-        height: 52,
+        height: 54,
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: List.generate(items.length, (index) {
@@ -163,7 +163,7 @@ class _PillNavigationItemWidget extends StatelessWidget {
                     isSelected ? item.selectedIcon : item.icon,
                     key: ValueKey<bool>(isSelected),
                     color: isSelected ? activeColor : unselectedColor,
-                    size: AppTokens.iconNav,
+                    size: 26,
                   ),
                 ),
                 ClipRect(
@@ -180,8 +180,8 @@ class _PillNavigationItemWidget extends StatelessWidget {
                                 item.label,
                                 style: TextStyle(
                                   color: activeColor,
-                                  fontWeight: FontWeight.w700,
-                                  fontSize: 14,
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 14.5,
                                   letterSpacing: 0.2,
                                 ),
                                 maxLines: 1,

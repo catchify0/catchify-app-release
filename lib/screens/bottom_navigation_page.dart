@@ -217,8 +217,8 @@ class _BottomNavigationPageState extends State<BottomNavigationPage> {
 
     items.addAll([
       _NavigationItem(
-        icon: Icons.library_music_outlined,
-        selectedIcon: Icons.library_music_rounded,
+        icon: FluentIcons.library_24_regular,
+        selectedIcon: FluentIcons.library_24_filled,
         label: context.l10n?.library ?? 'Library',
         route: '/library',
         shellIndex: 3,
