@@ -78,7 +78,7 @@ final shouldWeCheckUpdates = ValueNotifier<bool?>(
 );
 
 final playNextSongAutomatically = ValueNotifier<bool>(
-  _readBoolSetting('playNextSongAutomatically', false),
+  _readBoolSetting('playNextSongAutomatically', true),
 );
 
 final useSystemColor = ValueNotifier<bool>(
@@ -334,7 +334,7 @@ void reloadSettingsFromStorage() {
   shouldWeCheckUpdates.value = _readNullableBoolSetting('shouldWeCheckUpdates');
   playNextSongAutomatically.value = _readBoolSetting(
     'playNextSongAutomatically',
-    false,
+    true,
   );
   useSystemColor.value = _readBoolSetting('useSystemColor', false);
   usePureBlackColor.value = _readBoolSetting('usePureBlackColor', false);
