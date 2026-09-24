@@ -10,6 +10,11 @@ set -e
 
 cd "$(dirname "$0")/.."
 
+if [ -f "tools/env.sh" ]; then
+  # shellcheck source=/dev/null
+  source tools/env.sh
+fi
+
 PUBSPEC="pubspec.yaml"
 FLAVOR="${1:-github}"
 

@@ -28,7 +28,11 @@ scratch/
 
 # Flutter/Dart/Pub related
 **/doc/api/
-tools/
+tools/*
+!tools/env.ps1
+!tools/env.sh
+!tools/*.bat
+!tools/*.sh
 .dart_tool/
 .flutter-plugins
 .flutter-plugins-dependencies

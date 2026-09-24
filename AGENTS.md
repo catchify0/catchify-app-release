@@ -14,17 +14,23 @@ Because the global system PATH may not include Flutter or Android tools, always 
   . .\tools\env.ps1
   flutter --version
   ```
-  or run directly:
+  or run directly via root convenience wrappers:
   ```powershell
-  & "tools\flutter\bin\flutter.bat" <command>
-  & "tools\flutter\bin\dart.bat" <command>
-  & "tools\android-sdk\platform-tools\adb.exe" <command>
+  & ".\tools\flutter.bat" <command>
+  & ".\tools\dart.bat" <command>
+  & ".\tools\adb.bat" <command>
   ```
 - **Bash / Git Bash**:
   ```bash
   source tools/env.sh
   flutter --version
   ```
+  or run directly:
+  ```bash
+  ./tools/flutter.sh <command>
+  ./tools/dart.sh <command>
+  ./tools/adb.sh <command>
+  ```
 
 ### Agent Skills
-Agent skills are organized under `.agents/skills/`. All skills utilize this local toolchain.
+Agent skills are organized under `.agents/skills/`. The `.agents/skills/local-toolchain` skill provides full specification and orchestration instructions for this local toolchain.
