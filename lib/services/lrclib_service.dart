@@ -69,6 +69,10 @@ class LrcLibService {
     'User-Agent': 'Catchify/1.0 (https://github.com/catchify0/catchify0.github.io)',
   };
 
+  /// In-memory LRU cache for fetched lyrics to prevent repeat network calls
+  static final Map<String, String> _lyricsCache = {};
+  static const int _maxLyricsCacheSize = 120;
+
   // Channel and label patterns that shouldn't be used as the artist name
   static final List<RegExp> _channelLabelPatterns = [
     RegExp(r'\bthink\s*(?:music|indie)\b', caseSensitive: false),
@@ -391,6 +395,20 @@ class LrcLibService {
     int? duration,
     String? album,
   }) async {
+    final cacheKey = '$title::$artist::${duration ?? 0}';
+    final cached = _lyricsCache[cacheKey];
+    if (cached != null) return cached;
+
+    String? cacheAndReturn(String? lyrics) {
+      if (lyrics != null && lyrics.isNotEmpty) {
+        if (_lyricsCache.length >= _maxLyricsCacheSize) {
+          _lyricsCache.remove(_lyricsCache.keys.first);
+        }
+        _lyricsCache[cacheKey] = lyrics;
+      }
+      return lyrics;
+    }
+
     try {
       final cleanA = _cleanArtist(artist);
       final isLabel = isChannelLabel(cleanA);
@@ -407,7 +425,7 @@ class LrcLibService {
             albumName: album,
           );
           if (exact != null && exact.syncedLyrics != null && exact.syncedLyrics!.isNotEmpty) {
-            return exact.syncedLyrics;
+            return cacheAndReturn(exact.syncedLyrics);
           }
         }
 
@@ -419,7 +437,7 @@ class LrcLibService {
             duration: duration,
           );
           if (inverted != null && inverted.syncedLyrics != null && inverted.syncedLyrics!.isNotEmpty) {
-            return inverted.syncedLyrics;
+            return cacheAndReturn(inverted.syncedLyrics);
           }
         }
       }
@@ -513,7 +531,7 @@ class LrcLibService {
       });
 
       final bestMatch = pool.first;
-      return bestMatch.syncedLyrics ?? bestMatch.plainLyrics;
+      return cacheAndReturn(bestMatch.syncedLyrics ?? bestMatch.plainLyrics);
     } catch (_) {
       return null;
     }

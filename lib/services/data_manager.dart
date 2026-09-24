@@ -443,3 +443,18 @@ Future<void> _replaceHiveFile(String targetPath, List<int> bytes) async {
     rethrow;
   }
 }
+
+/// Compacts all open Hive boxes asynchronously to recover disk space and defragment database files.
+Future<void> compactAllBoxes() async {
+  const boxNames = ['user', 'settings', 'cache', 'userNoBackup'];
+  for (final name in boxNames) {
+    if (Hive.isBoxOpen(name)) {
+      try {
+        final box = Hive.box(name);
+        await box.compact();
+      } catch (e, st) {
+        logger.log('Failed to compact box $name', error: e, stackTrace: st);
+      }
+    }
+  }
+}

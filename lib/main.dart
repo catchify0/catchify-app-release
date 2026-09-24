@@ -190,6 +190,10 @@ class _CatchifyState extends State<Catchify> with WidgetsBindingObserver {
         }
       });
     }
+
+    SchedulerBinding.instance.addPostFrameCallback((_) {
+      Future.delayed(const Duration(seconds: 5), compactAllBoxes);
+    });
   }
 
   @override

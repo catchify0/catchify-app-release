@@ -102,6 +102,7 @@ class CatchifyAudioHandler extends BaseAudioHandler {
   String? _lastCompletedSongId;
   String? _playerInferredDurationSongId;
   bool _interruptedPlayingState = false;
+  bool _hasPreloadedCurrentTrackEnd = false;
   bool _isFetchingAutoplay = false;
   static const int _autoplayPrefetchThreshold = 3;
 
@@ -230,6 +231,14 @@ class CatchifyAudioHandler extends BaseAudioHandler {
     audioPlayer.positionStream.listen((pos) {
       if (audioPlayer.playing) {
         _saveLastPositionThrottled(pos.inMilliseconds);
+        final dur = audioPlayer.duration;
+        if (dur != null && dur.inMilliseconds > 15000) {
+          final progress = pos.inMilliseconds / dur.inMilliseconds;
+          if (progress >= 0.85 && !_hasPreloadedCurrentTrackEnd) {
+            _hasPreloadedCurrentTrackEnd = true;
+            _preloadUpcomingSongs();
+          }
+        }
       }
     });
 
@@ -1960,7 +1969,12 @@ class CatchifyAudioHandler extends BaseAudioHandler {
         preloadUrl = null;
       } else {
         // fetchSongStreamUrl handles caching, freshness checks, and validation
-        preloadUrl = await fetchSongStreamUrl(ytid, nextSong['isLive'] ?? false)
+        preloadUrl = await fetchSongStreamUrl(
+          ytid,
+          nextSong['isLive'] ?? false,
+          title: nextSong['title']?.toString(),
+          artist: nextSong['artist']?.toString(),
+        )
             .timeout(
               const Duration(seconds: 8),
               onTimeout: () {
@@ -2420,6 +2434,7 @@ class CatchifyAudioHandler extends BaseAudioHandler {
         return false;
       }
       _lastCompletedSongId = null;
+      _hasPreloadedCurrentTrackEnd = false;
       songData['id'] = canonicalId;
       songData['ytid'] = canonicalId;
 
