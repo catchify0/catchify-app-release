@@ -25,7 +25,6 @@ import 'package:catchify/constants/version.dart';
 import 'package:catchify/services/update_manager.dart';
 import 'package:catchify/utilities/url_launcher.dart';
 import 'package:catchify/extensions/l10n.dart';
-import 'package:catchify/widgets/catchify_brand_icon.dart';
 
 class AboutPage extends StatelessWidget {
   const AboutPage({super.key});
@@ -67,7 +66,7 @@ class AboutPage extends StatelessWidget {
             );
 
             // Safety net for extreme edge cases (e.g. landscape or tiny height)
-            if (constraints.maxHeight < 500) {
+            if (constraints.maxHeight < 580) {
               return SingleChildScrollView(
                 physics: const BouncingScrollPhysics(),
                 padding: const EdgeInsets.symmetric(vertical: 12),
@@ -97,9 +96,11 @@ class AboutPage extends StatelessWidget {
               ),
             ],
           ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(20),
-            child: CatchifyBrandIcon(size: iconSize),
+          child: Image.asset(
+            'assets/icons/catchify-brand.png',
+            width: iconSize,
+            height: iconSize,
+            fit: BoxFit.contain,
           ),
         ),
         const SizedBox(height: 12),
@@ -296,7 +297,7 @@ class AboutPage extends StatelessWidget {
                   padding: const EdgeInsets.all(2),
                   child: ClipOval(
                     child: Image.asset(
-                      'assets/icons/developer.jpg',
+                      'assets/icons/developer.png',
                       fit: BoxFit.cover,
                     ),
                   ),
@@ -327,6 +328,15 @@ class AboutPage extends StatelessWidget {
                   ),
                 ),
               ],
+            ),
+            SizedBox(height: isCompact ? 8 : 10),
+            Text(
+              'Passionate developer dedicated to building elegant, high-performance open-source apps. Creator of Catchify, focusing on intuitive user experience and privacy.',
+              style: TextStyle(
+                color: colorScheme.onSurfaceVariant,
+                fontSize: 12,
+                height: 1.35,
+              ),
             ),
             SizedBox(height: isCompact ? 10 : 12),
             Row(

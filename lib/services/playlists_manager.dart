@@ -3067,16 +3067,22 @@ Future<Map?> _fetchYouTubePlaylist(String id) async {
                 .toList(),
           };
         } catch (_) {
+          final cachedSongs =
+              await getData('cache', 'ytm_playlistSongs_v2_$cleanId') ??
+              await getData('cache', 'playlistSongs$cleanId');
           playlist = {
             'ytid': cleanId,
             'title': 'Playlist',
             'image': null,
             'source': 'youtube-music-playlist',
-            'list': [],
+            'list': cachedSongs is List ? cachedSongs : [],
           };
         }
       }
-      _updateOnlineCache(playlist);
+      if (playlist != null &&
+          (playlist['list'] as List?)?.isNotEmpty == true) {
+        _updateOnlineCache(playlist);
+      }
     } catch (e, stackTrace) {
       logger.log(
         'Failed to fetch playlist info for id $id',
@@ -3183,11 +3189,15 @@ Future<List> getSongsFromPlaylist(
       return songList;
     }
   } catch (e, st) {
-    logger.log(
-      'Error fetching YTM songs for playlist $cleanId:',
-      error: e,
-      stackTrace: st,
-    );
+    if (!isNetworkError(e)) {
+      logger.log(
+        'Error fetching YTM songs for playlist $cleanId:',
+        error: e,
+        stackTrace: st,
+      );
+    } else {
+      logger.log('[PLAYLIST] Network unavailable for $cleanId ($e)');
+    }
   }
 
   // 2. Legacy cache fallback if available
@@ -3855,7 +3865,32 @@ Future<List<HomeSection>> _loadUnifiedHomeFeed({
     }
   }
 
-  // 3. Global fallback is English-only. Regional feeds must not fall back to
+  // 3. If remote and language fetches returned 0 sections (e.g. offline during refresh/SWR),
+  // restore cached sections from Hive so the home feed is not wiped out.
+  if (sections.isEmpty && languageSections.isEmpty) {
+    try {
+      final cachedRaw = await getData('cache', cacheKey);
+      if (cachedRaw is List && cachedRaw.isNotEmpty) {
+        final cachedSections = cachedRaw
+            .whereType<Map>()
+            .map((item) => HomeSection.fromJson(Map<String, dynamic>.from(item)))
+            .where((s) => s.isNotEmpty)
+            .toList();
+        if (cachedSections.isNotEmpty) {
+          logger.log(
+            '[HOME_CACHE_FALLBACK] Restored ${cachedSections.length} cached sections due to network fetch producing 0 sections',
+          );
+          if (shouldUseNativeHomeFeed(contentLang)) {
+            sections.addAll(cachedSections);
+          } else {
+            languageSections.addAll(cachedSections);
+          }
+        }
+      }
+    } catch (_) {}
+  }
+
+  // 4. Global fallback is English-only. Regional feeds must not fall back to
   // generic songs/playlists because that breaks the selected-language contract.
   if (shouldUseNativeHomeFeed(contentLang) &&
       sections.isEmpty &&
