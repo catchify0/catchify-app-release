@@ -28,6 +28,7 @@ import 'package:catchify/services/data_manager.dart';
 import 'package:catchify/services/settings_manager.dart';
 import 'package:catchify/utilities/flutter_bottom_sheet.dart';
 import 'package:catchify/utilities/flutter_toast.dart';
+import 'package:catchify/utilities/language_utils.dart';
 import 'package:catchify/widgets/bottom_sheet_bar.dart';
 import 'package:catchify/widgets/custom_bar.dart';
 import 'package:catchify/widgets/mini_player_bottom_space.dart';
@@ -277,8 +278,12 @@ class _PlaybackSettingsPageState extends State<PlaybackSettingsPage> {
                           description: isOffline
                               ? 'Available when Offline Mode is disabled'
                               : mode == ProxyMode.off
-                                  ? 'Disabled (Tap to configure)'
-                                  : '${mode.displayName} (Tap to configure)',
+                                  ? 'Disabled • Tap to configure'
+                                  : mode == ProxyMode.auto
+                                      ? 'Smart Auto • Auto-failover on geo-blocks'
+                                      : mode == ProxyMode.countryMatch
+                                          ? 'Country Match • ${getCountryByCode(contentCountryPreference).name}'
+                                          : 'Custom Proxy • ${customProxyNotifier.value.isNotEmpty ? customProxyNotifier.value : "Configured"}',
                           enabled: !isOffline,
                           borderRadius: commonCustomBarRadiusLast,
                           trailing: Row(

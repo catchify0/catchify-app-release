@@ -73,6 +73,15 @@ class _ProxySettingsSheetState extends State<ProxySettingsSheet> {
     });
   }
 
+  void _saveCustomProxy() {
+    final text = _customProxyController.text.trim();
+    setCustomProxyAddress(text);
+    if (proxyModeNotifier.value != ProxyMode.custom) {
+      setProxyMode(ProxyMode.custom);
+    }
+    showToast(context, 'Custom proxy saved');
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -82,297 +91,362 @@ class _ProxySettingsSheetState extends State<ProxySettingsSheet> {
     return ValueListenableBuilder<ProxyMode>(
       valueListenable: proxyModeNotifier,
       builder: (context, currentMode, _) {
+        final isEnabled = currentMode != ProxyMode.off;
+
         return ValueListenableBuilder<ProxyStatus>(
           valueListenable: ProxyManager().proxyStatusNotifier,
           builder: (context, status, _) {
             return SingleChildScrollView(
               physics: const BouncingScrollPhysics(),
               padding: const EdgeInsets.only(
-                left: 16,
-                right: 16,
-                top: 8,
-                bottom: 32,
+                left: 18,
+                right: 18,
+                top: 4,
+                bottom: 28,
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
+                  // Header Bar with close icon
                   Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: colorScheme.primary.withValues(alpha: 0.15),
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          FluentIcons.shield_keyhole_24_filled,
-                          color: colorScheme.primary,
-                          size: 24,
-                        ),
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: colorScheme.primary.withValues(alpha: 0.12),
+                              borderRadius: BorderRadius.circular(
+                                AppTokens.radiusControl,
+                              ),
+                            ),
+                            child: Icon(
+                              FluentIcons.shield_keyhole_24_filled,
+                              color: colorScheme.primary,
+                              size: 22,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Proxy & Regional Routing',
+                                style: theme.textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                ),
+                              ),
+                              Text(
+                                'Smart bypass for geo-blocked songs',
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: colorScheme.onSurfaceVariant,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
                       ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Advanced Proxy & Routing',
-                              style: theme.textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            Text(
-                              'Bypass regional blocks & customize connection',
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: colorScheme.onSurfaceVariant,
-                              ),
-                            ),
-                          ],
-                        ),
+                      IconButton(
+                        icon: const Icon(FluentIcons.dismiss_20_regular),
+                        tooltip: 'Close',
+                        onPressed: () => Navigator.pop(context),
                       ),
                     ],
                   ),
 
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 14),
 
-                  // Status Card
+                  // Master Toggle Card
                   Container(
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 14,
+                      horizontal: 16,
                       vertical: 12,
                     ),
                     decoration: BoxDecoration(
-                      color: colorScheme.surfaceContainerHighest.withValues(
-                        alpha: 0.4,
-                      ),
+                      color: isEnabled
+                          ? colorScheme.primary.withValues(alpha: 0.08)
+                          : colorScheme.surfaceContainerHighest.withValues(
+                              alpha: 0.35,
+                            ),
                       borderRadius: BorderRadius.circular(
                         AppTokens.radiusMedium,
                       ),
                       border: Border.all(
-                        color: status.isActive
-                            ? colorScheme.primary.withValues(alpha: 0.4)
+                        color: isEnabled
+                            ? colorScheme.primary.withValues(alpha: 0.35)
                             : colorScheme.outlineVariant.withValues(alpha: 0.2),
                       ),
                     ),
                     child: Row(
                       children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                isEnabled ? 'Proxy Enabled' : 'Proxy Disabled',
+                                style: theme.textTheme.titleSmall?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: isEnabled ? colorScheme.primary : null,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                isEnabled
+                                    ? currentMode.displayName
+                                    : 'Direct connection (fastest, standard)',
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: colorScheme.onSurfaceVariant,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Switch(
+                          value: isEnabled,
+                          activeColor: colorScheme.primary,
+                          onChanged: (val) {
+                            if (val) {
+                              setProxyMode(ProxyMode.auto);
+                              showToast(context, 'Smart Auto-Proxy activated');
+                            } else {
+                              setProxyMode(ProxyMode.off);
+                              showToast(context, 'Proxy disabled');
+                            }
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // Mode Selector (Visible when Enabled)
+                  if (isEnabled) ...[
+                    const SizedBox(height: 16),
+                    Text(
+                      'ROUTING MODE',
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: colorScheme.primary,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 0.8,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+
+                    // Smart Auto Chip/Tile
+                    _buildModeTile(
+                      context: context,
+                      mode: ProxyMode.auto,
+                      title: 'Smart Auto (Recommended)',
+                      subtitle:
+                          'Direct 0ms speed. Auto-activates proxy only if track fails or is blocked.',
+                      icon: FluentIcons.flash_24_regular,
+                      isSelected: currentMode == ProxyMode.auto,
+                      badge: 'FASTEST',
+                      badgeColor: Colors.green,
+                      onTap: () {
+                        setProxyMode(ProxyMode.auto);
+                        showToast(context, 'Smart Auto mode active');
+                      },
+                    ),
+
+                    const SizedBox(height: 8),
+
+                    // Country Match Chip/Tile
+                    _buildModeTile(
+                      context: context,
+                      mode: ProxyMode.countryMatch,
+                      title: 'Match Region (${currentCountry.code})',
+                      subtitle:
+                          'Routes through proxies in ${currentCountry.name} to match your selected region.',
+                      icon: FluentIcons.globe_24_regular,
+                      isSelected: currentMode == ProxyMode.countryMatch,
+                      badge: currentCountry.code,
+                      badgeColor: colorScheme.primary,
+                      onTap: () {
+                        setProxyMode(ProxyMode.countryMatch);
+                        showToast(
+                          context,
+                          'Country Match (${currentCountry.code}) active',
+                        );
+                      },
+                    ),
+
+                    const SizedBox(height: 8),
+
+                    // Custom Proxy Chip/Tile
+                    _buildModeTile(
+                      context: context,
+                      mode: ProxyMode.custom,
+                      title: 'Custom Server',
+                      subtitle: 'Use your own private HTTP or SOCKS proxy.',
+                      icon: FluentIcons.server_24_regular,
+                      isSelected: currentMode == ProxyMode.custom,
+                      onTap: () {
+                        setProxyMode(ProxyMode.custom);
+                      },
+                    ),
+
+                    // Custom Proxy Input Field
+                    if (currentMode == ProxyMode.custom) ...[
+                      const SizedBox(height: 12),
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: colorScheme.surfaceContainerHighest.withValues(
+                            alpha: 0.25,
+                          ),
+                          borderRadius: BorderRadius.circular(
+                            AppTokens.radiusMedium,
+                          ),
+                          border: Border.all(
+                            color: colorScheme.outlineVariant.withValues(
+                              alpha: 0.3,
+                            ),
+                          ),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: TextField(
+                                    controller: _customProxyController,
+                                    style: theme.textTheme.bodyMedium?.copyWith(
+                                      fontFamily: 'monospace',
+                                      fontSize: 13,
+                                    ),
+                                    decoration: InputDecoration(
+                                      isDense: true,
+                                      hintText: 'e.g. 192.168.1.100:8080',
+                                      labelText: 'Server IP : Port',
+                                      prefixIcon: const Icon(
+                                        FluentIcons.link_20_regular,
+                                        size: 20,
+                                      ),
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(
+                                          AppTokens.radiusControl,
+                                        ),
+                                      ),
+                                    ),
+                                    onSubmitted: (_) => _saveCustomProxy(),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                IconButton.filledTonal(
+                                  icon: const Icon(
+                                    FluentIcons.save_20_regular,
+                                  ),
+                                  tooltip: 'Save',
+                                  onPressed: _saveCustomProxy,
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ],
+
+                  const SizedBox(height: 16),
+
+                  // Connection Health & Ping Bar
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 10,
+                    ),
+                    decoration: BoxDecoration(
+                      color: colorScheme.surfaceContainerHighest.withValues(
+                        alpha: 0.3,
+                      ),
+                      borderRadius: BorderRadius.circular(
+                        AppTokens.radiusMedium,
+                      ),
+                      border: Border.all(
+                        color: colorScheme.outlineVariant.withValues(
+                          alpha: 0.2,
+                        ),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
                         Container(
-                          width: 10,
-                          height: 10,
+                          width: 8,
+                          height: 8,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            color: currentMode == ProxyMode.off
+                            color: !isEnabled
                                 ? colorScheme.outline
                                 : (status.isActive
                                     ? Colors.greenAccent
                                     : Colors.orangeAccent),
                           ),
                         ),
-                        const SizedBox(width: 10),
+                        const SizedBox(width: 8),
                         Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                currentMode.displayName,
-                                style: theme.textTheme.bodyMedium?.copyWith(
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                              Text(
-                                status.message ?? currentMode.description,
-                                style: theme.textTheme.bodySmall?.copyWith(
-                                  color: colorScheme.onSurfaceVariant,
-                                ),
-                              ),
-                            ],
+                          child: Text(
+                            _testResult ??
+                                (status.message ??
+                                    (isEnabled
+                                        ? 'Standby (0ms delay)'
+                                        : 'Direct connection')),
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: _testSuccess == true
+                                  ? Colors.greenAccent
+                                  : (_testSuccess == false
+                                      ? Colors.redAccent
+                                      : colorScheme.onSurfaceVariant),
+                              fontWeight: _testResult != null
+                                  ? FontWeight.w600
+                                  : FontWeight.normal,
+                              fontSize: 12,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                        if (status.latencyMs != null)
-                          Container(
+                        const SizedBox(width: 8),
+                        FilledButton.tonal(
+                          onPressed: _isTesting ? null : _runTest,
+                          style: FilledButton.styleFrom(
+                            visualDensity: VisualDensity.compact,
                             padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 3,
+                              horizontal: 12,
+                              vertical: 6,
                             ),
-                            decoration: BoxDecoration(
-                              color: colorScheme.primary.withValues(alpha: 0.1),
+                            shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(
                                 AppTokens.radiusPill,
                               ),
                             ),
-                            child: Text(
-                              '${status.latencyMs}ms',
-                              style: TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.bold,
-                                color: colorScheme.primary,
-                              ),
-                            ),
                           ),
+                          child: _isTesting
+                              ? const SizedBox(
+                                  width: 14,
+                                  height: 14,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : const Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(FluentIcons.pulse_20_regular, size: 14),
+                                    SizedBox(width: 4),
+                                    Text('Ping', style: TextStyle(fontSize: 12)),
+                                  ],
+                                ),
+                        ),
                       ],
                     ),
                   ),
-
-                  const SizedBox(height: 16),
-
-                  // Mode Options
-                  _buildModeOption(
-                    context: context,
-                    mode: ProxyMode.auto,
-                    title: 'Smart Auto-Failover (Recommended)',
-                    subtitle:
-                        'Direct streaming by default (0ms). Auto-activates proxy only if track fails or is geo-blocked.',
-                    icon: FluentIcons.flash_24_regular,
-                    isSelected: currentMode == ProxyMode.auto,
-                    onTap: () {
-                      setProxyMode(ProxyMode.auto);
-                      showToast(context, 'Smart Auto-Proxy activated');
-                    },
-                  ),
-                  const SizedBox(height: 8),
-
-                  _buildModeOption(
-                    context: context,
-                    mode: ProxyMode.countryMatch,
-                    title: 'Country Matched (${currentCountry.code})',
-                    subtitle:
-                        'Routes requests through proxies in ${currentCountry.name} to match selected Music Region.',
-                    icon: FluentIcons.globe_24_regular,
-                    isSelected: currentMode == ProxyMode.countryMatch,
-                    onTap: () {
-                      setProxyMode(ProxyMode.countryMatch);
-                      showToast(
-                        context,
-                        'Country Matched (${currentCountry.code}) proxy set',
-                      );
-                    },
-                  ),
-                  const SizedBox(height: 8),
-
-                  _buildModeOption(
-                    context: context,
-                    mode: ProxyMode.custom,
-                    title: 'Custom Proxy',
-                    subtitle: 'Use your own private HTTP / SOCKS proxy server.',
-                    icon: FluentIcons.server_24_regular,
-                    isSelected: currentMode == ProxyMode.custom,
-                    onTap: () {
-                      setProxyMode(ProxyMode.custom);
-                    },
-                  ),
-                  const SizedBox(height: 8),
-
-                  _buildModeOption(
-                    context: context,
-                    mode: ProxyMode.off,
-                    title: 'Disabled (Direct Only)',
-                    subtitle:
-                        'Direct connection only. No proxy routing will be used.',
-                    icon: FluentIcons.dismiss_circle_24_regular,
-                    isSelected: currentMode == ProxyMode.off,
-                    onTap: () {
-                      setProxyMode(ProxyMode.off);
-                      showToast(context, 'Proxy disabled');
-                    },
-                  ),
-
-                  if (currentMode == ProxyMode.custom) ...[
-                    const SizedBox(height: 16),
-                    TextField(
-                      controller: _customProxyController,
-                      style: theme.textTheme.bodyMedium,
-                      decoration: InputDecoration(
-                        labelText: 'Custom Proxy Server',
-                        hintText: 'e.g. 192.168.1.100:8080 or host:port',
-                        prefixIcon: const Icon(FluentIcons.link_24_regular),
-                        suffixIcon: IconButton(
-                          icon: const Icon(FluentIcons.save_24_regular),
-                          onPressed: () {
-                            setCustomProxyAddress(
-                              _customProxyController.text.trim(),
-                            );
-                            showToast(context, 'Custom proxy saved');
-                          },
-                        ),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(
-                            AppTokens.radiusControl,
-                          ),
-                        ),
-                      ),
-                      onSubmitted: (v) {
-                        setCustomProxyAddress(v.trim());
-                        showToast(context, 'Custom proxy saved');
-                      },
-                    ),
-                  ],
-
-                  const SizedBox(height: 20),
-
-                  // Test Connection Button & Result
-                  FilledButton.tonalIcon(
-                    onPressed: _isTesting ? null : _runTest,
-                    icon: _isTesting
-                        ? const SizedBox(
-                            width: 16,
-                            height: 16,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Icon(FluentIcons.pulse_24_regular),
-                    label: Text(
-                      _isTesting ? 'Testing connection...' : 'Test Connection',
-                    ),
-                    style: FilledButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(
-                          AppTokens.radiusControl,
-                        ),
-                      ),
-                    ),
-                  ),
-
-                  if (_testResult != null) ...[
-                    const SizedBox(height: 10),
-                    Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: (_testSuccess == true
-                                ? Colors.green
-                                : Colors.red)
-                            .withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(
-                          AppTokens.radiusSmall,
-                        ),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(
-                            _testSuccess == true
-                                ? FluentIcons.checkmark_circle_24_regular
-                                : FluentIcons.error_circle_24_regular,
-                            size: 18,
-                            color: _testSuccess == true
-                                ? Colors.green
-                                : Colors.redAccent,
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              _testResult!,
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: _testSuccess == true
-                                    ? Colors.greenAccent
-                                    : Colors.redAccent,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
                 ],
               ),
             );
@@ -382,7 +456,7 @@ class _ProxySettingsSheetState extends State<ProxySettingsSheet> {
     );
   }
 
-  Widget _buildModeOption({
+  Widget _buildModeTile({
     required BuildContext context,
     required ProxyMode mode,
     required String title,
@@ -390,6 +464,8 @@ class _ProxySettingsSheetState extends State<ProxySettingsSheet> {
     required IconData icon,
     required bool isSelected,
     required VoidCallback onTap,
+    String? badge,
+    Color? badgeColor,
   }) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
@@ -399,12 +475,13 @@ class _ProxySettingsSheetState extends State<ProxySettingsSheet> {
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(AppTokens.radiusMedium),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
           decoration: BoxDecoration(
             color: isSelected
                 ? colorScheme.primary.withValues(alpha: 0.1)
-                : colorScheme.surfaceContainerHighest.withValues(alpha: 0.25),
+                : colorScheme.surfaceContainerHighest.withValues(alpha: 0.2),
             borderRadius: BorderRadius.circular(AppTokens.radiusMedium),
             border: Border.all(
               color: isSelected
@@ -420,26 +497,59 @@ class _ProxySettingsSheetState extends State<ProxySettingsSheet> {
                 color: isSelected
                     ? colorScheme.primary
                     : colorScheme.onSurfaceVariant,
-                size: 22,
+                size: 20,
               ),
-              const SizedBox(width: 14),
+              const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      title,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        fontWeight:
-                            isSelected ? FontWeight.bold : FontWeight.w600,
-                        color: isSelected ? colorScheme.primary : null,
-                      ),
+                    Row(
+                      children: [
+                        Text(
+                          title,
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            fontWeight: isSelected
+                                ? FontWeight.bold
+                                : FontWeight.w600,
+                            color: isSelected ? colorScheme.primary : null,
+                            fontSize: 13,
+                          ),
+                        ),
+                        if (badge != null) ...[
+                          const SizedBox(width: 6),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 1.5,
+                            ),
+                            decoration: BoxDecoration(
+                              color: (badgeColor ?? colorScheme.primary)
+                                  .withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(
+                                AppTokens.radiusPill,
+                              ),
+                            ),
+                            child: Text(
+                              badge,
+                              style: TextStyle(
+                                fontSize: 9.5,
+                                fontWeight: FontWeight.w800,
+                                color: badgeColor ?? colorScheme.primary,
+                                letterSpacing: 0.3,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
                     ),
                     const SizedBox(height: 2),
                     Text(
                       subtitle,
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: colorScheme.onSurfaceVariant,
+                        fontSize: 11.5,
+                        height: 1.25,
                       ),
                     ),
                   ],
@@ -450,6 +560,7 @@ class _ProxySettingsSheetState extends State<ProxySettingsSheet> {
                 groupValue: proxyModeNotifier.value,
                 onChanged: (_) => onTap(),
                 activeColor: colorScheme.primary,
+                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
               ),
             ],
           ),
