@@ -44,11 +44,14 @@ class NowPlayingAmbientBackground extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (isPureBlack) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    // OLED pure black is strictly a Dark Mode feature
+    if (isPureBlack && isDark) {
       return const ColoredBox(color: Colors.black);
     }
 
-    final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
     final imageProvider = _resolveImageProvider(metadata);
@@ -58,15 +61,35 @@ class NowPlayingAmbientBackground extends StatelessWidget {
             : '${metadata!.artist ?? ''}-${metadata!.title}')
         : 'none';
 
-    // Interpolate overlay darkening for lyrics mode (Apple Music style)
-    final topAlpha = lerpDouble(0.35, 0.48, lyricsProgress) ?? 0.35;
-    final midAlpha = lerpDouble(0.55, 0.68, lyricsProgress) ?? 0.55;
-    final bottomAlpha = lerpDouble(0.85, 0.94, lyricsProgress) ?? 0.85;
+    // Gradients tailored for Apple Music style contrast:
+    // In Dark Mode: dark vignette overlay so light controls pop.
+    // In Light Mode: frosted luminous white/surface overlay so dark controls pop.
+    final List<Color> gradientColors;
+    if (isDark) {
+      final topAlpha = lerpDouble(0.35, 0.48, lyricsProgress) ?? 0.35;
+      final midAlpha = lerpDouble(0.55, 0.68, lyricsProgress) ?? 0.55;
+      final bottomAlpha = lerpDouble(0.85, 0.94, lyricsProgress) ?? 0.85;
+      gradientColors = [
+        Colors.black.withValues(alpha: topAlpha),
+        Colors.black.withValues(alpha: midAlpha),
+        Colors.black.withValues(alpha: bottomAlpha),
+      ];
+    } else {
+      // Light Mode: Apple Music frosted luminous white & surface wash
+      final topAlpha = lerpDouble(0.38, 0.52, lyricsProgress) ?? 0.38;
+      final midAlpha = lerpDouble(0.60, 0.74, lyricsProgress) ?? 0.60;
+      final bottomAlpha = lerpDouble(0.88, 0.96, lyricsProgress) ?? 0.88;
+      gradientColors = [
+        Colors.white.withValues(alpha: topAlpha),
+        Colors.white.withValues(alpha: midAlpha),
+        colorScheme.surface.withValues(alpha: bottomAlpha),
+      ];
+    }
 
     return Stack(
       fit: StackFit.expand,
       children: [
-        // Base dark tone
+        // Base tone matching theme surface
         ColoredBox(color: colorScheme.surface),
 
         // Blurred artwork layer with smooth crossfade between songs
@@ -79,8 +102,8 @@ class NowPlayingAmbientBackground extends StatelessWidget {
                   key: ValueKey<String>('art_$songKey'),
                   child: ImageFiltered(
                     imageFilter: ImageFilter.blur(
-                      sigmaX: 65,
-                      sigmaY: 65,
+                      sigmaX: 70,
+                      sigmaY: 70,
                       tileMode: TileMode.mirror,
                     ),
                     child: Transform.scale(
@@ -90,25 +113,26 @@ class NowPlayingAmbientBackground extends StatelessWidget {
                         fit: BoxFit.cover,
                         width: double.infinity,
                         height: double.infinity,
-                        errorBuilder: (_, __, ___) => _fallbackGradient(colorScheme),
+                        errorBuilder: (_, __, ___) =>
+                            _fallbackGradient(colorScheme, isDark),
                       ),
                     ),
                   ),
                 )
-              : _fallbackGradient(colorScheme, key: const ValueKey('fallback')),
+              : _fallbackGradient(
+                  colorScheme,
+                  isDark,
+                  key: const ValueKey('fallback'),
+                ),
         ),
 
-        // Apple Music contrast vignette overlay
+        // Apple Music contrast vignette overlay (adapts to light / dark)
         DecoratedBox(
           decoration: BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
-              colors: [
-                Colors.black.withValues(alpha: topAlpha),
-                Colors.black.withValues(alpha: midAlpha),
-                Colors.black.withValues(alpha: bottomAlpha),
-              ],
+              colors: gradientColors,
               stops: const [0.0, 0.45, 1.0],
             ),
           ),
@@ -148,7 +172,7 @@ class NowPlayingAmbientBackground extends StatelessWidget {
     return null;
   }
 
-  Widget _fallbackGradient(ColorScheme colorScheme, {Key? key}) {
+  Widget _fallbackGradient(ColorScheme colorScheme, bool isDark, {Key? key}) {
     return Container(
       key: key,
       decoration: BoxDecoration(
@@ -156,7 +180,7 @@ class NowPlayingAmbientBackground extends StatelessWidget {
           center: Alignment.topCenter,
           radius: 1.2,
           colors: [
-            colorScheme.primary.withValues(alpha: 0.35),
+            colorScheme.primary.withValues(alpha: isDark ? 0.35 : 0.22),
             colorScheme.surface,
           ],
         ),

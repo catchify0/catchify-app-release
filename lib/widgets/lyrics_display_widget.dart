@@ -115,9 +115,12 @@ class _SyncedLyricsWidgetState extends State<SyncedLyricsWidget> {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final colorScheme = theme.colorScheme;
     final activeColor = colorScheme.onSurface;
-    final inactiveColor = colorScheme.onSurface.withValues(alpha: 0.38);
+    final inactiveColor = colorScheme.onSurface
+        .withValues(alpha: isDark ? 0.38 : 0.48);
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -194,7 +197,9 @@ class _SyncedLyricsWidgetState extends State<SyncedLyricsWidget> {
         );
 
         // Top + bottom fade so lyrics dissolve gracefully into the
-        // header above and the controls below.
+        // header above and the controls below in both Light & Dark modes.
+        final fadeBaseColor = isDark ? Colors.black : colorScheme.surface;
+
         return Stack(
           children: [
             lyricView,
@@ -203,7 +208,7 @@ class _SyncedLyricsWidgetState extends State<SyncedLyricsWidget> {
               top: 0,
               left: 0,
               right: 0,
-              height: 32,
+              height: 36,
               child: IgnorePointer(
                 child: DecoratedBox(
                   decoration: BoxDecoration(
@@ -211,8 +216,8 @@ class _SyncedLyricsWidgetState extends State<SyncedLyricsWidget> {
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
                       colors: [
-                        Colors.black.withValues(alpha: 0.35),
-                        Colors.transparent,
+                        fadeBaseColor.withValues(alpha: isDark ? 0.35 : 0.45),
+                        fadeBaseColor.withValues(alpha: 0),
                       ],
                     ),
                   ),
@@ -224,7 +229,7 @@ class _SyncedLyricsWidgetState extends State<SyncedLyricsWidget> {
               bottom: 0,
               left: 0,
               right: 0,
-              height: 52,
+              height: 56,
               child: IgnorePointer(
                 child: DecoratedBox(
                   decoration: BoxDecoration(
@@ -232,8 +237,8 @@ class _SyncedLyricsWidgetState extends State<SyncedLyricsWidget> {
                       begin: Alignment.bottomCenter,
                       end: Alignment.topCenter,
                       colors: [
-                        Colors.black.withValues(alpha: 0.45),
-                        Colors.transparent,
+                        fadeBaseColor.withValues(alpha: isDark ? 0.45 : 0.60),
+                        fadeBaseColor.withValues(alpha: 0),
                       ],
                     ),
                   ),
@@ -255,9 +260,12 @@ class PlainLyricsWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final colorScheme = theme.colorScheme;
     final textColor = colorScheme.onSurface;
     final cleanLyricsText = LrcParser.cleanLyrics(lyrics);
+    final fadeBaseColor = isDark ? Colors.black : colorScheme.surface;
 
     final content = SingleChildScrollView(
       padding: const EdgeInsets.only(
@@ -273,7 +281,7 @@ class PlainLyricsWidget extends StatelessWidget {
           fontFamilyFallback: const ['AnekTamil'],
           fontSize: 18,
           fontWeight: FontWeight.w600,
-          color: textColor.withValues(alpha: 0.88),
+          color: textColor.withValues(alpha: isDark ? 0.88 : 0.92),
           height: 1.75,
         ),
         textAlign: TextAlign.left,
@@ -288,7 +296,7 @@ class PlainLyricsWidget extends StatelessWidget {
           top: 0,
           left: 0,
           right: 0,
-          height: 32,
+          height: 36,
           child: IgnorePointer(
             child: DecoratedBox(
               decoration: BoxDecoration(
@@ -296,8 +304,8 @@ class PlainLyricsWidget extends StatelessWidget {
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    colorScheme.surface,
-                    colorScheme.surface.withValues(alpha: 0),
+                    fadeBaseColor.withValues(alpha: isDark ? 0.35 : 0.45),
+                    fadeBaseColor.withValues(alpha: 0),
                   ],
                 ),
               ),
@@ -309,7 +317,7 @@ class PlainLyricsWidget extends StatelessWidget {
           bottom: 0,
           left: 0,
           right: 0,
-          height: 52,
+          height: 56,
           child: IgnorePointer(
             child: DecoratedBox(
               decoration: BoxDecoration(
@@ -317,8 +325,8 @@ class PlainLyricsWidget extends StatelessWidget {
                   begin: Alignment.bottomCenter,
                   end: Alignment.topCenter,
                   colors: [
-                    colorScheme.surface,
-                    colorScheme.surface.withValues(alpha: 0),
+                    fadeBaseColor.withValues(alpha: isDark ? 0.45 : 0.60),
+                    fadeBaseColor.withValues(alpha: 0),
                   ],
                 ),
               ),
@@ -336,12 +344,15 @@ class _LrcLibAttribution extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final colorScheme = theme.colorScheme;
     final textColor = colorScheme.onSecondaryContainer;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
-        color: colorScheme.secondaryContainer.withValues(alpha: 0.70),
+        color: colorScheme.secondaryContainer
+            .withValues(alpha: isDark ? 0.70 : 0.85),
         borderRadius: BorderRadius.circular(6),
       ),
       child: Row(
@@ -350,7 +361,7 @@ class _LrcLibAttribution extends StatelessWidget {
           Icon(
             Icons.lyrics_outlined,
             size: 9,
-            color: textColor.withValues(alpha: 0.40),
+            color: textColor.withValues(alpha: 0.55),
           ),
           const SizedBox(width: 3.5),
           Text(
@@ -359,7 +370,7 @@ class _LrcLibAttribution extends StatelessWidget {
               fontFamilyFallback: const ['AnekTamil'],
               fontSize: 8,
               fontWeight: FontWeight.w400,
-              color: textColor.withValues(alpha: 0.40),
+              color: textColor.withValues(alpha: 0.55),
               letterSpacing: 0.2,
             ),
           ),

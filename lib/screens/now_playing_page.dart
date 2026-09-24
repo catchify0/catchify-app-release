@@ -139,7 +139,8 @@ class _NowPlayingPageState extends State<NowPlayingPage>
         return ValueListenableBuilder<String>(
           valueListenable: playerGradientStyle,
           builder: (context, gradientStyle, _) {
-            final isPureBlackStyle = gradientStyle == 'pure_black';
+            final isDark = theme.brightness == Brightness.dark;
+            final isPureBlackStyle = isDark && gradientStyle == 'pure_black';
 
             return Scaffold(
               backgroundColor:
