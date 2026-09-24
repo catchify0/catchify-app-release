@@ -41,6 +41,7 @@ import 'package:catchify/screens/settings/player_settings_page.dart';
 import 'package:catchify/screens/settings/storage_cache_page.dart';
 import 'package:catchify/screens/settings/theme_settings_page.dart';
 import 'package:catchify/screens/time_machine_page.dart';
+import 'package:catchify/screens/top_charts_page.dart';
 import 'package:catchify/screens/user_songs_page.dart';
 import 'package:catchify/services/playlist_download_service.dart';
 import 'package:catchify/services/settings_manager.dart';
@@ -91,7 +92,9 @@ class NavigationManager {
         final currentPath = state.matchedLocation;
 
         if (isOffline &&
-            (currentPath == searchPath || currentPath == timeMachinePath)) {
+            (currentPath == searchPath ||
+                currentPath == timeMachinePath ||
+                currentPath == chartsPath)) {
           // Redirect unavailable pages to home in offline mode
           return homePath;
         }
@@ -120,6 +123,8 @@ class NavigationManager {
       GlobalKey<NavigatorState>();
   static final GlobalKey<NavigatorState> homeTabNavigatorKey =
       GlobalKey<NavigatorState>();
+  static final GlobalKey<NavigatorState> chartsTabNavigatorKey =
+      GlobalKey<NavigatorState>();
   static final GlobalKey<NavigatorState> searchTabNavigatorKey =
       GlobalKey<NavigatorState>();
   static final GlobalKey<NavigatorState> libraryTabNavigatorKey =
@@ -144,6 +149,7 @@ class NavigationManager {
 
   static const String languageOnboardingPath = '/language-onboarding';
   static const String homePath = '/home';
+  static const String chartsPath = '/charts';
   static const String timeMachinePath = '$homePath/timeMachine';
   static const String settingsPath = '/settings';
   static const String searchPath = '/search';
@@ -224,7 +230,53 @@ class NavigationManager {
           ),
         ],
       ),
-      // Branch 1: Search
+      // Branch 1: Top Charts
+      StatefulShellBranch(
+        navigatorKey: chartsTabNavigatorKey,
+        routes: [
+          GoRoute(
+            path: chartsPath,
+            pageBuilder: (context, GoRouterState state) {
+              return getPage(
+                child: ValueListenableBuilder<bool>(
+                  valueListenable: offlineMode,
+                  builder: (context, isOffline, _) {
+                    return isOffline
+                        ? const UserSongsPage(page: 'offline')
+                        : const TopChartsPage();
+                  },
+                ),
+                state: state,
+              );
+            },
+            routes: [
+              GoRoute(
+                path: 'playlist/:playlistId',
+                pageBuilder: (context, state) => _pushPage(
+                  child: PlaylistPage(
+                    playlistId: state.pathParameters['playlistId'],
+                    playlistData: _extraAsMap(state.extra),
+                  ),
+                  state: state,
+                ),
+              ),
+              GoRoute(
+                path: 'artist/:artistId',
+                pageBuilder: (context, state) => _pushPage(
+                  child: ArtistPage(
+                    artistId: _decodePathParameter(
+                      state.pathParameters['artistId'],
+                    ),
+                    artistData: _extraAsMap(state.extra),
+                  ),
+                  state: state,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+      // Branch 2: Search
       StatefulShellBranch(
         navigatorKey: searchTabNavigatorKey,
         routes: [

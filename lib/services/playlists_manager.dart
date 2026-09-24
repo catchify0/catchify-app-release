@@ -3877,22 +3877,6 @@ Future<List<HomeSection>> _loadUnifiedHomeFeed({
         }
       }
 
-      // Add Trending songs if not present
-      if (!sections.any((s) => s.title.toLowerCase().contains('trending'))) {
-        final trending = await getTrendingSongsForYou(
-          forceRefresh: forceRefresh,
-        );
-        if (trending.isNotEmpty) {
-          sections.add(
-            HomeSection(
-              title: 'Trending songs for you',
-              subtitle: 'POPULAR NOW',
-              type: HomeContentType.songs,
-              contents: trending,
-            ),
-          );
-        }
-      }
 
       // Add Featured Playlists if not present
       if (!sections.any((s) => s.title.toLowerCase().contains('featured'))) {
@@ -3958,22 +3942,6 @@ Future<List<HomeSection>> _loadUnifiedHomeFeed({
         }
       }
 
-      // Add Community playlists if not present
-      if (!sections.any((s) => s.title.toLowerCase().contains('community'))) {
-        final community = await getTrendingCommunityPlaylists(
-          forceRefresh: forceRefresh,
-        );
-        if (community.isNotEmpty) {
-          sections.add(
-            HomeSection(
-              title: 'Trending community playlists',
-              subtitle: 'COMMUNITY PLAYLISTS',
-              type: HomeContentType.playlists,
-              contents: community,
-            ),
-          );
-        }
-      }
     } catch (_) {}
   }
 
@@ -4071,17 +4039,9 @@ Future<List<HomeSection>> _fetchLanguageCuratedSections({
       'quick_picks',
       getQuickPicksSongs(forceRefresh: forceRefresh),
     );
-    final trendingFuture = _timedHomeCategory(
-      'trending_songs',
-      getTrendingSongsForYou(forceRefresh: forceRefresh),
-    );
     final featuredPlaylistsFuture = _timedHomeCategory(
       'featured_playlists',
       getFeaturedPlaylists(forceRefresh: forceRefresh),
-    );
-    final communityPlaylistsFuture = _timedHomeCategory(
-      'community_playlists',
-      getTrendingCommunityPlaylists(forceRefresh: forceRefresh),
     );
     final newReleasesFuture = _timedHomeCategory(
       'new_releases',
@@ -4094,19 +4054,15 @@ Future<List<HomeSection>> _fetchLanguageCuratedSections({
 
     final results = await Future.wait([
       quickPicksFuture,
-      trendingFuture,
       featuredPlaylistsFuture,
-      communityPlaylistsFuture,
       newReleasesFuture,
       artistsFuture,
     ]);
 
     final quickPicks = results[0];
-    final trending = results[1];
-    final featuredPlaylists = results[2];
-    final communityPlaylists = results[3];
-    final newReleases = results[4];
-    final artists = results[5];
+    final featuredPlaylists = results[1];
+    final newReleases = results[2];
+    final artists = results[3];
 
     if (quickPicks.isNotEmpty) {
       curated.add(
@@ -4120,17 +4076,6 @@ Future<List<HomeSection>> _fetchLanguageCuratedSections({
       );
     }
 
-    if (trending.isNotEmpty) {
-      curated.add(
-        HomeSection(
-          title: 'Trending songs for you',
-          subtitle: 'POPULAR NOW',
-          type: HomeContentType.songs,
-          contents: trending,
-        ),
-      );
-    }
-
     if (featuredPlaylists.isNotEmpty) {
       curated.add(
         HomeSection(
@@ -4138,17 +4083,6 @@ Future<List<HomeSection>> _fetchLanguageCuratedSections({
           subtitle: 'CURATED FOR YOU',
           type: HomeContentType.playlists,
           contents: featuredPlaylists,
-        ),
-      );
-    }
-
-    if (communityPlaylists.isNotEmpty) {
-      curated.add(
-        HomeSection(
-          title: 'Trending community playlists',
-          subtitle: 'COMMUNITY PLAYLISTS',
-          type: HomeContentType.playlists,
-          contents: communityPlaylists,
         ),
       );
     }

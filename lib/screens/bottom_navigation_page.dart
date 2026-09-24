@@ -195,17 +195,24 @@ class _BottomNavigationPageState extends State<BottomNavigationPage> {
       ),
     ];
 
-    // Only add search tab in online mode
+    // Only add search and charts tabs in online mode
     if (!isOfflineMode) {
-      items.add(
+      items.addAll([
+        const _NavigationItem(
+          icon: FluentIcons.arrow_trending_24_regular,
+          selectedIcon: FluentIcons.arrow_trending_24_filled,
+          label: 'Charts',
+          route: '/charts',
+          shellIndex: 1,
+        ),
         _NavigationItem(
           icon: FluentIcons.search_24_regular,
           selectedIcon: FluentIcons.search_24_filled,
           label: context.l10n?.search ?? 'Search',
           route: '/search',
-          shellIndex: 1,
+          shellIndex: 2,
         ),
-      );
+      ]);
     }
 
     items.addAll([
@@ -214,14 +221,14 @@ class _BottomNavigationPageState extends State<BottomNavigationPage> {
         selectedIcon: Icons.library_music_rounded,
         label: context.l10n?.library ?? 'Library',
         route: '/library',
-        shellIndex: 2,
+        shellIndex: 3,
       ),
       _NavigationItem(
         icon: FluentIcons.settings_24_regular,
         selectedIcon: FluentIcons.settings_24_filled,
         label: context.l10n?.settings ?? 'Settings',
         route: '/settings',
-        shellIndex: 3,
+        shellIndex: 4,
       ),
     ]);
 
@@ -233,8 +240,10 @@ class _BottomNavigationPageState extends State<BottomNavigationPage> {
 
     final currentRoute = GoRouterState.of(context).matchedLocation;
 
-    // If we're switching to offline mode and currently on search tab
-    if (isOfflineMode && currentRoute.startsWith('/search')) {
+    // If we're switching to offline mode and currently on search or charts tab
+    if (isOfflineMode &&
+        (currentRoute.startsWith('/search') ||
+            currentRoute.startsWith('/charts'))) {
       // Navigate to home
       widget.child.goBranch(0);
     }
@@ -273,9 +282,11 @@ class _BottomNavigationPageState extends State<BottomNavigationPage> {
     );
     if (matchedIndex != -1) return matchedIndex;
 
-    // If the Search branch (1) is active but Search is hidden in offline mode,
+    // If the Charts (1) or Search (2) branch is active but hidden in offline mode,
     // fall back to the Home tab.
-    if (isOfflineMode && currentShellIndex == 1) return 0;
+    if (isOfflineMode && (currentShellIndex == 1 || currentShellIndex == 2)) {
+      return 0;
+    }
 
     // Final fallback: return the first tab to keep UI in a valid state.
     return 0;
