@@ -577,9 +577,13 @@ class _ArtworkThumbnail extends StatelessWidget {
             imageUrl.contains('/sddefault.') ||
             imageUrl.contains('/default.'));
 
+    final cachePx = (size * 2).round().clamp(64, 256);
+
     return CachedNetworkImage(
       width: size,
       height: size,
+      memCacheWidth: cachePx,
+      memCacheHeight: cachePx,
       imageUrl: imageUrl,
       imageBuilder: (_, imageProvider) {
         Widget imageWidget = Image(

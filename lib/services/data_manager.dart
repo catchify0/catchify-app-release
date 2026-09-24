@@ -444,8 +444,43 @@ Future<void> _replaceHiveFile(String targetPath, List<int> bytes) async {
   }
 }
 
+/// Cleans expired keys from the 'cache' box to prevent disk bloat.
+Future<void> pruneExpiredCacheEntries() async {
+  if (!Hive.isBoxOpen('cache')) return;
+  try {
+    final box = Hive.box('cache');
+    final keys = box.keys.toList();
+    final now = DateTime.now();
+    final toDelete = <dynamic>[];
+
+    for (final key in keys) {
+      if (key is String && !key.endsWith('_date')) {
+        final dateKey = '${key}_date';
+        final rawDate = box.get(dateKey);
+        if (rawDate is DateTime) {
+          final maxAge = _getCacheDurationForKey(key);
+          if (now.difference(rawDate) > maxAge) {
+            toDelete
+              ..add(key)
+              ..add(dateKey);
+          }
+        }
+      }
+    }
+
+    if (toDelete.isNotEmpty) {
+      await box.deleteAll(toDelete);
+      logger.log('Pruned ${toDelete.length ~/ 2} expired entries from cache box');
+    }
+  } catch (e, st) {
+    logger.log('Error during pruneExpiredCacheEntries', error: e, stackTrace: st);
+  }
+}
+
 /// Compacts all open Hive boxes asynchronously to recover disk space and defragment database files.
 Future<void> compactAllBoxes() async {
+  await pruneExpiredCacheEntries();
+
   const boxNames = ['user', 'settings', 'cache', 'userNoBackup'];
   for (final name in boxNames) {
     if (Hive.isBoxOpen(name)) {
@@ -458,3 +493,4 @@ Future<void> compactAllBoxes() async {
     }
   }
 }
+
