@@ -226,6 +226,36 @@ String? _initContentLanguagePreference() {
   return null;
 }
 
+String _initContentCountryPreference() {
+  if (!Hive.isBoxOpen('settings')) return defaultHomeFeedRegion;
+  final rawCountry = _readNullableStringSetting('contentCountryCode');
+  if (rawCountry != null && rawCountry.trim().isNotEmpty) {
+    return resolveCountryCode(rawCountry);
+  }
+  return defaultHomeFeedRegion;
+}
+
+/// Content-country/region preference picked on first launch or in settings,
+/// used to steer trending charts, new releases, and native home feed curation.
+String contentCountryPreference = _initContentCountryPreference();
+
+final contentCountryPreferenceNotifier = ValueNotifier<String>(
+  contentCountryPreference,
+);
+
+void setContentCountryPreference(String countryCode) {
+  final validCode = resolveCountryCode(countryCode);
+  contentCountryPreference = validCode;
+  contentCountryPreferenceNotifier.value = validCode;
+  if (Hive.isBoxOpen('settings')) {
+    Hive.box('settings').put('contentCountryCode', validCode);
+    logger.log('[COUNTRY_RUNTIME] contentCountryCode=$validCode');
+  }
+}
+
+/// Dynamic region getter for Home Feed and charts curation.
+String get homeFeedRegion => contentCountryPreference;
+
 /// Content-language preference picked on first launch, used only to steer
 /// which playlists/songs are suggested. Distinct from [languageSetting],
 /// which controls the app's displayed UI language and is unaffected by this.
@@ -250,32 +280,37 @@ void setContentLanguagePreference(String languageCode) {
   }
 }
 
-/// Atomically completes first-launch music content language onboarding by:
+/// Atomically completes first-launch music content language & country onboarding by:
 /// 1. Validating the selected content language code against supportedContentLanguageCodes.
-/// 2. Persisting `contentLanguageCode` and `hasSeenLanguageOnboarding = true` to Hive.
-/// 3. Updating in-memory [contentLanguagePreference] and [contentLanguagePreferenceNotifier].
-/// 4. Crucially preserving `languageCode` (App UI language remains 'en' by default).
-/// 5. Never mutating [languageSetting] or calling Catchify.updateAppState for locale changes.
+/// 2. Validating the selected country code against supportedCountries.
+/// 3. Persisting `contentLanguageCode`, `contentCountryCode`, and `hasSeenLanguageOnboarding = true` to Hive.
+/// 4. Updating in-memory preferences and notifiers.
+/// 5. Crucially preserving `languageCode` (App UI language remains 'en' by default).
 Future<void> completeContentLanguageOnboarding(
-  String selectedContentLanguageCode,
-) async {
+  String selectedContentLanguageCode, {
+  String? selectedCountryCode,
+}) async {
   final validContentLang = resolveContentLanguageCode(
     selectedContentLanguageCode,
   );
+  final validCountry = resolveCountryCode(selectedCountryCode);
 
   if (Hive.isBoxOpen('settings')) {
     final box = Hive.box('settings');
     await box.put('contentLanguageCode', validContentLang);
+    await box.put('contentCountryCode', validCountry);
     await box.put('hasSeenLanguageOnboarding', true);
 
     final uiLang = resolveUiLanguageCode(
       _readNullableStringSetting('languageCode'),
     );
     logger.log(
-      '[LANGUAGE_RUNTIME] contentLanguageCode=$validContentLang uiLanguageCode=$uiLang',
+      '[LANGUAGE_RUNTIME] contentLanguageCode=$validContentLang contentCountryCode=$validCountry uiLanguageCode=$uiLang',
     );
   }
 
+  contentCountryPreference = validCountry;
+  contentCountryPreferenceNotifier.value = validCountry;
   contentLanguagePreference = validContentLang;
   contentLanguagePreferenceNotifier.value = validContentLang;
 }

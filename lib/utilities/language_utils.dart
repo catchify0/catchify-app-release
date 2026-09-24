@@ -43,10 +43,196 @@ const supportedContentLanguageCodes = <String>{
   'as',
   'sa',
   'kok',
+  // Global music languages
+  'es',
+  'ko',
+  'ja',
+  'fr',
+  'de',
+  'pt',
+  'id',
+  'it',
+  'tr',
+  'ru',
+  'ar',
 };
 
-/// YouTube Music region used for home-feed recommendations.
-const homeFeedRegion = 'IN';
+class CountryOption {
+  const CountryOption({
+    required this.code,
+    required this.name,
+    required this.flag,
+    this.primaryLanguages = const [],
+  });
+
+  final String code;
+  final String name;
+  final String flag;
+  final List<String> primaryLanguages;
+}
+
+const supportedCountries = <CountryOption>[
+  CountryOption(
+    code: 'IN',
+    name: 'India',
+    flag: '🇮🇳',
+    primaryLanguages: ['ta', 'hi', 'te', 'ml', 'kn', 'pa', 'en'],
+  ),
+  CountryOption(
+    code: 'US',
+    name: 'United States',
+    flag: '🇺🇸',
+    primaryLanguages: ['en', 'es', 'ko'],
+  ),
+  CountryOption(
+    code: 'GB',
+    name: 'United Kingdom',
+    flag: '🇬🇧',
+    primaryLanguages: ['en'],
+  ),
+  CountryOption(
+    code: 'CA',
+    name: 'Canada',
+    flag: '🇨🇦',
+    primaryLanguages: ['en', 'fr', 'pa'],
+  ),
+  CountryOption(
+    code: 'AU',
+    name: 'Australia',
+    flag: '🇦🇺',
+    primaryLanguages: ['en'],
+  ),
+  CountryOption(
+    code: 'DE',
+    name: 'Germany',
+    flag: '🇩🇪',
+    primaryLanguages: ['de', 'en'],
+  ),
+  CountryOption(
+    code: 'FR',
+    name: 'France',
+    flag: '🇫🇷',
+    primaryLanguages: ['fr', 'en'],
+  ),
+  CountryOption(
+    code: 'JP',
+    name: 'Japan',
+    flag: '🇯🇵',
+    primaryLanguages: ['ja', 'en', 'ko'],
+  ),
+  CountryOption(
+    code: 'KR',
+    name: 'South Korea',
+    flag: '🇰🇷',
+    primaryLanguages: ['ko', 'en', 'ja'],
+  ),
+  CountryOption(
+    code: 'BR',
+    name: 'Brazil',
+    flag: '🇧🇷',
+    primaryLanguages: ['pt', 'en'],
+  ),
+  CountryOption(
+    code: 'MX',
+    name: 'Mexico',
+    flag: '🇲🇽',
+    primaryLanguages: ['es', 'en'],
+  ),
+  CountryOption(
+    code: 'ES',
+    name: 'Spain',
+    flag: '🇪🇸',
+    primaryLanguages: ['es', 'en'],
+  ),
+  CountryOption(
+    code: 'ID',
+    name: 'Indonesia',
+    flag: '🇮🇩',
+    primaryLanguages: ['id', 'en'],
+  ),
+  CountryOption(
+    code: 'IT',
+    name: 'Italy',
+    flag: '🇮🇹',
+    primaryLanguages: ['it', 'en'],
+  ),
+  CountryOption(
+    code: 'RU',
+    name: 'Russia',
+    flag: '🇷🇺',
+    primaryLanguages: ['ru', 'en'],
+  ),
+  CountryOption(
+    code: 'TR',
+    name: 'Turkey',
+    flag: '🇹🇷',
+    primaryLanguages: ['tr', 'en'],
+  ),
+  CountryOption(
+    code: 'SA',
+    name: 'Saudi Arabia',
+    flag: '🇸🇦',
+    primaryLanguages: ['ar', 'en'],
+  ),
+  CountryOption(
+    code: 'AE',
+    name: 'United Arab Emirates',
+    flag: '🇦🇪',
+    primaryLanguages: ['ar', 'en', 'hi', 'ta'],
+  ),
+  CountryOption(
+    code: 'SG',
+    name: 'Singapore',
+    flag: '🇸🇬',
+    primaryLanguages: ['en', 'ta', 'zh'],
+  ),
+  CountryOption(
+    code: 'MY',
+    name: 'Malaysia',
+    flag: '🇲🇾',
+    primaryLanguages: ['ms', 'en', 'ta'],
+  ),
+  CountryOption(
+    code: 'ZA',
+    name: 'South Africa',
+    flag: '🇿🇦',
+    primaryLanguages: ['en'],
+  ),
+  CountryOption(
+    code: 'NZ',
+    name: 'New Zealand',
+    flag: '🇳🇿',
+    primaryLanguages: ['en'],
+  ),
+  CountryOption(
+    code: 'PH',
+    name: 'Philippines',
+    flag: '🇵🇭',
+    primaryLanguages: ['en', 'tl'],
+  ),
+];
+
+/// Default fallback region for YouTube Music recommendations.
+const defaultHomeFeedRegion = 'IN';
+
+String resolveCountryCode(String? countryCode) {
+  if (countryCode == null || countryCode.trim().isEmpty) {
+    return defaultHomeFeedRegion;
+  }
+  final clean = countryCode.trim().toUpperCase();
+  for (final country in supportedCountries) {
+    if (country.code == clean) return clean;
+  }
+  return defaultHomeFeedRegion;
+}
+
+CountryOption getCountryByCode(String? countryCode) {
+  final code = resolveCountryCode(countryCode);
+  for (final country in supportedCountries) {
+    if (country.code == code) return country;
+  }
+  return supportedCountries.first;
+}
 
 /// Resolves a UI language code to a supported music content language code.
 ///

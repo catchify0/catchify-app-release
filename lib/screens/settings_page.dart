@@ -117,6 +117,37 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
+  void _showCountryPicker(BuildContext context) {
+    showCustomBottomSheet(
+      context,
+      ListView.builder(
+        shrinkWrap: true,
+        physics: const BouncingScrollPhysics(),
+        padding: commonListViewBottomPadding,
+        itemCount: supportedCountries.length,
+        itemBuilder: (context, index) {
+          final country = supportedCountries[index];
+          final isSelected = contentCountryPreference == country.code;
+
+          return BottomSheetBar(
+            '${country.flag}  ${country.name}',
+            () {
+              setContentCountryPreference(country.code);
+              setState(() {});
+              Navigator.pop(context);
+              showToast(
+                context,
+                '${country.flag} ${country.name} selected',
+              );
+            },
+            isSelected,
+            icon: FluentIcons.globe_24_regular,
+          );
+        },
+      ),
+    );
+  }
+
   Widget _sectionTitle(String title, Color primaryColor) {
     return Padding(
       padding: const EdgeInsets.only(left: 4, right: 4, top: 20, bottom: 8),
@@ -156,6 +187,7 @@ class _SettingsPageState extends State<SettingsPage> {
     final currentAppLang = getLanguageDisplayName(context, languageSetting.languageCode);
     final currentMusicLang =
         artistLanguageCodeToName[contentLanguagePreference ?? 'en'] ?? 'English';
+    final currentCountry = getCountryByCode(contentCountryPreference);
 
     return Scaffold(
       appBar: AppBar(
@@ -210,8 +242,8 @@ class _SettingsPageState extends State<SettingsPage> {
               },
             ),
 
-            // ── LANGUAGES ──
-            _sectionTitle('LANGUAGES', primaryColor),
+            // ── LANGUAGES & REGION ──
+            _sectionTitle('LANGUAGES & REGION', primaryColor),
             CustomBar(
               context.l10n?.language ?? 'App Language',
               FluentIcons.translate_24_filled,
@@ -241,8 +273,8 @@ class _SettingsPageState extends State<SettingsPage> {
             CustomBar(
               'Music Language',
               FluentIcons.music_note_2_24_filled,
-              description: 'Content preference for home feed & charts',
-              borderRadius: commonCustomBarRadiusLast,
+              description: 'Content preference for home feed & discovery',
+              borderRadius: commonCustomBarRadiusMiddle,
               trailing: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -263,6 +295,32 @@ class _SettingsPageState extends State<SettingsPage> {
                 ],
               ),
               onTap: () => _showMusicLanguagePicker(context),
+            ),
+            CustomBar(
+              'Music Region / Country',
+              FluentIcons.globe_24_filled,
+              description: 'Region for trending charts, releases & recommendations',
+              borderRadius: commonCustomBarRadiusLast,
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    '${currentCountry.flag} ${currentCountry.name}',
+                    style: TextStyle(
+                      color: primaryColor,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 13,
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  Icon(
+                    FluentIcons.chevron_right_24_regular,
+                    size: 16,
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                ],
+              ),
+              onTap: () => _showCountryPicker(context),
             ),
 
             // ── PLAYBACK ──

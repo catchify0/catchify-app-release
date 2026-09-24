@@ -1174,6 +1174,18 @@ const Map<String, String> artistLanguageCodeToName = {
   'as': 'Assamese',
   'sa': 'Sanskrit',
   'kok': 'Konkani',
+  // Global music languages
+  'es': 'Spanish',
+  'ko': 'Korean',
+  'ja': 'Japanese',
+  'fr': 'French',
+  'de': 'German',
+  'pt': 'Portuguese',
+  'id': 'Indonesian',
+  'it': 'Italian',
+  'tr': 'Turkish',
+  'ru': 'Russian',
+  'ar': 'Arabic',
 };
 
 /// Validates whether a channel/artist name belongs to a legitimate music artist,
@@ -1842,8 +1854,9 @@ Future<List<Map<String, dynamic>>> getSuggestedNewReleases({
   } catch (_) {}
   rawLang ??= 'en';
   final prefLang = artistLanguageCodeToName[rawLang] ?? rawLang;
+  final country = contentCountryPreference;
 
-  final cacheKey = 'ytm_home_new_releases_v4_$prefLang';
+  final cacheKey = 'ytm_home_new_releases_v5_${prefLang}_$country';
   var liveSongs = <Map<String, dynamic>>[];
 
   // 1. Try cache if not forcing refresh and cache box is open
@@ -2120,8 +2133,9 @@ Future<List<Map<String, dynamic>>> getTrendingSongsForYou({
   } catch (_) {}
   rawLang ??= 'en';
   final prefLang = artistLanguageCodeToName[rawLang] ?? rawLang;
+  final country = contentCountryPreference;
 
-  final cacheKey = 'ytm_pure_audio_trending_v5_$prefLang';
+  final cacheKey = 'ytm_pure_audio_trending_v6_${prefLang}_$country';
   var liveSongs = <Map<String, dynamic>>[];
 
   if (!forceRefresh && Hive.isBoxOpen('cache')) {
@@ -2138,9 +2152,16 @@ Future<List<Map<String, dynamic>>> getTrendingSongsForYou({
 
   if (liveSongs.isEmpty) {
     try {
+      final countryName = getCountryByCode(country).name;
+      final query = prefLang.toLowerCase() == 'english'
+          ? (country == 'US'
+              ? 'Trending songs USA'
+              : 'Trending songs $countryName')
+          : 'Trending $prefLang';
+
       // 1. Primary: YouTube Music Official Trending Songs (dedicated Songs search filter)
       final ytmTrending = await ytMusicClient.music
-          .searchSongs('Trending $prefLang', limit: limit)
+          .searchSongs(query, limit: limit)
           .timeout(const Duration(seconds: 8))
           .catchError((_) => <Video>[]);
 
@@ -3588,7 +3609,7 @@ Future<List<HomeSection>> _loadUnifiedHomeFeed({
 
   final contentLang = contentLanguagePreference ?? 'en';
   final transportHl = resolveHomeFeedTransportLanguage(contentLang);
-  const reg = homeFeedRegion;
+  final reg = homeFeedRegion;
 
   logger.log(
     '[HOME_LANGUAGE] requested=$contentLang transport_hl=$transportHl region=$reg',

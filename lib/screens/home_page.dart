@@ -115,6 +115,7 @@ class _HomePageState extends State<HomePage> {
     _currentContentLanguageCode = contentLanguagePreferenceNotifier.value;
     externalRecommendations.addListener(_refreshHomeFeed);
     contentLanguagePreferenceNotifier.addListener(_onLanguagePreferenceChanged);
+    contentCountryPreferenceNotifier.addListener(_onCountryPreferenceChanged);
   }
 
   @override
@@ -158,6 +159,9 @@ class _HomePageState extends State<HomePage> {
     contentLanguagePreferenceNotifier.removeListener(
       _onLanguagePreferenceChanged,
     );
+    contentCountryPreferenceNotifier.removeListener(
+      _onCountryPreferenceChanged,
+    );
     _languageRefreshDebounce?.cancel();
     super.dispose();
   }
@@ -182,6 +186,18 @@ class _HomePageState extends State<HomePage> {
       setState(() {
         _selectedMood = 'All';
         _initFutures(forceRefresh: true, source: 'language_change');
+      });
+    });
+  }
+
+  void _onCountryPreferenceChanged() {
+    _feedGeneration++;
+    _languageRefreshDebounce?.cancel();
+    _languageRefreshDebounce = Timer(const Duration(milliseconds: 300), () {
+      if (!mounted) return;
+      setState(() {
+        _selectedMood = 'All';
+        _initFutures(forceRefresh: true, source: 'country_change');
       });
     });
   }
