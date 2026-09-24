@@ -642,8 +642,46 @@ class DownloadManager {
     final totalSize = audioManifest.size.totalBytes;
     var receivedBytes = 0;
 
-    final stream = ytClient.videos.streamsClient.get(audioManifest);
-    final sink = audioTmpFile.openWrite();
+    // Check for resumable partial download
+    var existingBytes = 0;
+    if (await audioTmpFile.exists()) {
+      existingBytes = await audioTmpFile.length();
+      if (existingBytes >= totalSize && totalSize > 0) {
+        // Corrupt or oversized partial file, reset
+        try {
+          await audioTmpFile.delete();
+        } catch (_) {}
+        existingBytes = 0;
+      }
+    }
+
+    final isResuming = existingBytes > 0;
+    receivedBytes = existingBytes;
+
+    if (isResuming && totalSize > 0) {
+      final initialRatio = (receivedBytes / totalSize).clamp(0.0, 1.0);
+      logger.log(
+        '[DOWNLOAD] Resuming interrupted download for $ytid from byte $existingBytes of $totalSize (${(initialRatio * 100).toStringAsFixed(1)}%)',
+      );
+      _updateActiveProgress(
+        DownloadProgressInfo(
+          ytid: ytid,
+          title: job.title,
+          status: DownloadStatus.downloading,
+          progress: initialRatio,
+          bytesDownloaded: receivedBytes,
+          totalBytes: totalSize,
+        ),
+      );
+    }
+
+    final stream = ytClient.videos.streamsClient.get(
+      audioManifest,
+      headers: isResuming ? {'Range': 'bytes=$existingBytes-'} : null,
+    );
+    final sink = audioTmpFile.openWrite(
+      mode: isResuming ? FileMode.append : FileMode.write,
+    );
 
     final streamCompleter = Completer<bool>();
     StreamSubscription<List<int>>? subscription;
@@ -667,8 +705,8 @@ class DownloadManager {
             : 0.5;
 
         final nowMs = DateTime.now().millisecondsSinceEpoch;
-        final shouldNotify = (ratio - lastReportedRatio).abs() >= 0.02 ||
-            (nowMs - lastReportedMs) >= 200 ||
+        final shouldNotify = (ratio - lastReportedRatio).abs() >= 0.03 ||
+            (nowMs - lastReportedMs) >= 500 ||
             ratio >= 1.0;
 
         if (shouldNotify) {
@@ -718,8 +756,13 @@ class DownloadManager {
     await sink.close();
 
     if (!streamSuccess || cancelToken.isCompleted) {
-      if (await audioTmpFile.exists()) {
-        await audioTmpFile.delete();
+      // Only delete partial file if the user explicitly cancelled the download.
+      // On network failure or retryable error, preserve the partial bytes so subsequent
+      // attempts resume cleanly without starting back at 0 bytes.
+      if (cancelToken.isCompleted && await audioTmpFile.exists()) {
+        try {
+          await audioTmpFile.delete();
+        } catch (_) {}
       }
       return false;
     }

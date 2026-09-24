@@ -566,6 +566,17 @@ List _deduplicateAndShuffle(List playlistSongs) {
   return uniqueSongs;
 }
 
+Timer? _likedSongsDebounceTimer;
+
+void _saveLikedSongsDebounced() {
+  _likedSongsDebounceTimer?.cancel();
+  _likedSongsDebounceTimer = Timer(const Duration(milliseconds: 350), () {
+    unawaited(
+      addOrUpdateData<List>('user', 'likedSongs', userLikedSongsList.value),
+    );
+  });
+}
+
 Future<void> updateSongLikeStatus(
   dynamic songId,
   bool add, {
@@ -610,9 +621,7 @@ Future<void> updateSongLikeStatus(
     }
 
     userLikedSongsList.value = updatedLikedSongs;
-    unawaited(
-      addOrUpdateData<List>('user', 'likedSongs', userLikedSongsList.value),
-    );
+    _saveLikedSongsDebounced();
   } catch (e, stackTrace) {
     logger.log(
       'Error updating song like status',

@@ -93,37 +93,39 @@ class NowPlayingAmbientBackground extends StatelessWidget {
         ColoredBox(color: colorScheme.surface),
 
         // Blurred artwork layer with smooth crossfade between songs
-        AnimatedSwitcher(
-          duration: const Duration(milliseconds: 700),
-          switchInCurve: Curves.easeOut,
-          switchOutCurve: Curves.easeIn,
-          child: imageProvider != null
-              ? ClipRect(
-                  key: ValueKey<String>('art_$songKey'),
-                  child: ImageFiltered(
-                    imageFilter: ImageFilter.blur(
-                      sigmaX: 70,
-                      sigmaY: 70,
-                      tileMode: TileMode.mirror,
-                    ),
-                    child: Transform.scale(
-                      scale: 1.35,
-                      child: Image(
-                        image: imageProvider,
-                        fit: BoxFit.cover,
-                        width: double.infinity,
-                        height: double.infinity,
-                        errorBuilder: (_, __, ___) =>
-                            _fallbackGradient(colorScheme, isDark),
+        RepaintBoundary(
+          child: AnimatedSwitcher(
+            duration: const Duration(milliseconds: 700),
+            switchInCurve: Curves.easeOut,
+            switchOutCurve: Curves.easeIn,
+            child: imageProvider != null
+                ? ClipRect(
+                    key: ValueKey<String>('art_$songKey'),
+                    child: ImageFiltered(
+                      imageFilter: ImageFilter.blur(
+                        sigmaX: 70,
+                        sigmaY: 70,
+                        tileMode: TileMode.mirror,
+                      ),
+                      child: Transform.scale(
+                        scale: 1.35,
+                        child: Image(
+                          image: imageProvider,
+                          fit: BoxFit.cover,
+                          width: double.infinity,
+                          height: double.infinity,
+                          errorBuilder: (_, __, ___) =>
+                              _fallbackGradient(colorScheme, isDark),
+                        ),
                       ),
                     ),
+                  )
+                : _fallbackGradient(
+                    colorScheme,
+                    isDark,
+                    key: const ValueKey('fallback'),
                   ),
-                )
-              : _fallbackGradient(
-                  colorScheme,
-                  isDark,
-                  key: const ValueKey('fallback'),
-                ),
+          ),
         ),
 
         // Apple Music contrast vignette overlay (adapts to light / dark)

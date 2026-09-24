@@ -80,6 +80,43 @@ class ArtworkService {
     return null;
   }
 
+  /// Prunes cached square artworks if total disk footprint exceeds [maxBytes] (default 150MB),
+  /// deleting oldest files first.
+  Future<void> pruneOldArtworkCache({int maxBytes = 150 * 1024 * 1024}) async {
+    try {
+      final dir = await _getCacheDirectory();
+      if (!await dir.exists()) return;
+
+      final entities = await dir.list().where((e) => e is File).cast<File>().toList();
+      var totalSize = 0;
+      final fileStats = <({File file, int size, DateTime modified})>[];
+
+      for (final file in entities) {
+        try {
+          final stat = await file.stat();
+          totalSize += stat.size;
+          fileStats.add((file: file, size: stat.size, modified: stat.modified));
+        } catch (_) {}
+      }
+
+      if (totalSize > maxBytes) {
+        fileStats.sort((a, b) => a.modified.compareTo(b.modified));
+        for (final item in fileStats) {
+          if (totalSize <= maxBytes) break;
+          try {
+            await item.file.delete();
+            totalSize -= item.size;
+          } catch (_) {}
+        }
+        logger.log(
+          '[ARTWORK] Pruned artwork cache to ${(totalSize / (1024 * 1024)).toStringAsFixed(1)}MB',
+        );
+      }
+    } catch (e, st) {
+      logger.log('Error during pruneOldArtworkCache', error: e, stackTrace: st);
+    }
+  }
+
   /// Center-crops image bytes to a 1:1 square, returning PNG bytes.
   /// If the image is already square, returns the original or PNG bytes.
   static Future<Uint8List> cropCenterSquare(Uint8List bytes) async {
@@ -134,6 +171,7 @@ class ArtworkService {
     Map song, {
     String? offlineArtworkPath,
     void Function(Uri squareUri)? onSquareReady,
+    int targetResolution = 1080,
   }) {
     final ytid = song['ytid']?.toString() ?? song['id']?.toString() ?? '';
     final rawHighRes =
@@ -155,9 +193,9 @@ class ArtworkService {
       return Uri.parse('');
     }
 
-    final highResUrl = formatArtworkResolution(rawHighRes, 1080);
+    final highResUrl = formatArtworkResolution(rawHighRes, targetResolution);
 
-    // 2. Google user content is already square; return high-res 1080p square URL
+    // 2. Google user content is already square; return crisp square URL
     if (isGoogleArtworkUrl(highResUrl)) {
       return Uri.parse(highResUrl);
     }

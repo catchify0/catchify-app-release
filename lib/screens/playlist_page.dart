@@ -230,6 +230,7 @@ class _PlaylistPageState extends State<PlaylistPage> {
                           padding: commonListViewBottomPadding,
                           sliver: SliverList.builder(
                             itemCount: sourceList.length,
+                            addAutomaticKeepAlives: false,
                             itemBuilder: (context, index) {
                               final isRemovable =
                                   _playlist['source'] == 'user-created';

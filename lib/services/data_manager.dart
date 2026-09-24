@@ -26,6 +26,7 @@ import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 import 'package:catchify/extensions/l10n.dart';
 import 'package:catchify/main.dart' show logger;
+import 'package:catchify/services/artwork_service.dart';
 
 // Cache durations for different types of data
 const Duration songCacheDuration = Duration(hours: 1, minutes: 30);
@@ -480,6 +481,7 @@ Future<void> pruneExpiredCacheEntries() async {
 /// Compacts all open Hive boxes asynchronously to recover disk space and defragment database files.
 Future<void> compactAllBoxes() async {
   await pruneExpiredCacheEntries();
+  await ArtworkService.instance.pruneOldArtworkCache();
 
   const boxNames = ['user', 'settings', 'cache', 'userNoBackup'];
   for (final name in boxNames) {

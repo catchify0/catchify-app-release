@@ -71,6 +71,10 @@ final userLikedPlaylists = ValueNotifier<List<Map>>(
 final userPlaylistFolders = ValueNotifier<List<Map>>(
   _readStoredMapList('playlistFolders'),
 );
+
+Map<String, ({Map playlist, bool isFromFolder})>? _customPlaylistIndexCache;
+bool _customPlaylistListenersAttached = false;
+
 final pinnedPlaylistIds = ValueNotifier<List<String>>(
   _readStoredStringList('pinnedPlaylistIds'),
 );
@@ -332,15 +336,23 @@ String addSongInCustomPlaylist(
 }
 
 List<Map> getUserCustomPlaylists() {
-  return [
-    ...userCustomPlaylists.value
-        .where((p) => p['source'] == 'user-created')
-        .cast<Map>(),
-    for (final folder in userPlaylistFolders.value)
-      ...(folder['playlists'] as List<dynamic>? ?? [])
-          .where((p) => p['source'] == 'user-created')
-          .cast<Map>(),
-  ];
+  final result = <Map>[];
+  for (final p in userCustomPlaylists.value) {
+    if (p['source'] == 'user-created') {
+      result.add(p);
+    }
+  }
+  for (final folder in userPlaylistFolders.value) {
+    final folderPlaylists = folder['playlists'] as List<dynamic>?;
+    if (folderPlaylists != null) {
+      for (final p in folderPlaylists) {
+        if (p is Map && p['source'] == 'user-created') {
+          result.add(p);
+        }
+      }
+    }
+  }
+  return result;
 }
 
 String addSongsInCustomPlaylist(
@@ -355,14 +367,18 @@ String addSongsInCustomPlaylist(
   if (customPlaylist != null) {
     final List<dynamic> playlistSongs = customPlaylist['list'];
 
+    final existingYtids = <dynamic>{
+      for (final item in playlistSongs)
+        if (item is Map && item['ytid'] != null) item['ytid'],
+    };
+
     final newSongs = <dynamic>[];
     for (final song in songs) {
-      final alreadyExists = playlistSongs.any(
-        (playlistElement) => playlistElement['ytid'] == song['ytid'],
-      );
-      if (!alreadyExists) {
+      final ytid = (song is Map) ? song['ytid'] : null;
+      if (ytid != null && !existingYtids.contains(ytid)) {
         playlistSongs.add(song);
         newSongs.add(song);
+        existingYtids.add(ytid);
       }
     }
 
@@ -2958,20 +2974,36 @@ Future<Map<String, dynamic>?> resolveArtistInfoForWidget(
 }
 
 ({Map playlist, bool isFromFolder})? _findCustomPlaylist(String playlistId) {
+  if (!_customPlaylistListenersAttached) {
+    _customPlaylistListenersAttached = true;
+    userCustomPlaylists.addListener(() => _customPlaylistIndexCache = null);
+    userPlaylistFolders.addListener(() => _customPlaylistIndexCache = null);
+  }
+
+  if (_customPlaylistIndexCache != null) {
+    return _customPlaylistIndexCache![playlistId];
+  }
+
+  final index = <String, ({Map playlist, bool isFromFolder})>{};
   for (final playlist in userCustomPlaylists.value) {
-    if (playlist['ytid'] == playlistId) {
-      return (playlist: playlist, isFromFolder: false);
+    final id = playlist['ytid']?.toString();
+    if (id != null) {
+      index[id] = (playlist: playlist, isFromFolder: false);
     }
   }
   for (final folder in userPlaylistFolders.value) {
     final folderPlaylists = folder['playlists'] as List<dynamic>? ?? [];
     for (final playlist in folderPlaylists) {
-      if (playlist['ytid'] == playlistId) {
-        return (playlist: playlist as Map, isFromFolder: true);
+      if (playlist is Map) {
+        final id = playlist['ytid']?.toString();
+        if (id != null) {
+          index[id] = (playlist: playlist, isFromFolder: true);
+        }
       }
     }
   }
-  return null;
+  _customPlaylistIndexCache = index;
+  return index[playlistId];
 }
 
 Map? _findOfflinePlaylist(String id) {

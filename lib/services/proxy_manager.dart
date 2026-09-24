@@ -576,6 +576,8 @@ class ProxyManager {
 
     final httpClient = HttpClient()
       ..connectionTimeout = Duration(seconds: timeoutSeconds)
+      ..idleTimeout = const Duration(seconds: 30)
+      ..maxConnectionsPerHost = 6
       ..findProxy = (_) {
         return 'PROXY ${proxy.address}; DIRECT';
       };
@@ -894,32 +896,26 @@ class ProxyManager {
     }
   }
 
-  /// Performs an HTTP GET request that respects current proxy settings.
+  static final http.Client _sharedDirectClient = IOClient(
+    HttpClient()
+      ..idleTimeout = const Duration(seconds: 30)
+      ..connectionTimeout = const Duration(seconds: 10)
+      ..maxConnectionsPerHost = 6,
+  );
+
+  /// Performs an HTTP GET request that respects current proxy settings,
+  /// reusing persistent pooled connections to eliminate redundant TCP & TLS handshakes.
   Future<http.Response> getProxiedResponse(
     Uri uri, {
     Map<String, String>? headers,
     int timeoutSeconds = 10,
   }) async {
-    if (!useProxy.value || _sharedProxyAddress == null) {
-      return http
-          .get(uri, headers: headers)
-          .timeout(
-            Duration(seconds: timeoutSeconds),
-            onTimeout: () => http.Response('Timeout', 408),
-          );
-    }
+    final client = (!useProxy.value || _sharedProxyAddress == null)
+        ? _sharedDirectClient
+        : (_proxyResources[_sharedProxyAddress!]?.ioClient ??
+            _sharedDirectClient);
 
-    final res = _proxyResources[_sharedProxyAddress!];
-    if (res == null) {
-      return http
-          .get(uri, headers: headers)
-          .timeout(
-            Duration(seconds: timeoutSeconds),
-            onTimeout: () => http.Response('Timeout', 408),
-          );
-    }
-
-    return res.ioClient
+    return client
         .get(uri, headers: headers)
         .timeout(
           Duration(seconds: timeoutSeconds),

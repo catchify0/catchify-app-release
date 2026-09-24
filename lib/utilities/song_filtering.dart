@@ -20,12 +20,19 @@
  */
 
 List<dynamic> filterSongsByQuery(List<dynamic> songsList, String searchQuery) {
-  if (searchQuery.isEmpty) return songsList;
+  final q = searchQuery.trim().toLowerCase();
+  if (q.isEmpty) return songsList;
 
-  final q = searchQuery.toLowerCase();
+  final tokens = q.split(RegExp(r'\s+')).where((t) => t.isNotEmpty).toList();
+  if (tokens.isEmpty) return songsList;
+
   return songsList.where((s) {
+    if (s is! Map) return false;
     final title = (s['title'] ?? '').toString().toLowerCase();
     final artist = (s['artist'] ?? '').toString().toLowerCase();
-    return title.contains(q) || artist.contains(q);
+    final album = (s['album'] ?? '').toString().toLowerCase();
+    final combined = '$title $artist $album';
+
+    return tokens.every(combined.contains);
   }).toList();
 }

@@ -436,7 +436,8 @@ class SearchService {
   Future<List<Map<String, dynamic>>> _safeFetchSongs(String query) async {
     try {
       final raw = await fetchSongsList(query).timeout(const Duration(seconds: 7));
-      return raw.whereType<Map>().map(Map<String, dynamic>.from).toList();
+      final items = raw.whereType<Map>().map(Map<String, dynamic>.from).toList();
+      return _deduplicateTracks(items);
     } catch (e, st) {
       if (!isNetworkError(e)) {
         logger.log('Error in _safeFetchSongs', error: e, stackTrace: st);
@@ -491,7 +492,7 @@ class SearchService {
         layout['isVideo'] = true;
         videos.add(layout);
       }
-      return videos;
+      return _deduplicateTracks(videos);
     } catch (e, st) {
       if (!isNetworkError(e)) {
         logger.log('Error in _safeFetchVideos', error: e, stackTrace: st);
@@ -499,4 +500,49 @@ class SearchService {
       return [];
     }
   }
+
+  List<Map<String, dynamic>> _deduplicateTracks(List<Map<String, dynamic>> items) {
+    final seenIds = <String>{};
+    final seenKeys = <String>{};
+    final deduplicated = <Map<String, dynamic>>[];
+
+    for (final item in items) {
+      final ytid = (item['ytid'] ?? item['id'])?.toString() ?? '';
+      if (ytid.isNotEmpty && !seenIds.add(ytid)) {
+        continue;
+      }
+
+      final rawTitle = (item['title'] ?? '').toString().toLowerCase().trim();
+      final rawArtist = (item['artist'] ?? '').toString().toLowerCase().trim();
+
+      final cleanTitle = rawTitle
+          .replaceAll(
+            RegExp(
+              r'\s*\(.*?(?:official|audio|video|lyrics|lyrical|hd|4k|from).*?\)',
+              caseSensitive: false,
+            ),
+            '',
+          )
+          .replaceAll(
+            RegExp(
+              r'\s*\[.*?(?:official|audio|video|lyrics|lyrical|hd|4k|from).*?\]',
+              caseSensitive: false,
+            ),
+            '',
+          )
+          .replaceAll(RegExp(r'\s{2,}'), ' ')
+          .trim();
+
+      if (cleanTitle.isNotEmpty && rawArtist.isNotEmpty) {
+        final key = '$cleanTitle::$rawArtist';
+        if (!seenKeys.add(key)) {
+          continue;
+        }
+      }
+
+      deduplicated.add(item);
+    }
+    return deduplicated;
+  }
 }
+

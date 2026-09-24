@@ -49,16 +49,26 @@ sed -i "s/^version: .*/version: ${new_version}+${new_build} # run update.sh afte
 
 bash update.sh
 
-echo "Building catchify v${new_version}+${new_build} (flavor: ${FLAVOR})..."
-flutter build apk --release --flavor "$FLAVOR"
-
-apk_src=$(find "build/app/outputs" -type f -name "app-${FLAVOR}-release.apk" -print -quit)
-if [ -z "$apk_src" ]; then
-  echo "Unable to find the ${FLAVOR} release APK under build/app/outputs"
-  exit 1
+SPLIT_ARG=""
+if [[ "$*" == *"--split-per-abi"* ]]; then
+  SPLIT_ARG="--split-per-abi"
+  echo "Enabling --split-per-abi for ~20MB lightweight APKs..."
 fi
-apk_dest="build/app/outputs/flutter-apk/catchify-v${new_version}.apk"
-mkdir -p "$(dirname "$apk_dest")"
-cp "$apk_src" "$apk_dest"
 
-echo "Built ${apk_dest}"
+echo "Building catchify v${new_version}+${new_build} (flavor: ${FLAVOR})..."
+flutter build apk --release --flavor "$FLAVOR" $SPLIT_ARG
+
+if [ -n "$SPLIT_ARG" ]; then
+  echo "Built split-per-abi APKs under build/app/outputs/flutter-apk/"
+else
+  apk_src=$(find "build/app/outputs" -type f -name "app-${FLAVOR}-release.apk" -print -quit)
+  if [ -z "$apk_src" ]; then
+    echo "Unable to find the ${FLAVOR} release APK under build/app/outputs"
+    exit 1
+  fi
+  apk_dest="build/app/outputs/flutter-apk/catchify-v${new_version}.apk"
+  mkdir -p "$(dirname "$apk_dest")"
+  cp "$apk_src" "$apk_dest"
+
+  echo "Built ${apk_dest}"
+fi
