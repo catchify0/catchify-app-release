@@ -38,6 +38,7 @@ import 'package:catchify/widgets/lyrics_display_widget.dart';
 import 'package:catchify/widgets/now_playing/bottom_actions_row.dart';
 import 'package:catchify/widgets/now_playing/now_playing_artwork.dart';
 import 'package:catchify/widgets/now_playing/now_playing_controls.dart';
+import 'package:catchify/widgets/now_playing_ambient_background.dart';
 import 'package:catchify/widgets/position_slider.dart';
 import 'package:catchify/widgets/queue_list_view.dart';
 import 'package:catchify/widgets/song_artwork.dart';
@@ -125,45 +126,43 @@ class _NowPlayingPageState extends State<NowPlayingPage>
         : 44.0;
     final miniIconSize = screenWidth < 360 ? 18.0 : 22.0;
 
-    return ValueListenableBuilder<String>(
-      valueListenable: playerGradientStyle,
-      builder: (context, gradientStyle, _) {
-        final isPureBlackStyle = gradientStyle == 'pure_black';
-        final isBlurredStyle = gradientStyle == 'blurred';
+    return StreamBuilder<MediaItem?>(
+      stream: audioHandler.mediaItem,
+      builder: (context, snapshot) {
+        if (snapshot.data == null || !snapshot.hasData) {
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+        final metadata = snapshot.data!;
 
-        return Scaffold(
-          backgroundColor: isPureBlackStyle ? Colors.black : colorScheme.surface,
-          body: DecoratedBox(
-            decoration: BoxDecoration(
-              color: isPureBlackStyle ? Colors.black : colorScheme.surface,
-              gradient: isPureBlackStyle
-                  ? null
-                  : LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [
-                        colorScheme.primary.withValues(
-                          alpha: isBlurredStyle ? 0.35 : 0.22,
-                        ),
-                        colorScheme.surface.withValues(
-                          alpha: isBlurredStyle ? 0.9 : 1.0,
-                        ),
-                        colorScheme.surface,
-                      ],
-                      stops: const [0.0, 0.48, 1.0],
-                    ),
-            ),
-            child: SafeArea(
-              child: StreamBuilder<MediaItem?>(
-          stream: audioHandler.mediaItem,
-          builder: (context, snapshot) {
-            if (snapshot.data == null || !snapshot.hasData) {
-              return const Center(child: CircularProgressIndicator());
-            }
-            final metadata = snapshot.data!;
+        return ValueListenableBuilder<String>(
+          valueListenable: playerGradientStyle,
+          builder: (context, gradientStyle, _) {
+            final isPureBlackStyle = gradientStyle == 'pure_black';
 
-            return LayoutBuilder(
-              builder: (context, constraints) {
+            return Scaffold(
+              backgroundColor:
+                  isPureBlackStyle ? Colors.black : colorScheme.surface,
+              body: Stack(
+                fit: StackFit.expand,
+                children: [
+                  // Dynamic Apple Music-style ambient blurred artwork background
+                  AnimatedBuilder(
+                    animation: _artworkCurve,
+                    builder: (context, _) {
+                      return NowPlayingAmbientBackground(
+                        metadata: metadata,
+                        isPureBlack: isPureBlackStyle,
+                        lyricsProgress: _artworkCurve.value,
+                      );
+                    },
+                  ),
+
+                  // Foreground content
+                  SafeArea(
+                    child: LayoutBuilder(
+                      builder: (context, constraints) {
                 final artworkSize = _artworkSize(size);
                 final artworkLeft = (constraints.maxWidth - artworkSize) / 2;
                 final artworkTop = _artworkTop(size);
@@ -338,12 +337,13 @@ class _NowPlayingPageState extends State<NowPlayingPage>
                   ],
                 );
               },
-            );
-          },
-        ),
+            ),
+          ),
+        ],
       ),
-    ),
-  );
+    );
+  },
+);
       },
     );
   }
