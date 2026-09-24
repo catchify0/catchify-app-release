@@ -157,6 +157,7 @@ class HomeSectionRenderer extends StatelessWidget {
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         physics: const BouncingScrollPhysics(),
+        cacheExtent: 350,
         padding: const EdgeInsets.symmetric(horizontal: AppTokens.pagePadding),
         itemCount: chunkedSongs.length,
         separatorBuilder: (context, index) =>
@@ -223,6 +224,7 @@ class HomeSectionRenderer extends StatelessWidget {
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         physics: const BouncingScrollPhysics(),
+        cacheExtent: 300,
         padding: const EdgeInsets.symmetric(horizontal: AppTokens.pagePadding),
         itemCount: section.contents.length,
         separatorBuilder: (_, __) => const SizedBox(width: AppTokens.cardGap),
@@ -254,6 +256,7 @@ class HomeSectionRenderer extends StatelessWidget {
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         physics: const BouncingScrollPhysics(),
+        cacheExtent: 300,
         padding: const EdgeInsets.symmetric(horizontal: AppTokens.pagePadding),
         itemCount: section.contents.length,
         separatorBuilder: (_, __) => const SizedBox(width: AppTokens.cardGap),
@@ -281,6 +284,7 @@ class HomeSectionRenderer extends StatelessWidget {
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         physics: const BouncingScrollPhysics(),
+        cacheExtent: 300,
         padding: const EdgeInsets.symmetric(horizontal: AppTokens.pagePadding),
         itemCount: section.contents.length,
         separatorBuilder: (_, __) => const SizedBox(width: AppTokens.cardGap),
@@ -307,6 +311,7 @@ class HomeSectionRenderer extends StatelessWidget {
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         physics: const BouncingScrollPhysics(),
+        cacheExtent: 300,
         padding: const EdgeInsets.symmetric(horizontal: AppTokens.pagePadding),
         itemCount: items.length,
         separatorBuilder: (_, __) => const SizedBox(width: AppTokens.cardGap),
@@ -334,6 +339,7 @@ class HomeSectionRenderer extends StatelessWidget {
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         physics: const BouncingScrollPhysics(),
+        cacheExtent: 300,
         padding: const EdgeInsets.symmetric(horizontal: AppTokens.pagePadding),
         itemCount: section.contents.length,
         separatorBuilder: (_, __) => const SizedBox(width: AppTokens.cardGap),

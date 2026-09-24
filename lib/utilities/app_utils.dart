@@ -48,7 +48,10 @@ BorderRadius getItemBorderRadius(
 }
 
 ValueKey<int> listItemKey(String scope, int index, [Object? item]) {
-  return ValueKey<int>(Object.hash(scope, index, item));
+  final identity = item is Map
+      ? (item['ytid'] ?? item['id'] ?? item['title'] ?? item.hashCode)
+      : item;
+  return ValueKey<int>(Object.hash(scope, index, identity));
 }
 
 List<Map<String, dynamic>> asMapList(dynamic value) {

@@ -455,7 +455,7 @@ class _SongBarState extends State<SongBar> {
         ]) ??
         '';
     if (_lowResImageUrl.isNotEmpty) {
-      _lowResImageUrl = formatArtworkResolution(_lowResImageUrl, 1080);
+      _lowResImageUrl = formatArtworkResolution(_lowResImageUrl, 240);
     }
     _ytid = widget.song['ytid'] ?? '';
 
@@ -501,7 +501,7 @@ class _SongBarState extends State<SongBar> {
         ]) ??
         '';
     final newLowResImageUrl = rawNewImageUrl.isNotEmpty
-        ? formatArtworkResolution(rawNewImageUrl, 1080)
+        ? formatArtworkResolution(rawNewImageUrl, 240)
         : '';
 
     final songChanged = _ytid != newYtid;
@@ -962,6 +962,8 @@ class _OfflineArtwork extends StatelessWidget {
               File(artworkPath),
               width: size,
               height: size,
+              cacheWidth: 160,
+              cacheHeight: 160,
               fit: BoxFit.cover,
               errorBuilder: (_, __, ___) =>
                   const NullArtworkWidget(iconSize: 30),
@@ -1018,6 +1020,8 @@ class _OnlineArtwork extends StatelessWidget {
             lowResImageUrl.contains('/sddefault.') ||
             lowResImageUrl.contains('/default.'));
 
+    final cachePx = (size * 3).toInt().clamp(120, 200);
+
     return SizedBox(
       width: size,
       height: size,
@@ -1029,8 +1033,8 @@ class _OnlineArtwork extends StatelessWidget {
             width: size,
             height: size,
             fit: BoxFit.cover,
-            memCacheWidth: 512,
-            memCacheHeight: 512,
+            memCacheWidth: cachePx,
+            memCacheHeight: cachePx,
             imageBuilder: (context, imageProvider) {
               Widget imageWidget = Image(
                 image: imageProvider,

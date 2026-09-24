@@ -397,12 +397,18 @@ class _HomePageState extends State<HomePage> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         for (final section in sections)
-                          HomeSectionRenderer(
-                            section: section,
-                            playlistHeight: playlistHeight,
+                          RepaintBoundary(
+                            child: HomeSectionRenderer(
+                              section: section,
+                              playlistHeight: playlistHeight,
+                            ),
                           ),
-                        _buildFavoritesSection(playlistHeight),
-                        _buildCurrentMonthRecapSection(),
+                        RepaintBoundary(
+                          child: _buildFavoritesSection(playlistHeight),
+                        ),
+                        RepaintBoundary(
+                          child: _buildCurrentMonthRecapSection(),
+                        ),
                       ],
                     );
                   },

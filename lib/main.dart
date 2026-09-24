@@ -322,6 +322,10 @@ void main() async {
     return false;
   };
 
+  PaintingBinding.instance.imageCache
+    ..maximumSize = 400
+    ..maximumSizeBytes = 120 << 20;
+
   await initialisation();
   appStartupMs = appStartupStopwatch.elapsedMilliseconds;
 
