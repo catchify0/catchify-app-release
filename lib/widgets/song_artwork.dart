@@ -169,10 +169,19 @@ class SongArtworkWidget extends StatelessWidget {
           );
         },
         placeholder: (context, url) => const Spinner(),
-        errorWidget: (context, url, error) =>
-            NullArtworkWidget(iconSize: errorWidgetIconSize),
+        errorWidget: (context, url, error) => NullArtworkWidget(
+          iconSize: errorWidgetIconSize,
+          width: effectiveWidth,
+          height: effectiveHeight,
+          borderRadius: borderRadius,
+        ),
       );
     }
-    return NullArtworkWidget(iconSize: errorWidgetIconSize);
+    return NullArtworkWidget(
+      iconSize: errorWidgetIconSize,
+      width: effectiveWidth,
+      height: effectiveHeight,
+      borderRadius: borderRadius,
+    );
   }
 }

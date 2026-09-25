@@ -27,6 +27,8 @@ class NullArtworkWidget extends StatelessWidget {
     super.key,
     this.icon = FluentIcons.music_note_1_24_regular,
     this.size = 220,
+    this.width,
+    this.height,
     this.iconSize,
     this.title,
     this.borderRadius = 12,
@@ -35,19 +37,23 @@ class NullArtworkWidget extends StatelessWidget {
   final IconData icon;
   final double? iconSize;
   final double size;
+  final double? width;
+  final double? height;
   final String? title;
   final double borderRadius;
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final effectiveWidth = width ?? size;
+    final effectiveHeight = height ?? size;
 
     // Calculate icon size based on container size if not provided
-    final calculatedIconSize = iconSize ?? (size * 0.3);
+    final calculatedIconSize = iconSize ?? (effectiveHeight * 0.3);
 
     return SizedBox(
-      width: size,
-      height: size,
+      width: effectiveWidth,
+      height: effectiveHeight,
       child: DecoratedBox(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(borderRadius),

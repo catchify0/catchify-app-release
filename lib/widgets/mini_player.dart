@@ -29,6 +29,7 @@ import 'package:catchify/main.dart';
 import 'package:catchify/models/full_player_state.dart';
 import 'package:catchify/models/position_data.dart';
 import 'package:catchify/screens/now_playing_page.dart';
+import 'package:catchify/services/artwork_service.dart';
 import 'package:catchify/services/settings_manager.dart';
 import 'package:catchify/theme/app_text_styles.dart';
 import 'package:catchify/widgets/glass_surface.dart';
@@ -305,32 +306,46 @@ class _ArtworkWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final uriStr = metadata.artUri?.toString() ??
+        metadata.extras?['highResImage']?.toString() ??
+        metadata.extras?['image']?.toString() ??
+        '';
+    final isHorizontal = ArtworkService.isYouTubeThumbnailUrl(uriStr);
+    final artWidth = isHorizontal ? 72.0 : MiniPlayer._artworkSize;
+    final artHeight = isHorizontal ? 40.0 : MiniPlayer._artworkSize;
+
     return Padding(
       padding: const EdgeInsets.only(right: 12),
       child: Hero(
         tag: 'now_playing_artwork',
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(MiniPlayer._artworkRadius),
-            border: Border.all(
-              color: Colors.white.withValues(alpha: 0.12),
-              width: 0.6,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.22),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
+        child: SizedBox(
+          width: artWidth,
+          height: artHeight,
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(MiniPlayer._artworkRadius),
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.12),
+                width: 0.6,
               ),
-            ],
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(MiniPlayer._artworkRadius),
-            child: SongArtworkWidget(
-              metadata: metadata,
-              size: MiniPlayer._artworkSize,
-              errorWidgetIconSize: 24,
-              borderRadius: MiniPlayer._artworkRadius,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.22),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(MiniPlayer._artworkRadius),
+              child: SongArtworkWidget(
+                metadata: metadata,
+                width: artWidth,
+                height: artHeight,
+                size: MiniPlayer._artworkSize,
+                errorWidgetIconSize: 24,
+                borderRadius: MiniPlayer._artworkRadius,
+              ),
             ),
           ),
         ),

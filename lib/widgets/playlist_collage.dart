@@ -74,13 +74,7 @@ class PlaylistCollage extends StatelessWidget {
 
   Widget _buildImage(String url, double width, double height, Color placeholderBg, Color placeholderIcon) {
     try {
-      final isYouTubeLetterboxed =
-          (url.contains('i.ytimg.com') || url.contains('img.youtube.com')) &&
-          (url.contains('/hqdefault.') ||
-              url.contains('/sddefault.') ||
-              url.contains('/default.'));
-
-      Widget img = Image(
+      final img = Image(
         image: ArtworkProvider.get(url),
         width: width,
         height: height,
@@ -94,18 +88,8 @@ class PlaylistCollage extends StatelessWidget {
             color: placeholderIcon,
             size: 16,
           ),
-
         ),
       );
-
-      if (isYouTubeLetterboxed) {
-        img = ClipRect(
-          child: Transform.scale(
-            scale: 1.34,
-            child: img,
-          ),
-        );
-      }
 
       return SizedBox(
         width: width,

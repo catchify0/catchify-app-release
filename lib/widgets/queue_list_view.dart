@@ -21,6 +21,7 @@
 
 import 'dart:async';
 import 'dart:io';
+import 'dart:math' as math;
 
 import 'package:audio_service/audio_service.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -28,6 +29,7 @@ import 'package:fluentui_system_icons/fluentui_system_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:catchify/extensions/l10n.dart';
 import 'package:catchify/main.dart';
+import 'package:catchify/services/artwork_service.dart';
 import 'package:catchify/services/settings_manager.dart';
 import 'package:catchify/utilities/mediaitem.dart';
 import 'package:catchify/utilities/queue_entry_utils.dart';
@@ -556,71 +558,66 @@ class _ArtworkThumbnail extends StatelessWidget {
       ytid,
       song['artworkPath']?.toString() ?? song['artWorkPath']?.toString(),
     );
+    final imageUrl = song['lowResImage']?.toString() ??
+        song['image']?.toString() ??
+        song['highResImage']?.toString() ??
+        '';
+
+    final isHorizontal = ArtworkService.isYouTubeThumbnailUrl(imageUrl) ||
+        (artworkPath != null && ArtworkService.isYouTubeThumbnailUrl(song['highResImage']?.toString() ?? ''));
+    final thumbWidth = isHorizontal ? 72.0 : size;
+    final thumbHeight = isHorizontal ? 40.0 : size;
+
     if (artworkPath != null && artworkPath.isNotEmpty) {
       return ClipRRect(
         borderRadius: BorderRadius.circular(radius),
         child: Image.file(
           File(artworkPath),
-          width: size,
-          height: size,
+          width: thumbWidth,
+          height: thumbHeight,
           fit: BoxFit.cover,
-          errorBuilder: (_, __, ___) => _fallback(),
+          errorBuilder: (_, __, ___) => _fallback(thumbWidth, thumbHeight),
         ),
       );
     }
-    final imageUrl = song['lowResImage']?.toString() ?? '';
-    if (imageUrl.isEmpty) return _fallback();
-    final isLetterboxed =
-        (imageUrl.contains('i.ytimg.com') ||
-            imageUrl.contains('img.youtube.com')) &&
-        (imageUrl.contains('/hqdefault.') ||
-            imageUrl.contains('/sddefault.') ||
-            imageUrl.contains('/default.'));
 
-    final cachePx = (size * 2).round().clamp(64, 256);
+    if (imageUrl.isEmpty) return _fallback(thumbWidth, thumbHeight);
+
+    final cachePx = (math.max(thumbWidth, thumbHeight) * 2).round().clamp(64, 256);
 
     return CachedNetworkImage(
-      width: size,
-      height: size,
+      width: thumbWidth,
+      height: thumbHeight,
       memCacheWidth: cachePx,
       memCacheHeight: cachePx,
       imageUrl: imageUrl,
       imageBuilder: (_, imageProvider) {
-        Widget imageWidget = Image(
-          image: imageProvider,
-          width: size,
-          height: size,
-          fit: BoxFit.cover,
-        );
-
-        if (isLetterboxed) {
-          imageWidget = ClipRect(
-            child: Transform.scale(
-              scale: 1.34,
-              child: imageWidget,
-            ),
-          );
-        }
-
         return ClipRRect(
           borderRadius: BorderRadius.circular(radius),
-          child: imageWidget,
+          child: Image(
+            image: imageProvider,
+            width: thumbWidth,
+            height: thumbHeight,
+            fit: BoxFit.cover,
+          ),
         );
       },
-      placeholder: (_, __) => _loading(),
-      errorWidget: (_, __, ___) => _fallback(),
+      placeholder: (_, __) => _loading(thumbWidth, thumbHeight),
+      errorWidget: (_, __, ___) => _fallback(thumbWidth, thumbHeight),
     );
   }
 
-  Widget _fallback() => NullArtworkWidget(
+  Widget _fallback(double w, double h) => NullArtworkWidget(
     size: size,
+    width: w,
+    height: h,
     borderRadius: radius,
-    iconSize: size * 0.45,
+    iconSize: h * 0.45,
   );
 
-  Widget _loading() => Container(
-    width: size,
-    height: size,
+  Widget _loading(double w, double h) => Container(
+    width: w,
+    height: h,
     decoration: BoxDecoration(
       color: colorScheme.surfaceContainerHighest,
       borderRadius: BorderRadius.circular(radius),

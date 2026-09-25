@@ -21,6 +21,7 @@
 import 'package:fluentui_system_icons/fluentui_system_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:catchify/constants/app_tokens.dart';
+import 'package:catchify/services/artwork_service.dart';
 import 'package:catchify/theme/app_text_styles.dart';
 import 'package:catchify/utilities/app_utils.dart';
 import 'package:catchify/widgets/playlist_artwork.dart';
@@ -47,13 +48,18 @@ class SongCard extends StatelessWidget {
     final title = song['title']?.toString() ?? '';
     final artist = getDisplayArtist(song);
 
+    final rawUrl = (song['highResImage'] ?? song['image'] ?? song['lowResImage'] ?? '').toString();
+    final isHorizontal = ArtworkService.isYouTubeThumbnailUrl(rawUrl);
+    final cardWidth = isHorizontal ? 180.0 : size;
+    final artworkHeight = isHorizontal ? (180.0 * 9 / 16).roundToDouble() : size;
+
     final semanticLabel = artist.isNotEmpty ? '$title, by $artist' : title;
 
     return Semantics(
       label: semanticLabel,
       button: true,
       child: SizedBox(
-        width: size,
+        width: cardWidth,
         child: Material(
           color: Colors.transparent,
           borderRadius: BorderRadius.circular(AppTokens.radiusCard),
@@ -99,6 +105,8 @@ class SongCard extends StatelessWidget {
                                 song['highResImage'] ?? song['image'],
                             playlistTitle: title,
                             size: size,
+                            width: cardWidth,
+                            height: artworkHeight,
                             cubeIcon: FluentIcons.music_note_2_24_filled,
                           ),
                         ),

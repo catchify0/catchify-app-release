@@ -34,6 +34,9 @@ class PlaylistArtwork extends StatelessWidget {
     this.cubeIcon = FluentIcons.text_bullet_list_24_filled,
     this.iconSize,
     this.size = 220,
+    this.width,
+    this.height,
+    this.fit = BoxFit.cover,
   });
 
   final String? playlistArtwork;
@@ -42,16 +45,27 @@ class PlaylistArtwork extends StatelessWidget {
   final IconData cubeIcon;
   final double? iconSize;
   final double size;
+  final double? width;
+  final double? height;
+  final BoxFit fit;
 
-  Widget _nullArtwork() => NullArtworkWidget(
-    icon: cubeIcon,
-    iconSize: iconSize ?? (size * 0.3), // Default to 30% of container size
-    size: size,
-    title: playlistTitle,
-  );
+  Widget _nullArtwork([double? effectiveWidth, double? effectiveHeight]) {
+    final w = effectiveWidth ?? width ?? size;
+    final h = effectiveHeight ?? height ?? size;
+    return NullArtworkWidget(
+      icon: cubeIcon,
+      iconSize: iconSize ?? (h * 0.3),
+      size: size,
+      width: w,
+      height: h,
+      title: playlistTitle,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
+    final effectiveWidth = width ?? size;
+    final effectiveHeight = height ?? size;
     final image = playlistArtwork;
     if (image == null || image.isEmpty) {
       if (songs != null && songs!.isNotEmpty) {
@@ -64,48 +78,31 @@ class PlaylistArtwork extends StatelessWidget {
           return PlaylistCollage(
             imageUrls: songArtworks,
             size: size,
-            fallback: _nullArtwork(),
+            fallback: _nullArtwork(effectiveWidth, effectiveHeight),
           );
         }
       }
-      return _nullArtwork();
+      return _nullArtwork(effectiveWidth, effectiveHeight);
     }
 
     try {
       final provider = ArtworkProvider.get(image);
-      final isYouTubeLetterboxed =
-          (image.contains('i.ytimg.com') || image.contains('img.youtube.com')) &&
-          (image.contains('/hqdefault.') ||
-           image.contains('/sddefault.') ||
-           image.contains('/default.'));
 
-      Widget imageWidget = Image(
+      final imageWidget = Image(
         image: provider,
-        height: size,
-        width: size,
-        fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) => _nullArtwork(),
+        height: effectiveHeight,
+        width: effectiveWidth,
+        fit: fit,
+        errorBuilder: (_, __, ___) => _nullArtwork(effectiveWidth, effectiveHeight),
       );
 
-      if (isYouTubeLetterboxed) {
-        // YouTube 4:3 thumbnails (hqdefault, sddefault, default) contain 12.5% black
-        // bars top and bottom. Scaling by 1.34 inside ClipRect crops out the black bars
-        // cleanly without over-zooming widescreen or square artworks.
-        imageWidget = ClipRect(
-          child: Transform.scale(
-            scale: 1.34,
-            child: imageWidget,
-          ),
-        );
-      }
-
       return SizedBox(
-        width: size,
-        height: size,
+        width: effectiveWidth,
+        height: effectiveHeight,
         child: imageWidget,
       );
     } catch (_) {
-      return _nullArtwork();
+      return _nullArtwork(effectiveWidth, effectiveHeight);
     }
   }
 }

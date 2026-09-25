@@ -21,6 +21,7 @@
 
 import 'dart:async';
 import 'dart:io';
+import 'dart:math' as math;
 
 import 'package:audio_service/audio_service.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -31,6 +32,7 @@ import 'package:go_router/go_router.dart';
 import 'package:catchify/constants/app_tokens.dart';
 import 'package:catchify/extensions/l10n.dart';
 import 'package:catchify/main.dart';
+import 'package:catchify/services/artwork_service.dart';
 import 'package:catchify/services/common_services.dart';
 import 'package:catchify/services/io_service.dart';
 import 'package:catchify/services/playlists_manager.dart';
@@ -654,7 +656,15 @@ class _SongBarState extends State<SongBar> {
   }
 
   Widget _buildAlbumArt(ColorScheme colorScheme) {
-    const size = 52.0;
+    final rawUrl = _firstNonEmptyString([
+      _lowResImageUrl,
+      widget.song['image'],
+      widget.song['highResImage'],
+    ]) ?? '';
+    final isHorizontal = ArtworkService.isYouTubeThumbnailUrl(rawUrl);
+    final artWidth = isHorizontal ? 76.0 : 52.0;
+    final artHeight = isHorizontal ? 44.0 : 52.0;
+
     final songDuration = widget.song['duration'];
     final isDurationAvailable =
         widget.showMusicDuration &&
@@ -669,7 +679,9 @@ class _SongBarState extends State<SongBar> {
           _ArtworkDisplay(
             lowResImageUrl: _lowResImageUrl,
             artworkPath: _artworkPath,
-            size: size,
+            width: artWidth,
+            height: artHeight,
+            size: 52,
             isDurationAvailable: isDurationAvailable,
             colorScheme: colorScheme,
             offlineStatus: _songOfflineStatus,
@@ -889,6 +901,8 @@ class _ArtworkDisplay extends StatelessWidget {
   const _ArtworkDisplay({
     required this.lowResImageUrl,
     required this.artworkPath,
+    required this.width,
+    required this.height,
     required this.size,
     required this.isDurationAvailable,
     required this.colorScheme,
@@ -899,6 +913,8 @@ class _ArtworkDisplay extends StatelessWidget {
 
   final String lowResImageUrl;
   final String? artworkPath;
+  final double width;
+  final double height;
   final double size;
   final bool isDurationAvailable;
   final ColorScheme colorScheme;
@@ -914,7 +930,8 @@ class _ArtworkDisplay extends StatelessWidget {
         if (isOffline && artworkPath != null) {
           return _OfflineArtwork(
             artworkPath: artworkPath!,
-            size: size,
+            width: width,
+            height: height,
             colorScheme: colorScheme,
           );
         }
@@ -924,6 +941,8 @@ class _ArtworkDisplay extends StatelessWidget {
           builder: (_, isLiked, __) {
             return _OnlineArtwork(
               lowResImageUrl: lowResImageUrl,
+              width: width,
+              height: height,
               size: size,
               isDurationAvailable: isDurationAvailable,
               colorScheme: colorScheme,
@@ -941,32 +960,34 @@ class _ArtworkDisplay extends StatelessWidget {
 class _OfflineArtwork extends StatelessWidget {
   const _OfflineArtwork({
     required this.artworkPath,
-    required this.size,
+    required this.width,
+    required this.height,
     required this.colorScheme,
   });
 
   final String artworkPath;
-  final double size;
+  final double width;
+  final double height;
   final ColorScheme colorScheme;
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: size,
-      height: size,
+      width: width,
+      height: height,
       child: ClipRRect(
         borderRadius: BorderRadius.circular(10),
         child: Stack(
           children: [
             Image.file(
               File(artworkPath),
-              width: size,
-              height: size,
-              cacheWidth: 160,
-              cacheHeight: 160,
+              width: width,
+              height: height,
+              cacheWidth: (width * 2).round().clamp(120, 240),
+              cacheHeight: (height * 2).round().clamp(120, 240),
               fit: BoxFit.cover,
               errorBuilder: (_, __, ___) =>
-                  const NullArtworkWidget(iconSize: 30),
+                  NullArtworkWidget(iconSize: 24, width: width, height: height),
             ),
             Positioned(
               top: 3,
@@ -995,6 +1016,8 @@ class _OfflineArtwork extends StatelessWidget {
 class _OnlineArtwork extends StatelessWidget {
   const _OnlineArtwork({
     required this.lowResImageUrl,
+    required this.width,
+    required this.height,
     required this.size,
     required this.isDurationAvailable,
     required this.colorScheme,
@@ -1004,6 +1027,8 @@ class _OnlineArtwork extends StatelessWidget {
   });
 
   final String lowResImageUrl;
+  final double width;
+  final double height;
   final double size;
   final bool isDurationAvailable;
   final ColorScheme colorScheme;
@@ -1013,18 +1038,18 @@ class _OnlineArtwork extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cachePx = (size * 3).toInt().clamp(120, 200);
+    final cachePx = (math.max(width, height) * 3).toInt().clamp(120, 240);
 
     return SizedBox(
-      width: size,
-      height: size,
+      width: width,
+      height: height,
       child: Stack(
         alignment: Alignment.center,
         children: <Widget>[
           CachedNetworkImage(
             imageUrl: lowResImageUrl,
-            width: size,
-            height: size,
+            width: width,
+            height: height,
             fit: BoxFit.cover,
             memCacheWidth: cachePx,
             memCacheHeight: cachePx,
@@ -1032,8 +1057,8 @@ class _OnlineArtwork extends StatelessWidget {
               final imageWidget = Image(
                 image: imageProvider,
                 fit: BoxFit.cover,
-                width: size,
-                height: size,
+                width: width,
+                height: height,
               );
 
               return ClipRRect(
@@ -1086,18 +1111,18 @@ class _OnlineArtwork extends StatelessWidget {
                 return CachedNetworkImage(
                   imageUrl: url.replaceFirst(
                     'maxresdefault.jpg',
-                    'hqdefault.jpg',
+                    'mqdefault.jpg',
                   ),
-                  width: size,
-                  height: size,
+                  width: width,
+                  height: height,
                   fit: BoxFit.cover,
                   memCacheWidth: 512,
                   memCacheHeight: 512,
                   errorWidget: (_, __, ___) =>
-                      const NullArtworkWidget(iconSize: 30),
+                      NullArtworkWidget(iconSize: 24, width: width, height: height),
                 );
               }
-              return const NullArtworkWidget(iconSize: 30);
+              return NullArtworkWidget(iconSize: 24, width: width, height: height);
             },
           ),
           if (isDurationAvailable)
