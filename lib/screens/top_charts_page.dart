@@ -20,12 +20,14 @@
  */
 
 import 'dart:math' as math;
+import 'dart:ui' as ui;
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:fluentui_system_icons/fluentui_system_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:catchify/constants/app_tokens.dart';
 import 'package:catchify/main.dart';
+import 'package:catchify/services/artwork_service.dart';
 import 'package:catchify/services/playlists_manager.dart';
 import 'package:catchify/services/router_service.dart';
 import 'package:catchify/services/settings_manager.dart';
@@ -520,181 +522,365 @@ class _HeroTrendingBanner extends StatelessWidget {
   final List<Map<String, dynamic>> allSongs;
   final String countryName;
 
+  Future<void> _playTrack(BuildContext context, {bool shuffle = false}) async {
+    final list = shuffle
+        ? (List<Map<String, dynamic>>.from(allSongs)..shuffle())
+        : allSongs;
+    await audioHandler.playPlaylistSong(
+      playlist: {
+        'title': 'Top Charts - $countryName',
+        'list': list,
+      },
+      songIndex: 0,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final imageUrl = topSong['highResImage'] ?? topSong['image'];
+    final rawUrl = (imageUrl ?? topSong['lowResImage'] ?? '').toString();
+    final isHorizontal = ArtworkService.isYouTubeThumbnailUrl(rawUrl);
     final title = topSong['title']?.toString() ?? 'Trending Hit';
     final artist = topSong['artist']?.toString() ?? 'Top Artist';
 
-    return Container(
-      height: 200,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(AppTokens.radiusCard),
-        color: colorScheme.surfaceContainerHigh,
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: Stack(
-        fit: StackFit.expand,
-        children: [
-          // Background Image
-          if (imageUrl != null && imageUrl.toString().isNotEmpty)
-            CachedNetworkImage(
-              imageUrl: imageUrl.toString(),
-              fit: BoxFit.cover,
-              errorWidget: (_, __, ___) => const SizedBox.shrink(),
+    if (isHorizontal) {
+      return _buildHorizontalBanner(
+        context,
+        colorScheme,
+        imageUrl?.toString(),
+        title,
+        artist,
+      );
+    }
+    return _buildSquareBanner(
+      context,
+      colorScheme,
+      imageUrl?.toString(),
+      title,
+      artist,
+    );
+  }
+
+  Widget _buildHorizontalBanner(
+    BuildContext context,
+    ColorScheme colorScheme,
+    String? imageUrl,
+    String title,
+    String artist,
+  ) {
+    return AspectRatio(
+      aspectRatio: 16 / 9,
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(AppTokens.radiusCard),
+          color: colorScheme.surfaceContainerHigh,
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            // Background Image (16:9 widescreen)
+            if (imageUrl != null && imageUrl.isNotEmpty)
+              CachedNetworkImage(
+                imageUrl: imageUrl,
+                fit: BoxFit.cover,
+                errorWidget: (_, __, ___) => const SizedBox.shrink(),
+              ),
+
+            // Deep gradient overlay for text legibility
+            Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.black.withValues(alpha: 0.25),
+                    Colors.black.withValues(alpha: 0.88),
+                  ],
+                  stops: const [0.35, 1.0],
+                ),
+              ),
             ),
 
-          // Gradient Overlay
-          Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  Colors.black.withValues(alpha: 0.35),
-                  Colors.black.withValues(alpha: 0.85),
+            // Content
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  _buildTrophyBadge(),
+                  const SizedBox(height: 8),
+                  Text(
+                    title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 19,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: -0.3,
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    artist,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.8),
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  _buildButtonsRow(context, colorScheme, isCompact: false),
                 ],
               ),
             ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSquareBanner(
+    BuildContext context,
+    ColorScheme colorScheme,
+    String? imageUrl,
+    String title,
+    String artist,
+  ) {
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(AppTokens.radiusCard),
+        color: colorScheme.surfaceContainerHigh,
+        boxShadow: [
+          BoxShadow(
+            color: colorScheme.shadow.withValues(alpha: 0.12),
+            blurRadius: 14,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Stack(
+        children: [
+          // Ambient blurred background from the square artwork
+          if (imageUrl != null && imageUrl.isNotEmpty)
+            Positioned.fill(
+              child: ImageFiltered(
+                imageFilter: ui.ImageFilter.blur(sigmaX: 32, sigmaY: 32),
+                child: Transform.scale(
+                  scale: 1.15,
+                  child: CachedNetworkImage(
+                    imageUrl: imageUrl,
+                    fit: BoxFit.cover,
+                    errorWidget: (_, __, ___) => const SizedBox.shrink(),
+                  ),
+                ),
+              ),
+            ),
+
+          // Dark wash overlay for contrast
+          Positioned.fill(
+            child: ColoredBox(
+              color: Colors.black.withValues(alpha: 0.62),
+            ),
           ),
 
-          // Content
+          // Foreground Content: True 1:1 Square artwork + details
           Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.end,
+            padding: const EdgeInsets.all(14),
+            child: Row(
               children: [
-                // Badge
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                // 1:1 Square Artwork
+                DecoratedBox(
                   decoration: BoxDecoration(
-                    color: const Color(0xFFFFD700),
-                    borderRadius: BorderRadius.circular(AppTokens.radiusPill),
-                  ),
-                  child: const Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        FluentIcons.trophy_16_filled,
-                        size: 14,
-                        color: Colors.black,
-                      ),
-                      SizedBox(width: 5),
-                      Text(
-                        '#1 IN TRENDING TODAY',
-                        style: TextStyle(
-                          color: Colors.black,
-                          fontSize: 11,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: 0.5,
-                        ),
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.35),
+                        blurRadius: 12,
+                        offset: const Offset(0, 4),
                       ),
                     ],
                   ),
-                ),
-                const SizedBox(height: 10),
-
-                // Title
-                Text(
-                  title,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 20,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: -0.3,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: SizedBox(
+                      width: 124,
+                      height: 124,
+                      child: Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          if (imageUrl != null && imageUrl.isNotEmpty)
+                            CachedNetworkImage(
+                              imageUrl: imageUrl,
+                              fit: BoxFit.cover,
+                              errorWidget: (_, __, ___) => ColoredBox(
+                                color: colorScheme.surfaceContainerHighest,
+                                child: const Icon(
+                                  FluentIcons.music_note_2_24_filled,
+                                  size: 32,
+                                  color: Colors.white70,
+                                ),
+                              ),
+                            )
+                          else
+                            ColoredBox(
+                              color: colorScheme.surfaceContainerHighest,
+                              child: const Icon(
+                                FluentIcons.music_note_2_24_filled,
+                                size: 32,
+                                color: Colors.white70,
+                              ),
+                            ),
+                          // Subtle border highlight
+                          Positioned.fill(
+                            child: DecoratedBox(
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: Colors.white.withValues(alpha: 0.15),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(width: 14),
 
-                // Artist
-                Text(
-                  artist,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.8),
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
+                // Info & Action Column
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      _buildTrophyBadge(),
+                      const SizedBox(height: 6),
+                      Text(
+                        title,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: -0.2,
+                          height: 1.2,
+                        ),
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        artist,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.8),
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      _buildButtonsRow(context, colorScheme, isCompact: true),
+                    ],
                   ),
-                ),
-                const SizedBox(height: 14),
-
-                // Buttons
-                Row(
-                  children: [
-                    ElevatedButton.icon(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: colorScheme.primary,
-                        foregroundColor: colorScheme.onPrimary,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 18,
-                          vertical: 10,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius:
-                              BorderRadius.circular(AppTokens.radiusPill),
-                        ),
-                      ),
-                      icon: const Icon(FluentIcons.play_20_filled, size: 18),
-                      label: const Text(
-                        'Play #1 Track',
-                        style: TextStyle(fontWeight: FontWeight.w700),
-                      ),
-                      onPressed: () async {
-                        await audioHandler.playPlaylistSong(
-                          playlist: {
-                            'title': 'Top Charts - $countryName',
-                            'list': allSongs,
-                          },
-                          songIndex: 0,
-                        );
-                      },
-                    ),
-                    const SizedBox(width: 10),
-                    OutlinedButton.icon(
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: Colors.white,
-                        side: const BorderSide(color: Colors.white38),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 14,
-                          vertical: 10,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius:
-                              BorderRadius.circular(AppTokens.radiusPill),
-                        ),
-                      ),
-                      icon: const Icon(FluentIcons.arrow_shuffle_20_regular,
-                          size: 18),
-                      label: const Text(
-                        'Shuffle',
-                        style: TextStyle(fontWeight: FontWeight.w600),
-                      ),
-                      onPressed: () async {
-                        final shuffledList = List<Map<String, dynamic>>.from(allSongs)
-                          ..shuffle();
-                        await audioHandler.playPlaylistSong(
-                          playlist: {
-                            'title': 'Top Charts - $countryName',
-                            'list': shuffledList,
-                          },
-                          songIndex: 0,
-                        );
-                      },
-                    ),
-                  ],
                 ),
               ],
             ),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildTrophyBadge() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3.5),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFD700),
+        borderRadius: BorderRadius.circular(AppTokens.radiusPill),
+      ),
+      child: const Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            FluentIcons.trophy_16_filled,
+            size: 13,
+            color: Colors.black,
+          ),
+          SizedBox(width: 4),
+          Text(
+            '#1 IN TRENDING TODAY',
+            style: TextStyle(
+              color: Colors.black,
+              fontSize: 10,
+              fontWeight: FontWeight.w800,
+              letterSpacing: 0.4,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildButtonsRow(
+    BuildContext context,
+    ColorScheme colorScheme, {
+    required bool isCompact,
+  }) {
+    return Wrap(
+      spacing: 8,
+      runSpacing: 6,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      children: [
+        ElevatedButton.icon(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: colorScheme.primary,
+            foregroundColor: colorScheme.onPrimary,
+            padding: EdgeInsets.symmetric(
+              horizontal: isCompact ? 14 : 18,
+              vertical: isCompact ? 8 : 10,
+            ),
+            minimumSize: Size(0, isCompact ? 34 : 38),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(AppTokens.radiusPill),
+            ),
+          ),
+          icon: const Icon(FluentIcons.play_20_filled, size: 16),
+          label: Text(
+            isCompact ? 'Play #1 Track' : 'Play #1 Track',
+            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12),
+          ),
+          onPressed: () => _playTrack(context),
+        ),
+        OutlinedButton.icon(
+          style: OutlinedButton.styleFrom(
+            foregroundColor: Colors.white,
+            side: const BorderSide(color: Colors.white38),
+            padding: EdgeInsets.symmetric(
+              horizontal: isCompact ? 10 : 14,
+              vertical: isCompact ? 8 : 10,
+            ),
+            minimumSize: Size(0, isCompact ? 34 : 38),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(AppTokens.radiusPill),
+            ),
+          ),
+          icon: const Icon(FluentIcons.arrow_shuffle_20_regular, size: 16),
+          label: const Text(
+            'Shuffle',
+            style: TextStyle(fontWeight: FontWeight.w600, fontSize: 12),
+          ),
+          onPressed: () => _playTrack(context, shuffle: true),
+        ),
+      ],
     );
   }
 }
