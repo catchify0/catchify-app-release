@@ -61,8 +61,8 @@ class PillNavigationBar extends StatelessWidget {
     final primary = theme.colorScheme.primary;
     final surfaceColor = isDark
         ? (theme.colorScheme.surface == Colors.black
-            ? Colors.black
-            : const Color(0xFF0A0A0C))
+              ? Colors.black
+              : const Color(0xFF0A0A0C))
         : theme.colorScheme.surface;
 
     final pillBackgroundColor = isDark
@@ -87,8 +87,8 @@ class PillNavigationBar extends StatelessWidget {
         blur: 24,
         surfaceColor: isDark
             ? (theme.colorScheme.surface == Colors.black
-                ? Colors.black.withValues(alpha: 0.78)
-                : const Color(0xFF101016).withValues(alpha: 0.82))
+                  ? Colors.black.withValues(alpha: 0.78)
+                  : const Color(0xFF101016).withValues(alpha: 0.82))
             : theme.colorScheme.surface.withValues(alpha: 0.86),
         borderColor: isDark
             ? Colors.white.withValues(alpha: 0.12)

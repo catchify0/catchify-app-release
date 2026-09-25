@@ -46,6 +46,7 @@ class BottomActionsRow extends StatefulWidget {
   final MediaItem metadata;
   final double iconSize;
   final bool isLargeScreen;
+
   /// Called when the lyrics icon is tapped — parent handles the view switch.
   final VoidCallback onLyricsTap;
 
@@ -511,7 +512,9 @@ void _showSleepTimerDialog(BuildContext context) {
                       onDecrement: () {
                         if (hours > 0) setState(() => hours--);
                       },
-                      onIncrement: () => setState(() => hours++),
+                      onIncrement: () {
+                        if (hours < 23) setState(() => hours++);
+                      },
                     ),
                     const SizedBox(height: 12),
                     _buildTimeSelector(
@@ -569,7 +572,9 @@ void _showSleepTimerDialog(BuildContext context) {
                       onDecrement: () {
                         if (songCount > 1) setState(() => songCount--);
                       },
-                      onIncrement: () => setState(() => songCount++),
+                      onIncrement: () {
+                        if (songCount < 99) setState(() => songCount++);
+                      },
                     ),
                     const SizedBox(height: 16),
                     Wrap(

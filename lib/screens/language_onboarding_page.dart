@@ -131,10 +131,7 @@ class _LanguageOnboardingPageState extends State<LanguageOnboardingPage> {
 
       if (!mounted) return;
 
-      context.go(
-        NavigationManager.homePath,
-        extra: {'freshLoad': true},
-      );
+      context.go(NavigationManager.homePath, extra: {'freshLoad': true});
     } catch (_) {
       if (mounted) {
         setState(() => _isProcessing = false);
@@ -152,10 +149,7 @@ class _LanguageOnboardingPageState extends State<LanguageOnboardingPage> {
         selectedCountryCode: _selectedCountry,
       );
       if (!mounted) return;
-      context.go(
-        NavigationManager.homePath,
-        extra: {'freshLoad': true},
-      );
+      context.go(NavigationManager.homePath, extra: {'freshLoad': true});
     } catch (_) {
       if (mounted) {
         setState(() => _isProcessing = false);
@@ -310,8 +304,9 @@ class _LanguageOnboardingPageState extends State<LanguageOnboardingPage> {
                         )
                       : null,
                   filled: true,
-                  fillColor:
-                      colorScheme.surfaceContainerHighest.withValues(alpha: 0.45),
+                  fillColor: colorScheme.surfaceContainerHighest.withValues(
+                    alpha: 0.45,
+                  ),
                   contentPadding: const EdgeInsets.symmetric(
                     horizontal: 16,
                     vertical: 12,
@@ -336,7 +331,9 @@ class _LanguageOnboardingPageState extends State<LanguageOnboardingPage> {
               return Material(
                 color: isSelected
                     ? colorScheme.primaryContainer.withValues(alpha: 0.8)
-                    : colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
+                    : colorScheme.surfaceContainerHighest.withValues(
+                        alpha: 0.4,
+                      ),
                 borderRadius: BorderRadius.circular(16),
                 child: InkWell(
                   onTap: () => _onCountrySelected(country.code),

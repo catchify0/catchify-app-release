@@ -1080,7 +1080,7 @@ Future<String?> fetchSongStreamUrl(
 }) async {
   final requestKey = [
     songId,
-    isLive ? 'live' : 'audio',
+    if (isLive) 'live' else 'audio',
     title?.trim().toLowerCase() ?? '',
     artist?.trim().toLowerCase() ?? '',
     audioQualitySetting.value,
@@ -1300,7 +1300,7 @@ Future<String?> getSongLyrics(
       _lyrics = await lyricsFuture;
     } finally {
       if (identical(_lyricsInFlight[requestKey], lyricsFuture)) {
-        _lyricsInFlight.remove(requestKey);
+        unawaited(_lyricsInFlight.remove(requestKey));
       }
     }
 

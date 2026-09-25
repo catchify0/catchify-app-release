@@ -345,9 +345,8 @@ class AboutPage extends StatelessWidget {
                   child: _ContactButton(
                     icon: FluentIcons.code_24_regular,
                     label: 'GitHub',
-                    onPressed: () => launchURL(
-                      Uri.parse('https://github.com/catchify0'),
-                    ),
+                    onPressed: () =>
+                        launchURL(Uri.parse('https://github.com/catchify0')),
                   ),
                 ),
                 const SizedBox(width: 10),

@@ -83,8 +83,9 @@ String formatArtworkResolution(String url, int size) {
   final host = uri?.host.toLowerCase() ?? '';
   if (!host.endsWith('googleusercontent.com') && !host.endsWith('ggpht.com')) {
     if (host.contains('youtube.com') || host.contains('ytimg.com')) {
-      final cleanUri =
-          uri != null && uri.hasQuery ? uri.replace(queryParameters: {}) : uri;
+      final cleanUri = uri != null && uri.hasQuery
+          ? uri.replace(queryParameters: {})
+          : uri;
       var clean = cleanUri?.toString() ?? trimmed;
       if (clean.endsWith('?')) clean = clean.substring(0, clean.length - 1);
 
@@ -107,7 +108,10 @@ String formatArtworkResolution(String url, int size) {
 
   var result = trimmed;
   if (result.contains(RegExp(r'=w\d+-h\d+'))) {
-    result = result.replaceFirst(RegExp(r'=w\d+-h\d+.*$'), '=w$size-h$size-l90-rj');
+    result = result.replaceFirst(
+      RegExp(r'=w\d+-h\d+.*$'),
+      '=w$size-h$size-l90-rj',
+    );
   } else if (result.contains(RegExp(r'=s\d+'))) {
     result = result.replaceFirst(RegExp(r'=s\d+.*$'), '=w$size-h$size-l90-rj');
   } else if (result.contains('=')) {
@@ -140,14 +144,15 @@ Map<String, dynamic> returnSongLayout(
   }
   final title = formatSongTitle(rawTitle);
 
-  final musicImage =
-      song.musicData.isNotEmpty ? song.musicData.first.image?.toString() : null;
+  final musicImage = song.musicData.isNotEmpty
+      ? song.musicData.first.image?.toString()
+      : null;
   // Always prioritize the individual song's artwork over the playlist cover!
   final effectiveImage = (musicImage != null && musicImage.trim().isNotEmpty)
       ? musicImage.trim()
       : (playlistImage != null && playlistImage.trim().isNotEmpty
-          ? playlistImage.trim()
-          : null);
+            ? playlistImage.trim()
+            : null);
 
   final videoId = song.id.value;
   final defaultMaxRes = 'https://i.ytimg.com/vi/$videoId/maxresdefault.jpg';
@@ -189,7 +194,8 @@ String formatDuration(dynamic audioDuration) {
   } else if (audioDuration is num) {
     totalSeconds = audioDuration.round();
   } else if (audioDuration is String) {
-    totalSeconds = int.tryParse(audioDuration) ??
+    totalSeconds =
+        int.tryParse(audioDuration) ??
         double.tryParse(audioDuration)?.round() ??
         0;
   }

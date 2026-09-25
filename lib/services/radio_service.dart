@@ -24,8 +24,7 @@ import 'dart:async';
 import 'package:catchify/main.dart' show logger;
 import 'package:catchify/services/artist_service.dart' show ytMusicClient;
 import 'package:catchify/utilities/formatter.dart' show returnSongLayout;
-import 'package:catchify/utilities/queue_entry_utils.dart'
-    show canonicalSongId;
+import 'package:catchify/utilities/queue_entry_utils.dart' show canonicalSongId;
 import 'package:youtube_music_explode_dart/youtube_music_explode_dart.dart';
 
 enum RadioType { song, artist, album }
@@ -86,11 +85,7 @@ class RadioService {
 
       final playlistId = 'RDAMVM$ytid';
       final result = await ytMusicClient.music
-          .getRadioTracks(
-            videoId: ytid,
-            playlistId: playlistId,
-            limit: limit,
-          )
+          .getRadioTracks(videoId: ytid, playlistId: playlistId, limit: limit)
           .timeout(const Duration(seconds: 10));
 
       final seen = <String>{ytid};
@@ -165,10 +160,7 @@ class RadioService {
       if (targetPlaylistId != null) {
         try {
           result = await ytMusicClient.music
-              .getRadioTracks(
-                playlistId: targetPlaylistId,
-                limit: limit,
-              )
+              .getRadioTracks(playlistId: targetPlaylistId, limit: limit)
               .timeout(const Duration(seconds: 10));
         } catch (e) {
           logger.log(

@@ -73,7 +73,9 @@ ThemeMode getThemeMode(int themeModeIndex) {
   final ColorScheme resolvedLight;
   final ColorScheme resolvedDark;
 
-  if (useSystemColor.value && lightColorScheme != null && darkColorScheme != null) {
+  if (useSystemColor.value &&
+      lightColorScheme != null &&
+      darkColorScheme != null) {
     resolvedLight = lightColorScheme.copyWith(
       surface: AppColors.lightBackground,
       surfaceContainerLowest: AppColors.lightSurface,
@@ -108,46 +110,48 @@ ThemeMode getThemeMode(int themeModeIndex) {
       );
     }
   } else {
-    resolvedLight = ColorScheme.fromSeed(
-      seedColor: primaryColorSetting,
-    ).harmonized().copyWith(
-      surface: AppColors.lightBackground,
-      surfaceContainerLowest: AppColors.lightSurface,
-      surfaceContainerLow: AppColors.lightSurfaceElevated,
-      surfaceContainer: AppColors.lightSurfaceElevated,
-      surfaceContainerHigh: AppColors.lightSurfaceHighlight,
-      surfaceContainerHighest: AppColors.lightSurfaceHighlight,
-      outline: AppColors.lightDivider,
-    );
+    resolvedLight = ColorScheme.fromSeed(seedColor: primaryColorSetting)
+        .harmonized()
+        .copyWith(
+          surface: AppColors.lightBackground,
+          surfaceContainerLowest: AppColors.lightSurface,
+          surfaceContainerLow: AppColors.lightSurfaceElevated,
+          surfaceContainer: AppColors.lightSurfaceElevated,
+          surfaceContainerHigh: AppColors.lightSurfaceHighlight,
+          surfaceContainerHighest: AppColors.lightSurfaceHighlight,
+          outline: AppColors.lightDivider,
+        );
 
     if (usePureBlackColor.value) {
-      resolvedDark = ColorScheme.fromSeed(
-        seedColor: primaryColorSetting,
-        brightness: Brightness.dark,
-      ).harmonized().copyWith(
-        surface: AppColors.pureBlack,
-        surfaceContainerLowest: AppColors.pureBlack,
-        surfaceContainerLow: AppColors.pureBlackElevated,
-        surfaceContainer: AppColors.pureBlackContainer,
-        surfaceContainerHigh: AppColors.pureBlackContainerHigh,
-        surfaceContainerHighest: AppColors.pureBlackContainerHigh,
-        outline: AppColors.darkDivider,
-        outlineVariant: const Color(0xFF272730),
-      );
+      resolvedDark =
+          ColorScheme.fromSeed(
+            seedColor: primaryColorSetting,
+            brightness: Brightness.dark,
+          ).harmonized().copyWith(
+            surface: AppColors.pureBlack,
+            surfaceContainerLowest: AppColors.pureBlack,
+            surfaceContainerLow: AppColors.pureBlackElevated,
+            surfaceContainer: AppColors.pureBlackContainer,
+            surfaceContainerHigh: AppColors.pureBlackContainerHigh,
+            surfaceContainerHighest: AppColors.pureBlackContainerHigh,
+            outline: AppColors.darkDivider,
+            outlineVariant: const Color(0xFF272730),
+          );
     } else {
-      resolvedDark = ColorScheme.fromSeed(
-        seedColor: primaryColorSetting,
-        brightness: Brightness.dark,
-      ).harmonized().copyWith(
-        surface: AppColors.darkBackground,
-        surfaceContainerLowest: AppColors.darkBackground,
-        surfaceContainerLow: AppColors.darkSurface,
-        surfaceContainer: AppColors.darkSurfaceElevated,
-        surfaceContainerHigh: AppColors.darkSurfaceHighlight,
-        surfaceContainerHighest: AppColors.darkSurfaceHighlight,
-        outline: AppColors.darkDivider,
-        outlineVariant: const Color(0xFF272730),
-      );
+      resolvedDark =
+          ColorScheme.fromSeed(
+            seedColor: primaryColorSetting,
+            brightness: Brightness.dark,
+          ).harmonized().copyWith(
+            surface: AppColors.darkBackground,
+            surfaceContainerLowest: AppColors.darkBackground,
+            surfaceContainerLow: AppColors.darkSurface,
+            surfaceContainer: AppColors.darkSurfaceElevated,
+            surfaceContainerHigh: AppColors.darkSurfaceHighlight,
+            surfaceContainerHighest: AppColors.darkSurfaceHighlight,
+            outline: AppColors.darkDivider,
+            outlineVariant: const Color(0xFF272730),
+          );
     }
   }
 
@@ -207,13 +211,19 @@ ThemeData getAppTheme(ColorScheme colorScheme) {
         borderRadius: BorderRadius.circular(AppTokens.radiusLarge),
         side: isLight
             ? BorderSide(
-                color: effectiveColorScheme.outlineVariant.withValues(alpha: 0.5),
+                color: effectiveColorScheme.outlineVariant.withValues(
+                  alpha: 0.5,
+                ),
                 width: AppTokens.borderSubtle,
               )
             : BorderSide(
                 color: isPureBlack
-                    ? effectiveColorScheme.outlineVariant.withValues(alpha: 0.28)
-                    : effectiveColorScheme.outlineVariant.withValues(alpha: 0.15),
+                    ? effectiveColorScheme.outlineVariant.withValues(
+                        alpha: 0.28,
+                      )
+                    : effectiveColorScheme.outlineVariant.withValues(
+                        alpha: 0.15,
+                      ),
                 width: 0.8,
               ),
       ),
@@ -268,7 +278,9 @@ ThemeData getAppTheme(ColorScheme colorScheme) {
         ),
       ),
       showDragHandle: false,
-      dragHandleColor: effectiveColorScheme.onSurfaceVariant.withValues(alpha: 0.4),
+      dragHandleColor: effectiveColorScheme.onSurfaceVariant.withValues(
+        alpha: 0.4,
+      ),
       dragHandleSize: const Size(36, 4.5),
     ),
     inputDecorationTheme: base.inputDecorationTheme.copyWith(
@@ -295,10 +307,7 @@ ThemeData getAppTheme(ColorScheme colorScheme) {
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(AppTokens.radiusMedium),
-        borderSide: BorderSide(
-          color: effectiveColorScheme.primary,
-          width: 1.5,
-        ),
+        borderSide: BorderSide(color: effectiveColorScheme.primary, width: 1.5),
       ),
       contentPadding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
     ),
@@ -474,7 +483,9 @@ ThemeData getAppTheme(ColorScheme colorScheme) {
     ),
     tooltipTheme: TooltipThemeData(
       decoration: BoxDecoration(
-        color: isLight ? AppColors.darkSurfaceElevated : AppColors.lightSurfaceElevated,
+        color: isLight
+            ? AppColors.darkSurfaceElevated
+            : AppColors.lightSurfaceElevated,
         borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
         boxShadow: [
           BoxShadow(
@@ -492,7 +503,10 @@ ThemeData getAppTheme(ColorScheme colorScheme) {
     ),
     iconButtonTheme: IconButtonThemeData(
       style: IconButton.styleFrom(
-        minimumSize: const Size(AppTokens.iconButtonSize, AppTokens.iconButtonSize),
+        minimumSize: const Size(
+          AppTokens.iconButtonSize,
+          AppTokens.iconButtonSize,
+        ),
         foregroundColor: effectiveColorScheme.onSurfaceVariant,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppTokens.radiusControl),

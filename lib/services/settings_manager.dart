@@ -90,9 +90,7 @@ final usePureBlackColor = ValueNotifier<bool>(
   _readBoolSetting('usePureBlackColor', false),
 );
 
-final offlineMode = ValueNotifier<bool>(
-  _readBoolSetting('offlineMode', false),
-);
+final offlineMode = ValueNotifier<bool>(_readBoolSetting('offlineMode', false));
 
 final wrappedEnabled = ValueNotifier<bool>(
   _readBoolSetting('wrappedEnabled', true),
@@ -126,9 +124,7 @@ final customProxyNotifier = ValueNotifier<String>(
   _readStringSetting('customProxy', ''),
 );
 
-final useProxy = ValueNotifier<bool>(
-  proxyModeNotifier.value != ProxyMode.off,
-);
+final useProxy = ValueNotifier<bool>(proxyModeNotifier.value != ProxyMode.off);
 
 void setProxyMode(ProxyMode mode) {
   proxyModeNotifier.value = mode;
@@ -232,9 +228,7 @@ final equalizerEnabled = ValueNotifier<bool>(
 final equalizerBandGains = ValueNotifier<List<double>>(_readEqualizerGains());
 
 Locale languageSetting = getLocaleFromLanguageCode(
-  resolveUiLanguageCode(
-    _readNullableStringSetting('languageCode'),
-  ),
+  resolveUiLanguageCode(_readNullableStringSetting('languageCode')),
 );
 
 final hasSeenLanguageOnboarding =
@@ -355,8 +349,7 @@ Future<void> completeLanguageOnboarding(String selectedLanguageCode) async {
   await completeContentLanguageOnboarding(selectedLanguageCode);
 }
 
-final themeModeSetting =
-    _readIntSetting('themeIndex', 0);
+final themeModeSetting = _readIntSetting('themeIndex', 0);
 
 String playlistSortSetting = _readStringSetting(
   'playlistSortType',

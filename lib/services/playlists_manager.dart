@@ -25,7 +25,12 @@ import 'package:flutter/widgets.dart';
 import 'package:hive/hive.dart';
 import 'package:catchify/extensions/l10n.dart';
 import 'package:catchify/main.dart'
-    show appStartupStopwatch, checkAndLogColdStartPerf, homeCacheMs, isNetworkError, logger;
+    show
+        appStartupStopwatch,
+        checkAndLogColdStartPerf,
+        homeCacheMs,
+        isNetworkError,
+        logger;
 import 'package:catchify/services/artist_service.dart';
 import 'package:catchify/services/data_manager.dart';
 import 'package:catchify/services/home_feed_composer.dart';
@@ -2174,8 +2179,8 @@ Future<List<Map<String, dynamic>>> getTrendingSongsForYou({
       final countryName = getCountryByCode(country).name;
       final query = prefLang.toLowerCase() == 'english'
           ? (country == 'US'
-              ? 'Trending songs USA'
-              : 'Trending songs $countryName')
+                ? 'Trending songs USA'
+                : 'Trending songs $countryName')
           : 'Trending $prefLang';
 
       // 1. Primary: YouTube Music Official Trending Songs (dedicated Songs search filter)
@@ -2301,15 +2306,16 @@ Future<List<Map<String, dynamic>>> getQuickPicksSongs({
   }
 
   late final Future<List<Map<String, dynamic>>> tracked;
-  tracked = _loadQuickPicksSongs(
-    prefLang: prefLang,
-    forceRefresh: forceRefresh,
-    limit: limit,
-  ).whenComplete(() {
-    if (identical(_quickPicksInFlight[inFlightKey], tracked)) {
-      _quickPicksInFlight.remove(inFlightKey);
-    }
-  });
+  tracked =
+      _loadQuickPicksSongs(
+        prefLang: prefLang,
+        forceRefresh: forceRefresh,
+        limit: limit,
+      ).whenComplete(() {
+        if (identical(_quickPicksInFlight[inFlightKey], tracked)) {
+          _quickPicksInFlight.remove(inFlightKey);
+        }
+      });
 
   _quickPicksInFlight[inFlightKey] = tracked;
   return tracked;
@@ -3121,8 +3127,7 @@ Future<Map?> _fetchYouTubePlaylist(String id) async {
           };
         }
       }
-      if (playlist != null &&
-          (playlist['list'] as List?)?.isNotEmpty == true) {
+      if (playlist != null && (playlist['list'] as List?)?.isNotEmpty == true) {
         _updateOnlineCache(playlist);
       }
     } catch (e, stackTrace) {
@@ -3615,7 +3620,7 @@ Future<List<HomeSection>> getUnifiedHomeFeed({
     }
   }
   final requestKey = [
-    effectiveForceRefresh ? 'refresh' : 'cached',
+    if (effectiveForceRefresh) 'refresh' else 'cached',
     cacheRequestKey,
   ].join('|');
 
@@ -3731,7 +3736,7 @@ Future<List<HomeSection>> _loadUnifiedHomeFeed({
             );
           }
 
-          List<Map<String, dynamic>> madeForYouRecs = const [];
+          var madeForYouRecs = const <Map<String, dynamic>>[];
           try {
             madeForYouRecs = await getMadeForYouRecommendations(
               forceRefresh: forceRefresh,
@@ -3863,10 +3868,7 @@ Future<List<HomeSection>> _loadUnifiedHomeFeed({
                 })
           : Future.value(<HomeSection>[]);
 
-      final results = await Future.wait([
-        remoteFuture,
-        langFuture,
-      ]);
+      final results = await Future.wait([remoteFuture, langFuture]);
       final remoteShelves = results[0];
       final curatedShelves = results[1];
 
@@ -3903,7 +3905,9 @@ Future<List<HomeSection>> _loadUnifiedHomeFeed({
       if (cachedRaw is List && cachedRaw.isNotEmpty) {
         final cachedSections = cachedRaw
             .whereType<Map>()
-            .map((item) => HomeSection.fromJson(Map<String, dynamic>.from(item)))
+            .map(
+              (item) => HomeSection.fromJson(Map<String, dynamic>.from(item)),
+            )
             .where((s) => s.isNotEmpty)
             .toList();
         if (cachedSections.isNotEmpty) {
@@ -3945,7 +3949,6 @@ Future<List<HomeSection>> _loadUnifiedHomeFeed({
           );
         }
       }
-
 
       // Add Featured Playlists if not present
       if (!sections.any((s) => s.title.toLowerCase().contains('featured'))) {
@@ -4010,7 +4013,6 @@ Future<List<HomeSection>> _loadUnifiedHomeFeed({
           );
         }
       }
-
     } catch (_) {}
   }
 

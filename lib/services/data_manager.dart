@@ -471,10 +471,16 @@ Future<void> pruneExpiredCacheEntries() async {
 
     if (toDelete.isNotEmpty) {
       await box.deleteAll(toDelete);
-      logger.log('Pruned ${toDelete.length ~/ 2} expired entries from cache box');
+      logger.log(
+        'Pruned ${toDelete.length ~/ 2} expired entries from cache box',
+      );
     }
   } catch (e, st) {
-    logger.log('Error during pruneExpiredCacheEntries', error: e, stackTrace: st);
+    logger.log(
+      'Error during pruneExpiredCacheEntries',
+      error: e,
+      stackTrace: st,
+    );
   }
 }
 
@@ -495,4 +501,3 @@ Future<void> compactAllBoxes() async {
     }
   }
 }
-

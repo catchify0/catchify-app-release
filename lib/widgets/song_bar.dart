@@ -574,7 +574,8 @@ class _SongBarState extends State<SongBar> {
             currentId != null && currentId.isNotEmpty && currentId == _ytid;
 
         return Material(
-          color: widget.backgroundColor ??
+          color:
+              widget.backgroundColor ??
               (isCurrentSong
                   ? colorScheme.primary.withValues(alpha: 0.08)
                   : colorScheme.surfaceContainerLow),
@@ -635,7 +636,8 @@ class _SongBarState extends State<SongBar> {
                       onRemove: widget.onRemove,
                       onRename: () => _handleRenameSong(context),
                     ),
-                    itemBuilder: (context) => _buildMenuItems(context, colorScheme),
+                    itemBuilder: (context) =>
+                        _buildMenuItems(context, colorScheme),
                   ),
                 ],
               ),
@@ -656,11 +658,13 @@ class _SongBarState extends State<SongBar> {
   }
 
   Widget _buildAlbumArt(ColorScheme colorScheme) {
-    final rawUrl = _firstNonEmptyString([
-      _lowResImageUrl,
-      widget.song['image'],
-      widget.song['highResImage'],
-    ]) ?? '';
+    final rawUrl =
+        _firstNonEmptyString([
+          _lowResImageUrl,
+          widget.song['image'],
+          widget.song['highResImage'],
+        ]) ??
+        '';
     final isHorizontal = ArtworkService.isYouTubeThumbnailUrl(rawUrl);
     final artWidth = isHorizontal ? 76.0 : 52.0;
     final artHeight = isHorizontal ? 44.0 : 52.0;
@@ -744,11 +748,12 @@ class _SongBarState extends State<SongBar> {
         await renameSongInLikedSongs(_ytid, newTitle, newArtist);
         widget.song['title'] = newTitle;
         widget.song['artist'] = newArtist;
+        if (!mounted) return;
+        setState(() {
+          _songTitle = newTitle;
+          _songArtist = newArtist;
+        });
         if (context.mounted) {
-          setState(() {
-            _songTitle = newTitle;
-            _songArtist = newArtist;
-          });
           showToast(context, context.l10n!.settingChangedMsg);
         }
       } else if (widget.playlistId != null) {
@@ -760,11 +765,12 @@ class _SongBarState extends State<SongBar> {
         );
         widget.song['title'] = newTitle;
         widget.song['artist'] = newArtist;
+        if (!mounted) return;
+        setState(() {
+          _songTitle = newTitle;
+          _songArtist = newArtist;
+        });
         if (context.mounted) {
-          setState(() {
-            _songTitle = newTitle;
-            _songArtist = newArtist;
-          });
           showToast(context, context.l10n!.settingChangedMsg);
           widget.onRenamed?.call();
         }
@@ -1118,11 +1124,18 @@ class _OnlineArtwork extends StatelessWidget {
                   fit: BoxFit.cover,
                   memCacheWidth: 512,
                   memCacheHeight: 512,
-                  errorWidget: (_, __, ___) =>
-                      NullArtworkWidget(iconSize: 24, width: width, height: height),
+                  errorWidget: (_, __, ___) => NullArtworkWidget(
+                    iconSize: 24,
+                    width: width,
+                    height: height,
+                  ),
                 );
               }
-              return NullArtworkWidget(iconSize: 24, width: width, height: height);
+              return NullArtworkWidget(
+                iconSize: 24,
+                width: width,
+                height: height,
+              );
             },
           ),
           if (isDurationAvailable)

@@ -278,12 +278,12 @@ class _PlaybackSettingsPageState extends State<PlaybackSettingsPage> {
                           description: isOffline
                               ? 'Available when Offline Mode is disabled'
                               : mode == ProxyMode.off
-                                  ? 'Disabled • Tap to configure'
-                                  : mode == ProxyMode.auto
-                                      ? 'Smart Auto • Auto-failover on geo-blocks'
-                                      : mode == ProxyMode.countryMatch
-                                          ? 'Country Match • ${getCountryByCode(contentCountryPreference).name}'
-                                          : 'Custom Proxy • ${customProxyNotifier.value.isNotEmpty ? customProxyNotifier.value : "Configured"}',
+                              ? 'Disabled • Tap to configure'
+                              : mode == ProxyMode.auto
+                              ? 'Smart Auto • Auto-failover on geo-blocks'
+                              : mode == ProxyMode.countryMatch
+                              ? 'Country Match • ${getCountryByCode(contentCountryPreference).name}'
+                              : 'Custom Proxy • ${customProxyNotifier.value.isNotEmpty ? customProxyNotifier.value : "Configured"}',
                           enabled: !isOffline,
                           borderRadius: commonCustomBarRadiusLast,
                           trailing: Row(

@@ -117,7 +117,9 @@ class _ProxySettingsSheetState extends State<ProxySettingsSheet> {
                           Container(
                             padding: const EdgeInsets.all(8),
                             decoration: BoxDecoration(
-                              color: colorScheme.primary.withValues(alpha: 0.12),
+                              color: colorScheme.primary.withValues(
+                                alpha: 0.12,
+                              ),
                               borderRadius: BorderRadius.circular(
                                 AppTokens.radiusControl,
                               ),
@@ -340,9 +342,7 @@ class _ProxySettingsSheetState extends State<ProxySettingsSheet> {
                                 ),
                                 const SizedBox(width: 8),
                                 IconButton.filledTonal(
-                                  icon: const Icon(
-                                    FluentIcons.save_20_regular,
-                                  ),
+                                  icon: const Icon(FluentIcons.save_20_regular),
                                   tooltip: 'Save',
                                   onPressed: _saveCustomProxy,
                                 ),
@@ -385,8 +385,8 @@ class _ProxySettingsSheetState extends State<ProxySettingsSheet> {
                             color: !isEnabled
                                 ? colorScheme.outline
                                 : (status.isActive
-                                    ? Colors.greenAccent
-                                    : Colors.orangeAccent),
+                                      ? Colors.greenAccent
+                                      : Colors.orangeAccent),
                           ),
                         ),
                         const SizedBox(width: 8),
@@ -401,8 +401,8 @@ class _ProxySettingsSheetState extends State<ProxySettingsSheet> {
                               color: _testSuccess == true
                                   ? Colors.greenAccent
                                   : (_testSuccess == false
-                                      ? Colors.redAccent
-                                      : colorScheme.onSurfaceVariant),
+                                        ? Colors.redAccent
+                                        : colorScheme.onSurfaceVariant),
                               fontWeight: _testResult != null
                                   ? FontWeight.w600
                                   : FontWeight.normal,
@@ -438,9 +438,15 @@ class _ProxySettingsSheetState extends State<ProxySettingsSheet> {
                               : const Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    Icon(FluentIcons.pulse_20_regular, size: 14),
+                                    Icon(
+                                      FluentIcons.pulse_20_regular,
+                                      size: 14,
+                                    ),
                                     SizedBox(width: 4),
-                                    Text('Ping', style: TextStyle(fontSize: 12)),
+                                    Text(
+                                      'Ping',
+                                      style: TextStyle(fontSize: 12),
+                                    ),
                                   ],
                                 ),
                         ),

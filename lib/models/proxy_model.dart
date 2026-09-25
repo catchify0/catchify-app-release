@@ -43,12 +43,7 @@ class ProxyInfo {
   int get hashCode => address.hashCode ^ country.hashCode;
 }
 
-enum ProxyMode {
-  off,
-  auto,
-  countryMatch,
-  custom,
-}
+enum ProxyMode { off, auto, countryMatch, custom }
 
 extension ProxyModeExtension on ProxyMode {
   String get displayName {

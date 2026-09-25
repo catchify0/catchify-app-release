@@ -57,8 +57,8 @@ class NowPlayingAmbientBackground extends StatelessWidget {
     final imageProvider = _resolveImageProvider(metadata);
     final songKey = metadata != null
         ? (metadata!.id.isNotEmpty
-            ? metadata!.id
-            : '${metadata!.artist ?? ''}-${metadata!.title}')
+              ? metadata!.id
+              : '${metadata!.artist ?? ''}-${metadata!.title}')
         : 'none';
 
     // Gradients tailored for Apple Music style contrast:
@@ -159,7 +159,8 @@ class NowPlayingAmbientBackground extends StatelessWidget {
       } catch (_) {}
     }
 
-    final imageUrl = item.artUri?.toString() ??
+    final imageUrl =
+        item.artUri?.toString() ??
         item.extras?['image']?.toString() ??
         item.extras?['highResImage']?.toString();
 

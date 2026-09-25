@@ -66,7 +66,8 @@ class _PositionSliderState extends State<PositionSlider> {
 
         // If user recently seeked, hold the target position until the stream catches up
         if (_dragEndValue != null) {
-          final diff = (_positionData.position.inSeconds - _dragEndValue!).abs();
+          final diff = (_positionData.position.inSeconds - _dragEndValue!)
+              .abs();
           final elapsed = _dragEndTime != null
               ? DateTime.now().difference(_dragEndTime!).inMilliseconds
               : 1000;
@@ -93,12 +94,18 @@ class _PositionSliderState extends State<PositionSlider> {
                 data: SliderTheme.of(context).copyWith(
                   activeTrackColor: colorScheme.primary,
                   inactiveTrackColor: colorScheme.surfaceContainerHighest,
-                  secondaryActiveTrackColor: colorScheme.primary.withValues(alpha: 0.75),
+                  secondaryActiveTrackColor: colorScheme.primary.withValues(
+                    alpha: 0.75,
+                  ),
                   thumbColor: colorScheme.primary,
                   overlayColor: colorScheme.primary.withValues(alpha: 0.14),
                   trackHeight: 4,
-                  thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 7),
-                  overlayShape: const RoundSliderOverlayShape(overlayRadius: 16),
+                  thumbShape: const RoundSliderThumbShape(
+                    enabledThumbRadius: 7,
+                  ),
+                  overlayShape: const RoundSliderOverlayShape(
+                    overlayRadius: 16,
+                  ),
                   valueIndicatorShape: const PaddleSliderValueIndicatorShape(),
                 ),
                 child: Slider(
@@ -146,10 +153,9 @@ class _PositionSliderState extends State<PositionSlider> {
       fontSize: 12.5,
       fontWeight: FontWeight.w600,
       fontFeatures: const [FontFeature.tabularFigures()],
-      color: Theme.of(context)
-          .colorScheme
-          .onSurfaceVariant
-          .withValues(alpha: 0.85),
+      color: Theme.of(
+        context,
+      ).colorScheme.onSurfaceVariant.withValues(alpha: 0.85),
       letterSpacing: 0.2,
     );
 

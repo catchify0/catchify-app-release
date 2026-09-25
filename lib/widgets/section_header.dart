@@ -66,11 +66,7 @@ class SectionHeader extends StatelessWidget {
                     if (icon != null) ...[
                       Padding(
                         padding: const EdgeInsets.only(top: 2),
-                        child: Icon(
-                          icon,
-                          size: 20,
-                          color: colorScheme.primary,
-                        ),
+                        child: Icon(icon, size: 20, color: colorScheme.primary),
                       ),
                       const SizedBox(width: 8),
                     ],

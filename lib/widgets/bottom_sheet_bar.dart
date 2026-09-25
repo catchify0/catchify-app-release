@@ -82,10 +82,14 @@ class BottomSheetBar extends StatelessWidget {
                       decoration: BoxDecoration(
                         color: isSelected
                             ? colorScheme.primary.withValues(alpha: 0.12)
-                            : colorScheme.surfaceContainerLow.withValues(alpha: 0.9),
+                            : colorScheme.surfaceContainerLow.withValues(
+                                alpha: 0.9,
+                              ),
                         borderRadius: BorderRadius.circular(10),
                         border: Border.all(
-                          color: colorScheme.outlineVariant.withValues(alpha: 0.3),
+                          color: colorScheme.outlineVariant.withValues(
+                            alpha: 0.3,
+                          ),
                         ),
                       ),
                       child: Icon(icon, size: 20, color: fgColor),

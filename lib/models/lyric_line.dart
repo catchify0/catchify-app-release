@@ -21,11 +21,7 @@
 
 /// Represents a single line of lyrics with its timestamp
 class LyricLine {
-  LyricLine({
-    required this.timeInMs,
-    required this.text,
-    this.endTimeInMs,
-  });
+  LyricLine({required this.timeInMs, required this.text, this.endTimeInMs});
 
   /// Timestamp in milliseconds
   final int timeInMs;
@@ -48,9 +44,7 @@ class LrcParser {
   static final RegExp _wordSyncPattern = RegExp(
     r'<\s*\d{1,3}:\d{2}(?:[.:]\d+)?\s*>',
   );
-  static final RegExp _metadataPattern = RegExp(
-    r'\[[a-zA-Z]+:[^\]]*\]',
-  );
+  static final RegExp _metadataPattern = RegExp(r'\[[a-zA-Z]+:[^\]]*\]');
 
   /// Cleans any LRC timestamps, word-level sync tags, and metadata tags from raw lyrics,
   /// returning clean human-readable text for plain lyrics display.
@@ -87,9 +81,7 @@ class LrcParser {
         ? (int.tryParse(offsetMatch.group(1) ?? '0') ?? 0)
         : 0;
 
-    final tagPattern = RegExp(
-      r'\[\s*(\d{1,3}):(\d{2})(?:[.:](\d+))?\s*\]',
-    );
+    final tagPattern = RegExp(r'\[\s*(\d{1,3}):(\d{2})(?:[.:](\d+))?\s*\]');
 
     final rawLines = <LyricLine>[];
     final breakTimes = <int>[];
@@ -171,8 +163,13 @@ class LrcParser {
       }
 
       // 2. If no explicit end tag, but gap to next line > 8 seconds, estimate vocal pause
-      if (endTime == null && nextTime != null && (nextTime - current.timeInMs > 8000)) {
-        final estimatedSingingMs = (current.text.length * 120).clamp(4000, 8000);
+      if (endTime == null &&
+          nextTime != null &&
+          (nextTime - current.timeInMs > 8000)) {
+        final estimatedSingingMs = (current.text.length * 120).clamp(
+          4000,
+          8000,
+        );
         endTime = current.timeInMs + estimatedSingingMs;
       }
 
@@ -190,9 +187,7 @@ class LrcParser {
 
   /// Checks if the lyrics are in LRC format (synced)
   static bool isSynced(String lyrics) {
-    return RegExp(
-      r'\[\s*\d{1,3}:\d{2}(?:[.:]\d+)?\s*\]',
-    ).hasMatch(lyrics);
+    return RegExp(r'\[\s*\d{1,3}:\d{2}(?:[.:]\d+)?\s*\]').hasMatch(lyrics);
   }
 
   /// Finds the current line index based on playback position and optional user offset.

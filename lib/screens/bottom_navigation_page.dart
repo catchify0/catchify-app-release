@@ -146,7 +146,9 @@ class _BottomNavigationPageState extends State<BottomNavigationPage> {
                                       duration: AppTokens.motionStandard,
                                       curve: Curves.easeOutCubic,
                                       child: AnimatedOpacity(
-                                        opacity: isMiniPlayerVisible ? 1.0 : 0.0,
+                                        opacity: isMiniPlayerVisible
+                                            ? 1.0
+                                            : 0.0,
                                         duration: AppTokens.motionStandard,
                                         curve: Curves.easeOutCubic,
                                         child: const Padding(

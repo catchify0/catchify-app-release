@@ -204,10 +204,8 @@ class _HomePageState extends State<HomePage> {
 
   void _refreshHomeFeed() {
     if (!mounted) return;
-    setState(() {
-      // This setting only changes local personalization sections.
-      _initFutures();
-    });
+    // This setting only changes local personalization sections.
+    setState(_initFutures);
   }
 
   void _retryHomeFeed() {
@@ -296,9 +294,7 @@ class _HomePageState extends State<HomePage> {
             ),
             const SizedBox(height: 3),
             Text(
-              DateFormat(
-                'EEEE, d MMMM',
-              ).format(DateTime.now()).toUpperCase(),
+              DateFormat('EEEE, d MMMM').format(DateTime.now()).toUpperCase(),
               style: TextStyle(
                 fontSize: 11.5,
                 fontWeight: FontWeight.w600,
@@ -476,7 +472,6 @@ class _HomePageState extends State<HomePage> {
                         color: isSelected
                             ? colorScheme.primary.withValues(alpha: 0.9)
                             : colorScheme.onSurface.withValues(alpha: 0.1),
-                        width: 1,
                       ),
                       boxShadow: isSelected
                           ? [

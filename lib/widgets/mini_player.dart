@@ -306,7 +306,8 @@ class _ArtworkWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final uriStr = metadata.artUri?.toString() ??
+    final uriStr =
+        metadata.artUri?.toString() ??
         metadata.extras?['highResImage']?.toString() ??
         metadata.extras?['image']?.toString() ??
         '';
@@ -316,36 +317,33 @@ class _ArtworkWidget extends StatelessWidget {
 
     return Padding(
       padding: const EdgeInsets.only(right: 12),
-      child: Hero(
-        tag: 'now_playing_artwork',
-        child: SizedBox(
-          width: artWidth,
-          height: artHeight,
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(MiniPlayer._artworkRadius),
-              border: Border.all(
-                color: Colors.white.withValues(alpha: 0.12),
-                width: 0.6,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.22),
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
-                ),
-              ],
+      child: SizedBox(
+        width: artWidth,
+        height: artHeight,
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(MiniPlayer._artworkRadius),
+            border: Border.all(
+              color: Colors.white.withValues(alpha: 0.12),
+              width: 0.6,
             ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(MiniPlayer._artworkRadius),
-              child: SongArtworkWidget(
-                metadata: metadata,
-                width: artWidth,
-                height: artHeight,
-                size: MiniPlayer._artworkSize,
-                errorWidgetIconSize: 24,
-                borderRadius: MiniPlayer._artworkRadius,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.22),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
               ),
+            ],
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(MiniPlayer._artworkRadius),
+            child: SongArtworkWidget(
+              metadata: metadata,
+              width: artWidth,
+              height: artHeight,
+              size: MiniPlayer._artworkSize,
+              errorWidgetIconSize: 24,
+              borderRadius: MiniPlayer._artworkRadius,
             ),
           ),
         ),

@@ -38,18 +38,20 @@ class TopResultCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final category = item['topResultCategory']?.toString() ??
+    final category =
+        item['topResultCategory']?.toString() ??
         (item['isArtist'] == true
             ? 'Artist'
             : (item['isAlbum'] == true
-                ? 'Album'
-                : (item['isVideo'] == true ? 'Video' : 'Song')));
+                  ? 'Album'
+                  : (item['isVideo'] == true ? 'Video' : 'Song')));
 
     final isArtist = category.toLowerCase() == 'artist';
     final title = item['title']?.toString() ?? item['name']?.toString() ?? '';
     final subtitle = getDisplayArtist(item, fallback: isArtist ? 'Artist' : '');
 
-    final artwork = item['highResImage']?.toString() ??
+    final artwork =
+        item['highResImage']?.toString() ??
         item['image']?.toString() ??
         item['lowResImage']?.toString();
 
@@ -66,9 +68,7 @@ class TopResultCard extends StatelessWidget {
               colorScheme.surfaceContainerLow,
             ],
           ),
-          border: Border.all(
-            color: colorScheme.primary.withValues(alpha: 0.2),
-          ),
+          border: Border.all(color: colorScheme.primary.withValues(alpha: 0.2)),
           boxShadow: [
             BoxShadow(
               color: colorScheme.shadow.withValues(alpha: 0.08),
@@ -202,24 +202,33 @@ class TopResultCard extends StatelessWidget {
     );
   }
 
-  Widget _buildArtwork(String? artwork, bool isArtist, ColorScheme colorScheme) {
+  Widget _buildArtwork(
+    String? artwork,
+    bool isArtist,
+    ColorScheme colorScheme,
+  ) {
     const size = 86.0;
     final placeholder = DecoratedBox(
-      decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerHighest,
-      ),
+      decoration: BoxDecoration(color: colorScheme.surfaceContainerHighest),
       child: SizedBox(
         width: size,
         height: size,
         child: Icon(
-          isArtist ? FluentIcons.person_24_filled : FluentIcons.music_note_2_24_filled,
+          isArtist
+              ? FluentIcons.person_24_filled
+              : FluentIcons.music_note_2_24_filled,
           color: colorScheme.onSurfaceVariant,
         ),
       ),
     );
 
     if (artwork == null || artwork.trim().isEmpty) {
-      return isArtist ? ClipOval(child: placeholder) : ClipRRect(borderRadius: BorderRadius.circular(14), child: placeholder);
+      return isArtist
+          ? ClipOval(child: placeholder)
+          : ClipRRect(
+              borderRadius: BorderRadius.circular(14),
+              child: placeholder,
+            );
     }
 
     try {
@@ -238,7 +247,12 @@ class TopResultCard extends StatelessWidget {
               child: imageWidget,
             );
     } catch (_) {
-      return isArtist ? ClipOval(child: placeholder) : ClipRRect(borderRadius: BorderRadius.circular(14), child: placeholder);
+      return isArtist
+          ? ClipOval(child: placeholder)
+          : ClipRRect(
+              borderRadius: BorderRadius.circular(14),
+              child: placeholder,
+            );
     }
   }
 }

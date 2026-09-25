@@ -150,9 +150,7 @@ class _StorageCachePageState extends State<StorageCachePage> {
     final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Storage & Cache'),
-      ),
+      appBar: AppBar(title: const Text('Storage & Cache')),
       body: SingleChildScrollView(
         padding: commonSingleChildScrollViewPadding,
         child: Column(
@@ -176,7 +174,8 @@ class _StorageCachePageState extends State<StorageCachePage> {
             CustomBar(
               context.l10n!.clearCache,
               FluentIcons.broom_24_regular,
-              description: 'Clear cached song artwork and temporary streaming chunks',
+              description:
+                  'Clear cached song artwork and temporary streaming chunks',
               borderRadius: commonCustomBarRadiusFirst,
               trailing: Text(
                 _isCalculating ? 'Calculating...' : _cacheSizeFormatted,
@@ -187,7 +186,8 @@ class _StorageCachePageState extends State<StorageCachePage> {
               ),
               onTap: () => _showConfirmationDialog(
                 context: context,
-                confirmationMessage: 'Are you sure you want to clear the cache?',
+                confirmationMessage:
+                    'Are you sure you want to clear the cache?',
                 onSubmit: _clearDiskAndMemoryCache,
               ),
             ),
@@ -197,7 +197,8 @@ class _StorageCachePageState extends State<StorageCachePage> {
                 return CustomBar(
                   'Auto-Cache Streamed Songs',
                   FluentIcons.arrow_download_24_regular,
-                  description: 'Cache audio chunks during playback for instant replay',
+                  description:
+                      'Cache audio chunks during playback for instant replay',
                   borderRadius: commonCustomBarRadiusLast,
                   trailing: SettingSwitch(
                     semanticLabel: 'Auto-Cache Streamed Songs',

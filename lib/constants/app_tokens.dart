@@ -24,16 +24,16 @@ import 'package:flutter/material.dart';
 /// Defines consistent spacing, radii, dimensions, and typography metrics.
 abstract final class AppTokens {
   // ── Spacing ──
-  static const double pagePadding = 16.0;
-  static const double wideContentMaxWidth = 1180.0;
-  static const double railBreakpoint = 720.0;
-  static const double spaciousBreakpoint = 960.0;
-  static const double cardGap = 12.0;
-  static const double sectionGap = 28.0;
-  static const double chipGap = 8.0;
-  static const double titleBottomGap = 10.0;
-  static const double rowGap = 8.0;
-  static const double itemSpacing = 12.0;
+  static const double pagePadding = 16;
+  static const double wideContentMaxWidth = 1180;
+  static const double railBreakpoint = 720;
+  static const double spaciousBreakpoint = 960;
+  static const double cardGap = 12;
+  static const double sectionGap = 28;
+  static const double chipGap = 8;
+  static const double titleBottomGap = 10;
+  static const double rowGap = 8;
+  static const double itemSpacing = 12;
 
   // ── Motion ──
   static const Duration motionFast = Duration(milliseconds: 160);
@@ -41,20 +41,20 @@ abstract final class AppTokens {
   static const Duration shimmerCycle = Duration(milliseconds: 1450);
 
   // ── Optics & Glass ──
-  static const double blurSubtle = 12.0;
-  static const double blurStandard = 18.0;
-  static const double blurProminent = 28.0;
+  static const double blurSubtle = 12;
+  static const double blurStandard = 18;
+  static const double blurProminent = 28;
   static const double borderSubtle = 0.5;
-  static const double borderRegular = 1.0;
+  static const double borderRegular = 1;
 
   // ── Radii ──
-  static const double radiusSmall = 8.0;
-  static const double radiusControl = 10.0;
-  static const double radiusMedium = 12.0;
-  static const double radiusCard = 14.0;
-  static const double radiusLarge = 16.0;
-  static const double radiusSheet = 20.0;
-  static const double radiusPill = 999.0;
+  static const double radiusSmall = 8;
+  static const double radiusControl = 10;
+  static const double radiusMedium = 12;
+  static const double radiusCard = 14;
+  static const double radiusLarge = 16;
+  static const double radiusSheet = 20;
+  static const double radiusPill = 999;
 
   static final BorderRadius borderRadiusSmall = BorderRadius.circular(
     radiusSmall,
@@ -79,31 +79,31 @@ abstract final class AppTokens {
   );
 
   // ── Card Dimensions ──
-  static const double songCardSize = 140.0;
-  static const double albumCardSize = 140.0;
-  static const double playlistCardSize = 150.0;
-  static const double artistAvatarSize = 88.0;
-  static const double artistCardWidth = 104.0;
-  static const double songRowArtworkSize = 52.0;
-  static const double miniPlayerHeight = 66.0;
-  static const double miniPlayerTotalHeight = 84.0;
-  static const double miniPlayerArtworkSize = 48.0;
+  static const double songCardSize = 140;
+  static const double albumCardSize = 140;
+  static const double playlistCardSize = 150;
+  static const double artistAvatarSize = 88;
+  static const double artistCardWidth = 104;
+  static const double songRowArtworkSize = 52;
+  static const double miniPlayerHeight = 66;
+  static const double miniPlayerTotalHeight = 84;
+  static const double miniPlayerArtworkSize = 48;
 
   // ── Control & Button Dimensions ──
-  static const double chipHeight = 34.0;
-  static const double buttonHeight = 44.0;
-  static const double buttonHeightSmall = 36.0;
-  static const double iconButtonSize = 40.0;
-  static const double settingIconContainerSize = 40.0;
+  static const double chipHeight = 34;
+  static const double buttonHeight = 44;
+  static const double buttonHeightSmall = 36;
+  static const double iconButtonSize = 40;
+  static const double settingIconContainerSize = 40;
 
   // ── Icon Sizes ──
-  static const double iconToolbar = 24.0;
-  static const double iconNav = 24.0;
-  static const double iconInline = 20.0;
-  static const double iconSmall = 16.0;
-  static const double iconLarge = 28.0;
-  static const double minInteractiveSize = 44.0;
-  static const double focusRingWidth = 2.0;
+  static const double iconToolbar = 24;
+  static const double iconNav = 24;
+  static const double iconInline = 20;
+  static const double iconSmall = 16;
+  static const double iconLarge = 28;
+  static const double minInteractiveSize = 44;
+  static const double focusRingWidth = 2;
 
   // ── Edge Insets ──
   static const EdgeInsets screenPadding = EdgeInsets.symmetric(
@@ -121,5 +121,5 @@ abstract final class AppTokens {
     pagePadding,
     titleBottomGap,
   );
-  static const EdgeInsets cardPadding = EdgeInsets.all(12.0);
+  static const EdgeInsets cardPadding = EdgeInsets.all(12);
 }

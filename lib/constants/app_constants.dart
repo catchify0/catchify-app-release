@@ -24,7 +24,9 @@ import 'package:catchify/constants/app_tokens.dart';
 
 const recommendedCubesNumber = 8;
 
-const commonSingleChildScrollViewPadding = EdgeInsets.symmetric(horizontal: AppTokens.pagePadding);
+const commonSingleChildScrollViewPadding = EdgeInsets.symmetric(
+  horizontal: AppTokens.pagePadding,
+);
 var commonBarRadius = BorderRadius.circular(AppTokens.radiusLarge);
 var commonBarTitleStyle = const TextStyle(
   fontSize: 15,
@@ -32,7 +34,9 @@ var commonBarTitleStyle = const TextStyle(
 );
 const commonMiniArtworkRadius = AppTokens.radiusSmall;
 
-const commonCustomBarRadius = BorderRadius.all(Radius.circular(AppTokens.radiusLarge));
+const commonCustomBarRadius = BorderRadius.all(
+  Radius.circular(AppTokens.radiusLarge),
+);
 const commonCustomBarRadiusFirst = BorderRadius.vertical(
   top: Radius.circular(AppTokens.radiusLarge),
 );
@@ -51,4 +55,3 @@ const commonBarContentPadding = EdgeInsets.symmetric(
 );
 
 const commonPlaylistArtworkDivision = 1.75;
-

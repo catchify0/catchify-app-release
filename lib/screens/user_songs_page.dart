@@ -415,9 +415,7 @@ class _UserSongsPageState extends State<UserSongsPage> {
             ? PlaylistUtils.findSongIndexByYtid(playlist, songId)
             : -1;
         if (fullIndex == -1) {
-          logger.log(
-            'Warning: Song $songId not found in full song list',
-          );
+          logger.log('Warning: Song $songId not found in full song list');
         }
         audioHandler.playPlaylistSong(
           playlist: playlist,
@@ -494,7 +492,11 @@ class _UserSongsPageState extends State<UserSongsPage> {
         showToast(context, _localScanMessage(report));
       }
     } catch (e, stackTrace) {
-      logger.log('Error refreshing local songs', error: e, stackTrace: stackTrace);
+      logger.log(
+        'Error refreshing local songs',
+        error: e,
+        stackTrace: stackTrace,
+      );
       if (mounted) {
         showToast(context, context.l10n!.error);
       }

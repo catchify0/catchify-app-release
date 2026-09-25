@@ -248,9 +248,7 @@ class HomeFeedComposer {
     final deduped = <Map<String, dynamic>>[];
 
     for (final item in section.contents) {
-      final normalizedItem = item.map(
-        (key, value) => MapEntry(key.toString(), value),
-      );
+      final normalizedItem = Map<String, dynamic>.from(item);
       final id = _extractItemId(normalizedItem);
       if (id.isNotEmpty) {
         if (seenIds.add(id)) {

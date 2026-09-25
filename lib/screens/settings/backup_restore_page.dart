@@ -128,7 +128,9 @@ class _BackupRestorePageState extends State<BackupRestorePage> {
           builder: (context, setState) {
             final isTa = Localizations.localeOf(context).languageCode == 'ta';
             return AlertDialog(
-              title: Text(isTa ? 'உள்ளக இசை கோப்புறைகள்' : 'Local music folders'),
+              title: Text(
+                isTa ? 'உள்ளக இசை கோப்புறைகள்' : 'Local music folders',
+              ),
               content: SizedBox(
                 width: double.maxFinite,
                 child: folders.isEmpty
@@ -188,7 +190,9 @@ class _BackupRestorePageState extends State<BackupRestorePage> {
                   onPressed: folders.isEmpty
                       ? null
                       : () async {
-                          final hasPermission = await _ensureAudioPermission(context);
+                          final hasPermission = await _ensureAudioPermission(
+                            context,
+                          );
                           if (!hasPermission) return;
                           await _rescanLocalMusicFolders(context, folders);
                         },
@@ -217,7 +221,11 @@ class _BackupRestorePageState extends State<BackupRestorePage> {
 
   Future<void> _saveLocalMusicFolders(List<String> folders) async {
     localMusicFolders = List<String>.from(folders);
-    await addOrUpdateData('userNoBackup', 'localMusicFolders', localMusicFolders);
+    await addOrUpdateData(
+      'userNoBackup',
+      'localMusicFolders',
+      localMusicFolders,
+    );
   }
 
   Future<void> _rescanLocalMusicFolders(
@@ -302,14 +310,16 @@ class _BackupRestorePageState extends State<BackupRestorePage> {
             CustomBar(
               context.l10n!.backupUserData,
               FluentIcons.cloud_sync_24_regular,
-              description: 'Export all playlists, favorites, and settings to a file',
+              description:
+                  'Export all playlists, favorites, and settings to a file',
               borderRadius: commonCustomBarRadiusFirst,
               onTap: () => _backupUserData(context),
             ),
             CustomBar(
               context.l10n!.restoreUserData,
               FluentIcons.cloud_add_24_regular,
-              description: 'Import and restore your data from an existing backup',
+              description:
+                  'Import and restore your data from an existing backup',
               borderRadius: commonCustomBarRadiusLast,
               onTap: () => _restoreUserData(context),
             ),

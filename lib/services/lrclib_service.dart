@@ -66,7 +66,8 @@ class LrcLibService {
 
   /// Standard User-Agent compliant with LRCLIB API guidelines
   static const Map<String, String> _headers = {
-    'User-Agent': 'Catchify/1.0 (https://github.com/catchify0/catchify0.github.io)',
+    'User-Agent':
+        'Catchify/1.0 (https://github.com/catchify0/catchify0.github.io)',
   };
 
   /// In-memory LRU cache for fetched lyrics to prevent repeat network calls
@@ -92,7 +93,10 @@ class LrcLibService {
     RegExp(r'\bjunglee\b', caseSensitive: false),
     RegExp(r'\bsun\s*tv\b|\bstar\s*vijay\b', caseSensitive: false),
     RegExp(r'\bvevo\b', caseSensitive: false),
-    RegExp(r'\brecords\b|\bofficial\b|\btopic\b|\bmusic\s*india\b', caseSensitive: false),
+    RegExp(
+      r'\brecords\b|\bofficial\b|\btopic\b|\bmusic\s*india\b',
+      caseSensitive: false,
+    ),
   ];
 
   static bool isChannelLabel(String artist) {
@@ -105,14 +109,34 @@ class LrcLibService {
 
   // Common title cleanup patterns
   static final List<RegExp> _titleCleanupPatterns = [
-    RegExp(r'\s*\(.*?(?:official|audio|video|lyrics|lyric|lyrical|feat|ft|remix|hd|4k|from|full song|original|tamil|telugu|hindi|malayalam|kannada).*?\)', caseSensitive: false),
-    RegExp(r'\s*\[.*?(?:official|audio|video|lyrics|lyric|lyrical|feat|ft|remix|hd|4k|from|full song|original|tamil|telugu|hindi|malayalam|kannada).*?\]', caseSensitive: false),
-    RegExp(r'\s*-\s*(?:official|audio|video|lyrics|lyric|lyrical|hd|4k|music video|lyric video|video song|full song).*$', caseSensitive: false),
-    RegExp(r'\s*(?:official video|music video|lyric video|lyrical video|video song|audio song|full video|full song|lyric|lyrics)', caseSensitive: false),
+    RegExp(
+      r'\s*\(.*?(?:official|audio|video|lyrics|lyric|lyrical|feat|ft|remix|hd|4k|from|full song|original|tamil|telugu|hindi|malayalam|kannada).*?\)',
+      caseSensitive: false,
+    ),
+    RegExp(
+      r'\s*\[.*?(?:official|audio|video|lyrics|lyric|lyrical|feat|ft|remix|hd|4k|from|full song|original|tamil|telugu|hindi|malayalam|kannada).*?\]',
+      caseSensitive: false,
+    ),
+    RegExp(
+      r'\s*-\s*(?:official|audio|video|lyrics|lyric|lyrical|hd|4k|music video|lyric video|video song|full song).*$',
+      caseSensitive: false,
+    ),
+    RegExp(
+      r'\s*(?:official video|music video|lyric video|lyrical video|video song|audio song|full video|full song|lyric|lyrics)',
+      caseSensitive: false,
+    ),
   ];
 
   // Common artist separation patterns
-  static final List<String> _artistSeparators = [' feat.', ' ft.', ' feat', ' ft', ' & ', ', ', ' x '];
+  static final List<String> _artistSeparators = [
+    ' feat.',
+    ' ft.',
+    ' feat',
+    ' ft',
+    ' & ',
+    ', ',
+    ' x ',
+  ];
 
   /// Clean the title for better search results
   static String _cleanTitle(String title) {
@@ -120,7 +144,9 @@ class LrcLibService {
 
     // If title contains '|', '•', or '~' (common YouTube dividers for cast/label/producer),
     // the song name is almost always the first segment:
-    if (cleaned.contains('|') || cleaned.contains('•') || cleaned.contains('~')) {
+    if (cleaned.contains('|') ||
+        cleaned.contains('•') ||
+        cleaned.contains('~')) {
       final seg = cleaned.split(RegExp('[|•~]')).first.trim();
       if (seg.isNotEmpty) cleaned = seg;
     }
@@ -150,7 +176,8 @@ class LrcLibService {
       if (parts.length >= 2) {
         final left = parts[0].trim();
         final right = parts.sublist(1).join(' - ').trim();
-        if (right.isNotEmpty && !candidates.contains(right)) candidates.add(right);
+        if (right.isNotEmpty && !candidates.contains(right))
+          candidates.add(right);
         if (left.isNotEmpty && !candidates.contains(left)) candidates.add(left);
         final merged = '$left $right';
         if (!candidates.contains(merged)) candidates.add(merged);
@@ -170,9 +197,18 @@ class LrcLibService {
         break;
       }
     }
-    cleaned = cleaned.replaceAll(RegExp(r'\s*-\s*topic$', caseSensitive: false), '');
-    cleaned = cleaned.replaceAll(RegExp(r'\s+topic$', caseSensitive: false), '');
-    cleaned = cleaned.replaceAll(RegExp(r'\s+official$', caseSensitive: false), '');
+    cleaned = cleaned.replaceAll(
+      RegExp(r'\s*-\s*topic$', caseSensitive: false),
+      '',
+    );
+    cleaned = cleaned.replaceAll(
+      RegExp(r'\s+topic$', caseSensitive: false),
+      '',
+    );
+    cleaned = cleaned.replaceAll(
+      RegExp(r'\s+official$', caseSensitive: false),
+      '',
+    );
     cleaned = cleaned.replaceAll(RegExp(r'vevo$', caseSensitive: false), '');
     return cleaned.trim();
   }
@@ -210,7 +246,9 @@ class LrcLibService {
             return track;
           }
         }
-      } else if (response.statusCode == 404 && duration != null && duration > 0) {
+      } else if (response.statusCode == 404 &&
+          duration != null &&
+          duration > 0) {
         // LRCLIB requires duration within +/- 2s. If YouTube audio has video intro/outro silence
         // or slight length variance, retry without duration and verify closeness.
         final retryParams = <String, String>{
@@ -230,7 +268,8 @@ class LrcLibService {
           if (jsonData is Map<String, dynamic>) {
             final track = Track.fromJson(jsonData);
             // Verify duration difference is reasonable (<= 18 seconds)
-            if (track.duration <= 0 || (track.duration - duration).abs() <= 18) {
+            if (track.duration <= 0 ||
+                (track.duration - duration).abs() <= 18) {
               if (track.syncedLyrics != null || track.plainLyrics != null) {
                 return track;
               }
@@ -253,7 +292,9 @@ class LrcLibService {
     final words = cleanT.split(' ').where((w) => w.trim().isNotEmpty).toList();
     final first1Word = words.isNotEmpty ? words.first : '';
     final first2Words = words.length >= 2 ? '${words[0]} ${words[1]}' : cleanT;
-    final first3Words = words.length >= 3 ? '${words[0]} ${words[1]} ${words[2]}' : cleanT;
+    final first3Words = words.length >= 3
+        ? '${words[0]} ${words[1]} ${words[2]}'
+        : cleanT;
 
     final queries = <String>[];
 
@@ -274,7 +315,8 @@ class LrcLibService {
 
     // 3. First 2-3 words of title
     if (first2Words.isNotEmpty) queries.add(first2Words);
-    if (first3Words.isNotEmpty && first3Words != first2Words) queries.add(first3Words);
+    if (first3Words.isNotEmpty && first3Words != first2Words)
+      queries.add(first3Words);
 
     // 4. First word if single word title
     if (first1Word.length >= 4 && !queries.contains(first1Word)) {
@@ -304,10 +346,14 @@ class LrcLibService {
       final uri = Uri.parse(_searchEndpoint);
       final queryParams = <String, String>{};
 
-      if (query != null && query.trim().isNotEmpty) queryParams['q'] = query.trim();
-      if (trackName != null && trackName.trim().isNotEmpty) queryParams['track_name'] = trackName.trim();
-      if (artistName != null && artistName.trim().isNotEmpty) queryParams['artist_name'] = artistName.trim();
-      if (albumName != null && albumName.trim().isNotEmpty) queryParams['album_name'] = albumName.trim();
+      if (query != null && query.trim().isNotEmpty)
+        queryParams['q'] = query.trim();
+      if (trackName != null && trackName.trim().isNotEmpty)
+        queryParams['track_name'] = trackName.trim();
+      if (artistName != null && artistName.trim().isNotEmpty)
+        queryParams['artist_name'] = artistName.trim();
+      if (albumName != null && albumName.trim().isNotEmpty)
+        queryParams['album_name'] = albumName.trim();
 
       final uriWithQuery = uri.replace(queryParameters: queryParams);
       final response = await http
@@ -341,10 +387,16 @@ class LrcLibService {
   }
 
   /// Score how well a track candidate matches the requested song and duration
-  static double _scoreTrack(Track track, String searchTitle, String searchArtist, int? targetDuration) {
+  static double _scoreTrack(
+    Track track,
+    String searchTitle,
+    String searchArtist,
+    int? targetDuration,
+  ) {
     var score = 0.0;
 
-    final hasSynced = track.syncedLyrics != null && track.syncedLyrics!.isNotEmpty;
+    final hasSynced =
+        track.syncedLyrics != null && track.syncedLyrics!.isNotEmpty;
     final hasPlain = track.plainLyrics != null && track.plainLyrics!.isNotEmpty;
 
     // Synced lyrics are overwhelmingly prioritized over plain lyrics
@@ -424,7 +476,9 @@ class LrcLibService {
             duration: duration,
             albumName: album,
           );
-          if (exact != null && exact.syncedLyrics != null && exact.syncedLyrics!.isNotEmpty) {
+          if (exact != null &&
+              exact.syncedLyrics != null &&
+              exact.syncedLyrics!.isNotEmpty) {
             return cacheAndReturn(exact.syncedLyrics);
           }
         }
@@ -436,7 +490,9 @@ class LrcLibService {
             artistName: cand,
             duration: duration,
           );
-          if (inverted != null && inverted.syncedLyrics != null && inverted.syncedLyrics!.isNotEmpty) {
+          if (inverted != null &&
+              inverted.syncedLyrics != null &&
+              inverted.syncedLyrics!.isNotEmpty) {
             return cacheAndReturn(inverted.syncedLyrics);
           }
         }
@@ -460,7 +516,9 @@ class LrcLibService {
           if (candidatePool.isNotEmpty) {
             if (duration != null && duration > 0) {
               final hasCloseSynced = candidatePool.values.any(
-                (t) => t.syncedLyrics != null && (t.duration - duration).abs() <= 6,
+                (t) =>
+                    t.syncedLyrics != null &&
+                    (t.duration - duration).abs() <= 6,
               );
               if (hasCloseSynced) break;
             } else {
@@ -483,7 +541,9 @@ class LrcLibService {
               candidatePool[t.id] = t;
             }
           }
-          if (candidatePool.values.any((t) => t.syncedLyrics != null && t.syncedLyrics!.isNotEmpty)) {
+          if (candidatePool.values.any(
+            (t) => t.syncedLyrics != null && t.syncedLyrics!.isNotEmpty,
+          )) {
             break;
           }
         }
@@ -503,10 +563,14 @@ class LrcLibService {
               candidatePool[t.id] = t;
             }
           }
-          if (candidatePool.values.any((t) => t.syncedLyrics != null && t.syncedLyrics!.isNotEmpty)) {
+          if (candidatePool.values.any(
+            (t) => t.syncedLyrics != null && t.syncedLyrics!.isNotEmpty,
+          )) {
             if (duration != null && duration > 0) {
               final hasCloseSynced = candidatePool.values.any(
-                (t) => t.syncedLyrics != null && (t.duration - duration).abs() <= 12,
+                (t) =>
+                    t.syncedLyrics != null &&
+                    (t.duration - duration).abs() <= 12,
               );
               if (hasCloseSynced) break;
             } else {
@@ -525,8 +589,18 @@ class LrcLibService {
 
       // Rank all candidates with multi-factor scoring: synced lyrics heavily favored
       pool.sort((a, b) {
-        final scoreA = _scoreTrack(a, cleanSearchTitle, effectiveArtist, duration);
-        final scoreB = _scoreTrack(b, cleanSearchTitle, effectiveArtist, duration);
+        final scoreA = _scoreTrack(
+          a,
+          cleanSearchTitle,
+          effectiveArtist,
+          duration,
+        );
+        final scoreB = _scoreTrack(
+          b,
+          cleanSearchTitle,
+          effectiveArtist,
+          duration,
+        );
         return scoreB.compareTo(scoreA);
       });
 
@@ -545,8 +619,14 @@ class LrcLibService {
     if (normA == normB) return 1;
     if (normA.isEmpty || normB.isEmpty) return 0;
 
-    final wordsA = normA.split(RegExp(r'\s+')).where((w) => w.isNotEmpty).toSet();
-    final wordsB = normB.split(RegExp(r'\s+')).where((w) => w.isNotEmpty).toSet();
+    final wordsA = normA
+        .split(RegExp(r'\s+'))
+        .where((w) => w.isNotEmpty)
+        .toSet();
+    final wordsB = normB
+        .split(RegExp(r'\s+'))
+        .where((w) => w.isNotEmpty)
+        .toSet();
     if (wordsA.isEmpty || wordsB.isEmpty) return 0;
 
     // If one set of words is entirely contained in the other (e.g. artist inside multi-artist string)

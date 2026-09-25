@@ -85,7 +85,11 @@ class ArtworkService {
       final dir = await _getCacheDirectory();
       if (!await dir.exists()) return;
 
-      final entities = await dir.list().where((e) => e is File).cast<File>().toList();
+      final entities = await dir
+          .list()
+          .where((e) => e is File)
+          .cast<File>()
+          .toList();
       var totalSize = 0;
       final fileStats = <({File file, int size, DateTime modified})>[];
 
@@ -171,8 +175,9 @@ class ArtworkService {
     void Function(Uri squareUri)? onSquareReady,
     int targetResolution = 1080,
   }) {
-    final rawHighRes =
-        (song['highResImage'] ?? song['image'] ?? '').toString().trim();
+    final rawHighRes = (song['highResImage'] ?? song['image'] ?? '')
+        .toString()
+        .trim();
 
     // 1. Offline artwork path provided and valid
     if (offlineArtworkPath != null && offlineArtworkPath.isNotEmpty) {

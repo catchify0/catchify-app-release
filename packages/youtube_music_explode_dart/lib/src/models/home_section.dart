@@ -18,24 +18,9 @@
  *     please visit: https://github.com/catchify0/catchify0.github.io
  */
 
-enum HomeContentType {
-  songs,
-  albums,
-  artists,
-  playlists,
-  mixed,
-  unknown,
-}
+enum HomeContentType { songs, albums, artists, playlists, mixed, unknown }
 
 class HomeSection {
-  final String title;
-  final String? subtitle;
-  final HomeContentType type;
-  final List<Map<String, dynamic>> contents;
-  final bool isChunkedSongs;
-  final String? browseId;
-  final String? params;
-
   const HomeSection({
     required this.title,
     this.subtitle,
@@ -45,21 +30,6 @@ class HomeSection {
     this.browseId,
     this.params,
   });
-
-  bool get isEmpty => contents.isEmpty;
-  bool get isNotEmpty => contents.isNotEmpty;
-
-  Map<String, dynamic> toJson() {
-    return {
-      'title': title,
-      if (subtitle != null) 'subtitle': subtitle,
-      'type': type.name,
-      'contents': contents,
-      'isChunkedSongs': isChunkedSongs,
-      if (browseId != null) 'browseId': browseId,
-      if (params != null) 'params': params,
-    };
-  }
 
   factory HomeSection.fromJson(Map<dynamic, dynamic> json) {
     final typeStr = json['type']?.toString();
@@ -87,5 +57,28 @@ class HomeSection {
       browseId: json['browseId']?.toString(),
       params: json['params']?.toString(),
     );
+  }
+
+  final String title;
+  final String? subtitle;
+  final HomeContentType type;
+  final List<Map<String, dynamic>> contents;
+  final bool isChunkedSongs;
+  final String? browseId;
+  final String? params;
+
+  bool get isEmpty => contents.isEmpty;
+  bool get isNotEmpty => contents.isNotEmpty;
+
+  Map<String, dynamic> toJson() {
+    return {
+      'title': title,
+      if (subtitle != null) 'subtitle': subtitle,
+      'type': type.name,
+      'contents': contents,
+      'isChunkedSongs': isChunkedSongs,
+      if (browseId != null) 'browseId': browseId,
+      if (params != null) 'params': params,
+    };
   }
 }

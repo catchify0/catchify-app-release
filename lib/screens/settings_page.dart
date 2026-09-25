@@ -68,10 +68,7 @@ class _SettingsPageState extends State<SettingsPage> {
             getLanguageDisplayName(context, language),
             () {
               addOrUpdateData<String>('settings', 'languageCode', language);
-              Catchify.updateAppState(
-                context,
-                newLocale: Locale(language),
-              );
+              Catchify.updateAppState(context, newLocale: Locale(language));
               setState(() {});
               Navigator.pop(context);
             },
@@ -135,10 +132,7 @@ class _SettingsPageState extends State<SettingsPage> {
               setContentCountryPreference(country.code);
               setState(() {});
               Navigator.pop(context);
-              showToast(
-                context,
-                '${country.flag} ${country.name} selected',
-              );
+              showToast(context, '${country.flag} ${country.name} selected');
             },
             isSelected,
             icon: FluentIcons.globe_24_regular,
@@ -184,9 +178,13 @@ class _SettingsPageState extends State<SettingsPage> {
       playerStyleLabel = 'Frosted';
     }
 
-    final currentAppLang = getLanguageDisplayName(context, languageSetting.languageCode);
+    final currentAppLang = getLanguageDisplayName(
+      context,
+      languageSetting.languageCode,
+    );
     final currentMusicLang =
-        artistLanguageCodeToName[contentLanguagePreference ?? 'en'] ?? 'English';
+        artistLanguageCodeToName[contentLanguagePreference ?? 'en'] ??
+        'English';
     final currentCountry = getCountryByCode(contentCountryPreference);
 
     return Scaffold(
@@ -274,7 +272,6 @@ class _SettingsPageState extends State<SettingsPage> {
               'Music Language',
               FluentIcons.music_note_2_24_filled,
               description: 'Content preference for home feed & discovery',
-              borderRadius: commonCustomBarRadiusMiddle,
               trailing: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -299,7 +296,8 @@ class _SettingsPageState extends State<SettingsPage> {
             CustomBar(
               'Music Region / Country',
               FluentIcons.globe_24_filled,
-              description: 'Region for trending charts, releases & recommendations',
+              description:
+                  'Region for trending charts, releases & recommendations',
               borderRadius: commonCustomBarRadiusLast,
               trailing: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -416,7 +414,8 @@ class _SettingsPageState extends State<SettingsPage> {
             CustomBar(
               context.l10n?.backupAndRestore ?? 'Backup & Restore',
               FluentIcons.cloud_sync_24_filled,
-              description: 'Export/import data, Spotify playlists & local folders',
+              description:
+                  'Export/import data, Spotify playlists & local folders',
               borderRadius: commonCustomBarRadiusLast,
               trailing: Icon(
                 FluentIcons.chevron_right_24_regular,

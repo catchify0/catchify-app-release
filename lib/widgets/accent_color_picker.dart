@@ -36,8 +36,9 @@ class AccentColorPickerSheet extends StatelessWidget {
   final Color initialColor;
   final ValueChanged<Color> onColorSelected;
 
-  bool get _isCustomActive =>
-      !curatedAccentColors.any((item) => item.color.toARGB32() == initialColor.toARGB32());
+  bool get _isCustomActive => !curatedAccentColors.any(
+    (item) => item.color.toARGB32() == initialColor.toARGB32(),
+  );
 
   void _openRoundedColorWheel(BuildContext context) {
     showDialog(
@@ -65,11 +66,7 @@ class AccentColorPickerSheet extends StatelessWidget {
           // ─── Header (No Hex Code, purely clean) ───────────────────────────
           Row(
             children: [
-              Icon(
-                FluentIcons.color_24_filled,
-                color: initialColor,
-                size: 22,
-              ),
+              Icon(FluentIcons.color_24_filled, color: initialColor, size: 22),
               const SizedBox(width: 8),
               Text(
                 'Accent color',
@@ -146,7 +143,9 @@ class AccentColorPickerSheet extends StatelessWidget {
               decoration: BoxDecoration(
                 color: _isCustomActive
                     ? initialColor.withValues(alpha: 0.15)
-                    : colorScheme.surfaceContainerHighest.withValues(alpha: 0.45),
+                    : colorScheme.surfaceContainerHighest.withValues(
+                        alpha: 0.45,
+                      ),
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
                   color: _isCustomActive
@@ -281,12 +280,18 @@ class _RoundedColorWheelDialogState extends State<_RoundedColorWheelDialog> {
             width: _wheelDiameter,
             height: _wheelDiameter,
             child: GestureDetector(
-              onPanStart: (details) =>
-                  _updateColorFromOffset(details.localPosition, _wheelDiameter / 2),
-              onPanUpdate: (details) =>
-                  _updateColorFromOffset(details.localPosition, _wheelDiameter / 2),
-              onTapDown: (details) =>
-                  _updateColorFromOffset(details.localPosition, _wheelDiameter / 2),
+              onPanStart: (details) => _updateColorFromOffset(
+                details.localPosition,
+                _wheelDiameter / 2,
+              ),
+              onPanUpdate: (details) => _updateColorFromOffset(
+                details.localPosition,
+                _wheelDiameter / 2,
+              ),
+              onTapDown: (details) => _updateColorFromOffset(
+                details.localPosition,
+                _wheelDiameter / 2,
+              ),
               child: CustomPaint(
                 painter: _ColorWheelPainter(
                   thumbAngle: _angle,
@@ -368,7 +373,9 @@ class _ColorWheelPainter extends CustomPainter {
     );
 
     final huePaint = Paint()
-      ..shader = sweepGradient.createShader(Rect.fromCircle(center: center, radius: radius))
+      ..shader = sweepGradient.createShader(
+        Rect.fromCircle(center: center, radius: radius),
+      )
       ..style = PaintingStyle.fill;
 
     canvas.drawCircle(center, radius, huePaint);
@@ -376,10 +383,7 @@ class _ColorWheelPainter extends CustomPainter {
     // 2. Radial gradient overlay (center white, edge transparent)
     final radialPaint = Paint()
       ..shader = RadialGradient(
-        colors: [
-          Colors.white,
-          Colors.white.withValues(alpha: 0),
-        ],
+        colors: [Colors.white, Colors.white.withValues(alpha: 0)],
       ).createShader(Rect.fromCircle(center: center, radius: radius))
       ..style = PaintingStyle.fill;
 

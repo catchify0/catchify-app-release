@@ -30,8 +30,7 @@ import 'package:catchify/utilities/queue_entry_utils.dart';
 Map mediaItemToMap(MediaItem mediaItem) {
   final extras = mediaItem.extras;
   final ytid = extras?['ytid']?.toString().trim();
-  final canonicalId =
-      ytid != null && ytid.isNotEmpty ? ytid : mediaItem.id;
+  final canonicalId = ytid != null && ytid.isNotEmpty ? ytid : mediaItem.id;
   final artworkPath = extras?['artworkPath']?.toString();
   return {
     'id': canonicalId,
@@ -64,12 +63,10 @@ MediaItem mapToMediaItem(
       : <String, dynamic>{};
   final isOffline = offlineSong.isNotEmpty;
 
-  final storedArtworkPath =
-      isOffline ? offlineSong['artworkPath']?.toString() : null;
-  final offlineArtworkPath = resolveOfflineArtworkPath(
-    ytid,
-    storedArtworkPath,
-  );
+  final storedArtworkPath = isOffline
+      ? offlineSong['artworkPath']?.toString()
+      : null;
+  final offlineArtworkPath = resolveOfflineArtworkPath(ytid, storedArtworkPath);
 
   final artUri = ArtworkService.instance.resolveArtUri(
     song,
@@ -115,8 +112,7 @@ String? resolveOfflineArtworkPath(String? ytid, String? storedPath) {
 
   final candidates = <String>[
     if (storedPath != null && storedPath.isNotEmpty) storedPath,
-    if (_canonicalArtworkPath(ytid) case final canonicalPath?)
-      canonicalPath,
+    if (_canonicalArtworkPath(ytid) case final canonicalPath?) canonicalPath,
   ];
   for (final path in candidates) {
     final file = File(path);

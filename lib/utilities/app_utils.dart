@@ -72,7 +72,8 @@ String formatArtistName(dynamic value) {
     final names = <String>[];
     for (final item in value) {
       if (item is Map) {
-        final name = item['name']?.toString().trim() ??
+        final name =
+            item['name']?.toString().trim() ??
             item['title']?.toString().trim() ??
             item['artist']?.toString().trim() ??
             '';
@@ -93,7 +94,8 @@ String formatArtistName(dynamic value) {
   }
 
   if (value is Map) {
-    final name = value['name']?.toString().trim() ??
+    final name =
+        value['name']?.toString().trim() ??
         value['title']?.toString().trim() ??
         value['artist']?.toString().trim() ??
         '';
@@ -110,7 +112,9 @@ String formatArtistName(dynamic value) {
     // Check if the string is a stringified list or map representation:
     // e.g. "[{name: Anirudh Ravichander, id: ...}]" or "[{\"name\": \"Anirudh\"}]"
     if ((trimmed.startsWith('[{') || trimmed.startsWith('{')) &&
-        (trimmed.contains('name:') || trimmed.contains('"name"') || trimmed.contains("'name'"))) {
+        (trimmed.contains('name:') ||
+            trimmed.contains('"name"') ||
+            trimmed.contains("'name'"))) {
       final matches = RegExp(r'''['"]?name['"]?\s*:\s*([^,}\]]+)''')
           .allMatches(trimmed)
           .map((m) {
@@ -166,7 +170,6 @@ String getDisplayArtist(Map map, {String fallback = ''}) {
   return fallback;
 }
 
-
 /// Validates if a URL is a YouTube playlist URL
 bool isYoutubePlaylistUrl(String url) {
   return _youtubePlaylistRegExp.hasMatch(url);
@@ -221,9 +224,9 @@ String formatMonthPeriodLabel(Locale locale, String monthKey) {
   final month = int.tryParse(parts[1]);
   if (year == null || month == null) return monthKey;
 
-  final label = DateFormat.yMMMM(locale.toString()).format(
-    DateTime(year, month),
-  );
+  final label = DateFormat.yMMMM(
+    locale.toString(),
+  ).format(DateTime(year, month));
   return label.isEmpty
       ? monthKey
       : '${label[0].toUpperCase()}${label.substring(1)}';

@@ -48,10 +48,14 @@ class SongCard extends StatelessWidget {
     final title = song['title']?.toString() ?? '';
     final artist = getDisplayArtist(song);
 
-    final rawUrl = (song['highResImage'] ?? song['image'] ?? song['lowResImage'] ?? '').toString();
+    final rawUrl =
+        (song['highResImage'] ?? song['image'] ?? song['lowResImage'] ?? '')
+            .toString();
     final isHorizontal = ArtworkService.isYouTubeThumbnailUrl(rawUrl);
     final cardWidth = isHorizontal ? 180.0 : size;
-    final artworkHeight = isHorizontal ? (180.0 * 9 / 16).roundToDouble() : size;
+    final artworkHeight = isHorizontal
+        ? (180.0 * 9 / 16).roundToDouble()
+        : size;
 
     final semanticLabel = artist.isNotEmpty ? '$title, by $artist' : title;
 

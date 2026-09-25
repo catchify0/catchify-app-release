@@ -66,7 +66,8 @@ class _NowPlayingArtworkState extends State<NowPlayingArtwork> {
   @override
   void didUpdateWidget(NowPlayingArtwork oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.metadata.artUri != widget.metadata.artUri) {
+    if (oldWidget.metadata.artUri != widget.metadata.artUri ||
+        oldWidget.metadata.id != widget.metadata.id) {
       _checkAspectRatio();
     }
   }
@@ -78,7 +79,8 @@ class _NowPlayingArtworkState extends State<NowPlayingArtwork> {
   }
 
   void _checkAspectRatio() {
-    final uriStr = widget.metadata.artUri?.toString() ??
+    final uriStr =
+        widget.metadata.artUri?.toString() ??
         widget.metadata.extras?['highResImage']?.toString() ??
         widget.metadata.extras?['image']?.toString() ??
         '';
@@ -87,19 +89,19 @@ class _NowPlayingArtworkState extends State<NowPlayingArtwork> {
     _lastResolvedUri = uriStr;
 
     if (uriStr.isEmpty) {
-      _artworkAspectRatio = 1.0;
+      _artworkAspectRatio = 1;
       return;
     }
 
     // Google User Content artwork is always 1:1 square
     if (ArtworkService.isGoogleArtworkUrl(uriStr)) {
-      _artworkAspectRatio = 1.0;
+      _artworkAspectRatio = 1;
       return;
     }
 
     // YouTube thumbnails are standard 16:9 horizontal
     if (ArtworkService.isYouTubeThumbnailUrl(uriStr)) {
-      _artworkAspectRatio = 16.0 / 9.0;
+      _artworkAspectRatio = 16 / 9;
       return;
     }
 
@@ -118,22 +120,24 @@ class _NowPlayingArtworkState extends State<NowPlayingArtwork> {
     }
 
     if (provider != null) {
-      provider.resolve(ImageConfiguration.empty).addListener(
-        ImageStreamListener((ImageInfo info, bool _) {
-          if (!mounted) return;
-          final w = info.image.width;
-          final h = info.image.height;
-          if (w > 0 && h > 0) {
-            final ratio = w / h;
-            if (_artworkAspectRatio == null ||
-                (_artworkAspectRatio! - ratio).abs() > 0.05) {
-              setState(() {
-                _artworkAspectRatio = ratio;
-              });
-            }
-          }
-        }),
-      );
+      provider
+          .resolve(ImageConfiguration.empty)
+          .addListener(
+            ImageStreamListener((ImageInfo info, bool _) {
+              if (!mounted) return;
+              final w = info.image.width;
+              final h = info.image.height;
+              if (w > 0 && h > 0) {
+                final ratio = w / h;
+                if (_artworkAspectRatio == null ||
+                    (_artworkAspectRatio! - ratio).abs() > 0.05) {
+                  setState(() {
+                    _artworkAspectRatio = ratio;
+                  });
+                }
+              }
+            }),
+          );
     } else {
       _artworkAspectRatio = 1.0;
     }
@@ -192,7 +196,9 @@ class _NowPlayingArtworkState extends State<NowPlayingArtwork> {
       onVerticalDragStart: (details) async {
         if (!volumeGestureEnabled.value) return;
         try {
-          _currentVolume = await VolumeController.instance.getVolume();
+          final vol = await VolumeController.instance.getVolume();
+          if (!mounted) return;
+          _currentVolume = vol;
           VolumeController.instance.showSystemUI = false;
           _volumeHUDTimer?.cancel();
           setState(() => _showVolumeHUD = true);
@@ -201,8 +207,8 @@ class _NowPlayingArtworkState extends State<NowPlayingArtwork> {
       onVerticalDragUpdate: (details) {
         if (!volumeGestureEnabled.value) return;
         try {
-          final delta = -details.primaryDelta! / 220.0;
-          _currentVolume = (_currentVolume + delta).clamp(0.0, 1.0);
+          final delta = -details.primaryDelta! / 220;
+          _currentVolume = (_currentVolume + delta).clamp(0, 1);
           VolumeController.instance.setVolume(_currentVolume);
           setState(() => _showVolumeHUD = true);
         } catch (_) {}
@@ -269,10 +275,10 @@ class _NowPlayingArtworkState extends State<NowPlayingArtwork> {
                         _currentVolume <= 0.01
                             ? FluentIcons.speaker_mute_24_filled
                             : _currentVolume < 0.4
-                                ? FluentIcons.speaker_0_24_filled
-                                : _currentVolume < 0.7
-                                    ? FluentIcons.speaker_1_24_filled
-                                    : FluentIcons.speaker_2_24_filled,
+                            ? FluentIcons.speaker_0_24_filled
+                            : _currentVolume < 0.7
+                            ? FluentIcons.speaker_1_24_filled
+                            : FluentIcons.speaker_2_24_filled,
                         size: 42,
                         color: Colors.white,
                       ),
@@ -294,7 +300,9 @@ class _NowPlayingArtworkState extends State<NowPlayingArtwork> {
                           child: LinearProgressIndicator(
                             value: _currentVolume,
                             minHeight: 6,
-                            backgroundColor: Colors.white.withValues(alpha: 0.3),
+                            backgroundColor: Colors.white.withValues(
+                              alpha: 0.3,
+                            ),
                             valueColor: AlwaysStoppedAnimation<Color>(
                               colorScheme.primary,
                             ),

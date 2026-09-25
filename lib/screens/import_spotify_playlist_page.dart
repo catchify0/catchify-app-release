@@ -174,8 +174,8 @@ class _ImportSpotifyPlaylistPageState extends State<ImportSpotifyPlaylistPage> {
       if (song.isEmpty) continue;
       final durationSeconds =
           (durationIndex != -1 && row.length > durationIndex)
-              ? _parseDurationSeconds(row[durationIndex])
-              : null;
+          ? _parseDurationSeconds(row[durationIndex])
+          : null;
       rows.add((
         index: i - 1,
         title: song,
@@ -233,9 +233,7 @@ class _ImportSpotifyPlaylistPageState extends State<ImportSpotifyPlaylistPage> {
     );
     if (missing.isNotEmpty) {
       final missingText = missing
-          .map(
-            (r) => r.artist.isEmpty ? r.title : '${r.title} - ${r.artist}',
-          )
+          .map((r) => r.artist.isEmpty ? r.title : '${r.title} - ${r.artist}')
           .join('\n');
       if (mounted) {
         showToast(
@@ -308,14 +306,15 @@ class _ImportSpotifyPlaylistPageState extends State<ImportSpotifyPlaylistPage> {
           query,
           expectedArtist: expectedArtist,
           expectedTitle: expectedTitle,
-          expectedDuration: expectedDurationSeconds != null &&
-                  expectedDurationSeconds > 0
+          expectedDuration:
+              expectedDurationSeconds != null && expectedDurationSeconds > 0
               ? Duration(seconds: expectedDurationSeconds)
               : null,
         );
         if (video == null) return (null, false);
-        final songLayout =
-            Map<String, dynamic>.from(returnSongLayout(0, video));
+        final songLayout = Map<String, dynamic>.from(
+          returnSongLayout(0, video),
+        );
         final vidDuration = video.duration?.inSeconds;
         if (vidDuration != null && vidDuration > 0) {
           songLayout['duration'] = vidDuration;

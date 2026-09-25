@@ -86,7 +86,9 @@ class Logger {
     final isNetErr = isNetworkError(error) || isNetworkError(errorLocation);
 
     // Suppress heavy stack traces for expected network/offline errors to avoid dumping AOT snapshot crash-like markers
-    final stackTraceMessage = (stackTrace != null && !isNetErr) ? '$stackTrace' : '';
+    final stackTraceMessage = (stackTrace != null && !isNetErr)
+        ? '$stackTrace'
+        : '';
 
     final cleanLocation = _sanitize(errorLocation);
     final logMessage = stackTraceMessage.isNotEmpty

@@ -127,14 +127,16 @@ class _EditPlaylistDialogState extends State<EditPlaylistDialog> {
         ),
         FilledButton.icon(
           onPressed: () {
+            final title = _titleController.text.trim();
+            if (title.isEmpty) return;
             final newPlaylist = {
               'ytid': widget.playlistData['ytid'],
-              'title': _titleController.text,
+              'title': title,
               'source': widget.playlistData['source'] ?? 'user-created',
               if (_imageBase64 != null)
                 'image': _imageBase64
-              else if (_imageUrlController.text.isNotEmpty)
-                'image': _imageUrlController.text,
+              else if (_imageUrlController.text.trim().isNotEmpty)
+                'image': _imageUrlController.text.trim(),
               'list': widget.playlistData['list'],
               if (widget.playlistData['createdAt'] != null)
                 'createdAt': widget.playlistData['createdAt'],

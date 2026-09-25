@@ -213,9 +213,7 @@ class ListeningStatsService {
     _sessionLastAudioPlayerPlaying = true;
   }
 
-  void recordListeningSessionProgress({
-    bool? wasPlaying,
-  }) {
+  void recordListeningSessionProgress({bool? wasPlaying}) {
     final song = _sessionSong;
     if (song == null) return;
 
@@ -235,10 +233,7 @@ class ListeningStatsService {
     }
 
     _sessionListened += listenedDuration;
-    recordListeningTime(
-      listenedDuration,
-      listenedAt: now,
-    );
+    recordListeningTime(listenedDuration, listenedAt: now);
 
     if (!_sessionQualified) {
       if (_sessionListened >= qualifiedPlaybackThreshold(_sessionDuration)) {
@@ -287,9 +282,7 @@ class ListeningStatsService {
     if (_sessionSong == null) return;
 
     if (countCurrentTick) {
-      recordListeningSessionProgress(
-        wasPlaying: wasPlaying,
-      );
+      recordListeningSessionProgress(wasPlaying: wasPlaying);
     }
 
     _sessionSong = null;
@@ -300,13 +293,15 @@ class ListeningStatsService {
     _sessionQualified = false;
     _sessionLastAudioPlayerPlaying = false;
     if (flushStats) {
-      unawaited(flush().catchError((error, stackTrace) {
-        logger.log(
-          'Error flushing listening stats',
-          error: error,
-          stackTrace: stackTrace,
-        );
-      }));
+      unawaited(
+        flush().catchError((error, stackTrace) {
+          logger.log(
+            'Error flushing listening stats',
+            error: error,
+            stackTrace: stackTrace,
+          );
+        }),
+      );
     }
   }
 
@@ -342,11 +337,7 @@ class ListeningStatsService {
       return Duration(minutes: parts[0]!, seconds: parts[1]!);
     }
     if (parts.length == 3) {
-      return Duration(
-        hours: parts[0]!,
-        minutes: parts[1]!,
-        seconds: parts[2]!,
-      );
+      return Duration(hours: parts[0]!, minutes: parts[1]!, seconds: parts[2]!);
     }
 
     return null;

@@ -76,7 +76,8 @@ class SongArtworkWidget extends StatelessWidget {
         );
       }
 
-      final extraArtwork = metadata.extras?['artworkPath']?.toString() ??
+      final extraArtwork =
+          metadata.extras?['artworkPath']?.toString() ??
           metadata.extras?['artWorkPath']?.toString();
       if (extraArtwork != null &&
           !extraArtwork.startsWith('http') &&
@@ -138,7 +139,8 @@ class SongArtworkWidget extends StatelessWidget {
   ]) {
     final targetMemWidth = (effectiveWidth * 2).round().clamp(64, 1280);
     final targetMemHeight = (effectiveHeight * 2).round().clamp(64, 1280);
-    var remoteUrl = metadata.extras?['highResImage']?.toString() ??
+    var remoteUrl =
+        metadata.extras?['highResImage']?.toString() ??
         metadata.extras?['image']?.toString() ??
         metadata.extras?['lowResImage']?.toString() ??
         '';

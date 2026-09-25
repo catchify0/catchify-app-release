@@ -32,16 +32,16 @@ import 'package:catchify/utilities/playlist_utils.dart';
 class PersonalizationWeights {
   const PersonalizationWeights._();
 
-  static const double likedSongWeight = 100.0;
-  static const double recentPlayWeight = 60.0;
-  static const double playCountMultiplier = 15.0;
-  static const double artistAffinityBonus = 25.0;
-  static const double searchMatchBonus = 20.0;
-  static const double radioSeedBonus = 40.0;
+  static const double likedSongWeight = 100;
+  static const double recentPlayWeight = 60;
+  static const double playCountMultiplier = 15;
+  static const double artistAffinityBonus = 25;
+  static const double searchMatchBonus = 20;
+  static const double radioSeedBonus = 40;
 
   /// Time-decay function: older listening interactions decay in relevance.
   static double calculateTimeDecay(int recentsIndex) {
-    if (recentsIndex <= 0) return 1.0;
+    if (recentsIndex <= 0) return 1;
     if (recentsIndex < 5) return 0.85;
     if (recentsIndex < 15) return 0.65;
     if (recentsIndex < 30) return 0.45;
@@ -51,14 +51,6 @@ class PersonalizationWeights {
 
 /// Normalized snapshot of the user's active behavioral signals.
 class UserSignals {
-  final List<Map<String, dynamic>> likedSongs;
-  final List<Map<String, dynamic>> recentSongs;
-  final List<Map<String, dynamic>> likedPlaylists;
-  final List<Map<String, dynamic>> customPlaylists;
-  final List<String> searchQueries;
-  final String? activeRadioSeed;
-  final Map<String, int> playCounts;
-
   const UserSignals({
     required this.likedSongs,
     required this.recentSongs,
@@ -68,6 +60,14 @@ class UserSignals {
     this.activeRadioSeed,
     required this.playCounts,
   });
+
+  final List<Map<String, dynamic>> likedSongs;
+  final List<Map<String, dynamic>> recentSongs;
+  final List<Map<String, dynamic>> likedPlaylists;
+  final List<Map<String, dynamic>> customPlaylists;
+  final List<String> searchQueries;
+  final String? activeRadioSeed;
+  final Map<String, int> playCounts;
 
   bool get hasSufficientData =>
       likedSongs.isNotEmpty ||
@@ -106,25 +106,25 @@ class PersonalizationService {
   UserSignals getUserSignals() {
     final liked = userLikedSongsList.value
         .whereType<Map>()
-        .map((e) => Map<String, dynamic>.from(e))
+        .map(Map<String, dynamic>.from)
         .toList();
 
     final recents = userRecentlyPlayed.value
         .whereType<Map>()
-        .map((e) => Map<String, dynamic>.from(e))
+        .map(Map<String, dynamic>.from)
         .toList();
 
     final likedPlaylists = userLikedPlaylists.value
         .whereType<Map>()
-        .map((e) => Map<String, dynamic>.from(e))
+        .map(Map<String, dynamic>.from)
         .toList();
 
     final customPlaylists = userCustomPlaylists.value
         .whereType<Map>()
-        .map((e) => Map<String, dynamic>.from(e))
+        .map(Map<String, dynamic>.from)
         .toList();
 
-    List<String> searches = const [];
+    var searches = const <String>[];
     if (Hive.isBoxOpen('user')) {
       final rawSearches = Hive.box(
         'user',
@@ -298,7 +298,7 @@ class PersonalizationService {
       if (artistStr.isEmpty) continue;
 
       final parts = artistStr
-          .split(RegExp(r'[,&]'))
+          .split(RegExp('[,&]'))
           .map((p) => p.trim())
           .where((p) => p.isNotEmpty);
 
@@ -321,7 +321,7 @@ class PersonalizationService {
 
       final decay = PersonalizationWeights.calculateTimeDecay(i);
       final parts = artistStr
-          .split(RegExp(r'[,&]'))
+          .split(RegExp('[,&]'))
           .map((p) => p.trim())
           .where((p) => p.isNotEmpty);
 
@@ -373,7 +373,7 @@ class PersonalizationService {
     for (final p in signals.customPlaylists) {
       final id = p['ytid']?.toString() ?? p['id']?.toString() ?? '';
       if (id.isNotEmpty) {
-        scored[id] = _ScoredItem(item: p, score: 90.0, id: id);
+        scored[id] = _ScoredItem(item: p, score: 90, id: id);
       }
     }
 
@@ -382,7 +382,7 @@ class PersonalizationService {
       if (PlaylistUtils.isArtistPlaylist(p)) continue;
       final id = p['ytid']?.toString() ?? p['id']?.toString() ?? '';
       if (id.isNotEmpty && !scored.containsKey(id)) {
-        scored[id] = _ScoredItem(item: p, score: 80.0, id: id);
+        scored[id] = _ScoredItem(item: p, score: 80, id: id);
       }
     }
 
@@ -482,11 +482,10 @@ class PersonalizationService {
     if (topArtists.isNotEmpty) {
       final topArtistName = topArtists.first['title']?.toString() ?? '';
       if (topArtistName.isNotEmpty) {
-        final artistHistory = _findSongsByArtist(
-          [...signals.likedSongs, ...signals.recentSongs],
-          topArtistName,
-          limit: 8,
-        );
+        final artistHistory = _findSongsByArtist([
+          ...signals.likedSongs,
+          ...signals.recentSongs,
+        ], topArtistName);
         final playedIds = {
           ...signals.likedSongs.map(_extractSongId),
           ...signals.recentSongs.map(_extractSongId),
@@ -494,7 +493,6 @@ class PersonalizationService {
         final freshArtistRecommendations = _findSongsByArtist(
           relevantCandidates ?? const [],
           topArtistName,
-          limit: 8,
         ).where((song) => !playedIds.contains(_extractSongId(song))).toList();
         final artistSongs = <Map<String, dynamic>>[
           ...freshArtistRecommendations,
@@ -597,13 +595,13 @@ class PersonalizationService {
 }
 
 class _ScoredItem<T> {
-  final T item;
-  final double score;
-  final String id;
-
   const _ScoredItem({
     required this.item,
     required this.score,
     required this.id,
   });
+
+  final T item;
+  final double score;
+  final String id;
 }

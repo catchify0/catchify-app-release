@@ -48,7 +48,6 @@ class QueueEntryIdManager {
       ensureId(song);
     }
   }
-
 }
 
 /// Returns the stable YouTube video identifier used across queue and radio

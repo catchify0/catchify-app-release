@@ -262,11 +262,13 @@ class _LibraryPageState extends State<LibraryPage> {
   Widget _buildFilterChips(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     const filters = LibraryFilter.values;
-    final scaledChipHeight = MediaQuery.textScalerOf(context).scale(
-      AppTokens.chipHeight,
+    final scaledChipHeight = MediaQuery.textScalerOf(
+      context,
+    ).scale(AppTokens.chipHeight);
+    final chipStripHeight = scaledChipHeight.clamp(
+      AppTokens.minInteractiveSize,
+      64.0,
     );
-    final chipStripHeight = scaledChipHeight
-        .clamp(AppTokens.minInteractiveSize, 64.0);
 
     return Padding(
       padding: const EdgeInsets.only(top: 12, bottom: 12),
@@ -325,7 +327,6 @@ class _LibraryPageState extends State<LibraryPage> {
                         color: isSelected
                             ? colorScheme.primary.withValues(alpha: 0.9)
                             : colorScheme.onSurface.withValues(alpha: 0.1),
-                        width: 1,
                       ),
                       boxShadow: isSelected
                           ? [
@@ -487,10 +488,7 @@ class _LibraryPageState extends State<LibraryPage> {
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: colorScheme.primary.withValues(alpha: 0.25),
-          width: 1,
-        ),
+        border: Border.all(color: colorScheme.primary.withValues(alpha: 0.25)),
         boxShadow: [
           BoxShadow(
             color: colorScheme.primary.withValues(alpha: 0.12),

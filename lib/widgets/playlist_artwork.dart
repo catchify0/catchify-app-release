@@ -70,7 +70,13 @@ class PlaylistArtwork extends StatelessWidget {
     if (image == null || image.isEmpty) {
       if (songs != null && songs!.isNotEmpty) {
         final songArtworks = songs!
-            .map((s) => (s is Map ? (s['highResImage'] ?? s['image'])?.toString() : null) ?? '')
+            .map(
+              (s) =>
+                  (s is Map
+                      ? (s['highResImage'] ?? s['image'])?.toString()
+                      : null) ??
+                  '',
+            )
             .where((u) => u.isNotEmpty)
             .toSet()
             .toList();
@@ -93,7 +99,8 @@ class PlaylistArtwork extends StatelessWidget {
         height: effectiveHeight,
         width: effectiveWidth,
         fit: fit,
-        errorBuilder: (_, __, ___) => _nullArtwork(effectiveWidth, effectiveHeight),
+        errorBuilder: (_, __, ___) =>
+            _nullArtwork(effectiveWidth, effectiveHeight),
       );
 
       return SizedBox(

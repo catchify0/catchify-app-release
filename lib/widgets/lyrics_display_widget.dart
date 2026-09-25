@@ -59,13 +59,10 @@ class _SyncedLyricsWidgetState extends State<SyncedLyricsWidget> {
   @override
   void initState() {
     super.initState();
-    _controller = LyricController()
-      ..loadLyric(widget.lyrics);
+    _controller = LyricController()..loadLyric(widget.lyrics);
 
     // Wire seek-on-tap
-    _controller.setOnTapLineCallback(
-      (position) => audioHandler.seek(position),
-    );
+    _controller.setOnTapLineCallback((position) => audioHandler.seek(position));
 
     _subscribe();
 
@@ -73,9 +70,7 @@ class _SyncedLyricsWidgetState extends State<SyncedLyricsWidget> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       try {
-        _controller.setProgress(
-          audioHandler.playbackState.value.position,
-        );
+        _controller.setProgress(audioHandler.playbackState.value.position);
       } catch (_) {}
     });
   }
@@ -94,9 +89,7 @@ class _SyncedLyricsWidgetState extends State<SyncedLyricsWidget> {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
         try {
-          _controller.setProgress(
-            audioHandler.playbackState.value.position,
-          );
+          _controller.setProgress(audioHandler.playbackState.value.position);
         } catch (_) {}
       });
     }
@@ -119,8 +112,9 @@ class _SyncedLyricsWidgetState extends State<SyncedLyricsWidget> {
     final isDark = theme.brightness == Brightness.dark;
     final colorScheme = theme.colorScheme;
     final activeColor = colorScheme.onSurface;
-    final inactiveColor = colorScheme.onSurface
-        .withValues(alpha: isDark ? 0.38 : 0.48);
+    final inactiveColor = colorScheme.onSurface.withValues(
+      alpha: isDark ? 0.38 : 0.48,
+    );
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -268,12 +262,7 @@ class PlainLyricsWidget extends StatelessWidget {
     final fadeBaseColor = isDark ? Colors.black : colorScheme.surface;
 
     final content = SingleChildScrollView(
-      padding: const EdgeInsets.only(
-        top: 28,
-        bottom: 50,
-        left: 24,
-        right: 24,
-      ),
+      padding: const EdgeInsets.only(top: 28, bottom: 50, left: 24, right: 24),
       physics: const BouncingScrollPhysics(),
       child: Text(
         cleanLyricsText.isNotEmpty ? cleanLyricsText : lyrics,
@@ -351,8 +340,9 @@ class _LrcLibAttribution extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
-        color: colorScheme.secondaryContainer
-            .withValues(alpha: isDark ? 0.70 : 0.85),
+        color: colorScheme.secondaryContainer.withValues(
+          alpha: isDark ? 0.70 : 0.85,
+        ),
         borderRadius: BorderRadius.circular(6),
       ),
       child: Row(
@@ -413,9 +403,7 @@ class LyricsDisplayWidget extends StatelessWidget {
           const Positioned(
             right: 10,
             bottom: 8,
-            child: IgnorePointer(
-              child: _LrcLibAttribution(),
-            ),
+            child: IgnorePointer(child: _LrcLibAttribution()),
           ),
       ],
     );

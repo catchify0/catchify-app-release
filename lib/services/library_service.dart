@@ -49,14 +49,15 @@ class LibraryService {
 
     final folders = isOffline
         ? userPlaylistFolders.value
-            .where(PlaylistUtils.folderHasOfflinePlaylists)
-            .toList()
+              .where(PlaylistUtils.folderHasOfflinePlaylists)
+              .toList()
         : userPlaylistFolders.value;
 
-    final offlineNotInFolders = PlaylistUtils.filterOfflinePlaylistsNotInFolders(
-      visibleOffline,
-      folders,
-    );
+    final offlineNotInFolders =
+        PlaylistUtils.filterOfflinePlaylistsNotInFolders(
+          visibleOffline,
+          folders,
+        );
 
     final offlineIdsNotInFolders = PlaylistUtils.offlinePlaylistIdsNotInFolders(
       visibleOffline,
@@ -106,7 +107,8 @@ class LibraryService {
     for (final playlist in userLikedPlaylists.value) {
       if (playlist['isAlbum'] == true || playlist['type'] == 'album') {
         final title = playlist['title']?.toString().trim() ?? '';
-        final id = playlist['ytid']?.toString().trim() ??
+        final id =
+            playlist['ytid']?.toString().trim() ??
             playlist['id']?.toString().trim() ??
             '';
         final key = (id.isNotEmpty ? id : title).toLowerCase();
@@ -218,7 +220,7 @@ class LibraryService {
 
           // Split composite artists like "Anirudh, Dhanush"
           final parts = artistStr
-              .split(RegExp(r'[,&]'))
+              .split(RegExp('[,&]'))
               .map((s) => s.trim())
               .where((s) => s.isNotEmpty);
 
@@ -292,10 +294,7 @@ class LibraryService {
       'source': 'user-created',
       'list': [song],
     };
-    audioHandler.playPlaylistSong(
-      playlist: playlist,
-      songIndex: 0,
-    );
+    audioHandler.playPlaylistSong(playlist: playlist, songIndex: 0);
   }
 
   /// Plays a list of songs through CatchifyAudioHandler with optional shuffle.

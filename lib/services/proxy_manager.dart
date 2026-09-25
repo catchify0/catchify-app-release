@@ -130,8 +130,8 @@ class ProxyManager {
           message: proxyModeNotifier.value == ProxyMode.off
               ? 'Direct connection (Disabled)'
               : proxyModeNotifier.value == ProxyMode.auto
-                  ? 'Standby (Auto-failover on error)'
-                  : 'Idle',
+              ? 'Standby (Auto-failover on error)'
+              : 'Idle',
         ),
       );
 
@@ -199,8 +199,8 @@ class ProxyManager {
       message: mode == ProxyMode.off
           ? 'Direct connection (Disabled)'
           : mode == ProxyMode.auto
-              ? 'Standby (Auto-failover on error)'
-              : 'Configuring proxy...',
+          ? 'Standby (Auto-failover on error)'
+          : 'Configuring proxy...',
     );
 
     if (mode == ProxyMode.off) {
@@ -327,7 +327,9 @@ class ProxyManager {
     bool? isSsl,
   }) {
     final addressParts = address.split(':');
-    final port = addressParts.length == 2 ? int.tryParse(addressParts[1]) : null;
+    final port = addressParts.length == 2
+        ? int.tryParse(addressParts[1])
+        : null;
     final ip = addressParts.length == 2 ? addressParts[0] : '';
     final parsedIp = InternetAddress.tryParse(ip);
     final validIp =
@@ -427,8 +429,7 @@ class ProxyManager {
   YoutubeExplode getClientSync() => _sharedYt ?? _defaultYt;
 
   /// Returns the currently active YoutubeMusicExplode client. Never null.
-  YoutubeMusicExplode getMusicClientSync() =>
-      _sharedMusicYt ?? _defaultMusicYt;
+  YoutubeMusicExplode getMusicClientSync() => _sharedMusicYt ?? _defaultMusicYt;
 
   Future<StreamManifest?> _validateDirect(
     String songId,
@@ -715,22 +716,17 @@ class ProxyManager {
     if (mode == ProxyMode.auto) {
       final direct = await _validateDirect(songId, _validateDirectTimeout);
       if (direct != null) {
-        _updateStatus(
-          isActive: false,
-          message: 'Direct streaming (0ms delay)',
-        );
+        _updateStatus(isActive: false, message: 'Direct streaming (0ms delay)');
         return direct;
       }
       logger.log(
         '[SMART_AUTO_PROXY] Direct streaming failed for $songId, activating proxy failover',
       );
-      _updateStatus(
-        isActive: true,
-        message: 'Auto-failover engaged',
-      );
+      _updateStatus(isActive: true, message: 'Auto-failover engaged');
     }
 
-    final targetCountry = preferredCountry ??
+    final targetCountry =
+        preferredCountry ??
         (mode == ProxyMode.countryMatch ? contentCountryPreference : null);
 
     if (DateTime.now().difference(_lastFetched).inMinutes >=
@@ -740,10 +736,7 @@ class ProxyManager {
 
     _maybeCleanupProxies();
 
-    final manifest = await _tryProxies(
-      songId,
-      preferredCountry: targetCountry,
-    );
+    final manifest = await _tryProxies(songId, preferredCountry: targetCountry);
     return manifest;
   }
 
@@ -913,7 +906,7 @@ class ProxyManager {
     final client = (!useProxy.value || _sharedProxyAddress == null)
         ? _sharedDirectClient
         : (_proxyResources[_sharedProxyAddress!]?.ioClient ??
-            _sharedDirectClient);
+              _sharedDirectClient);
 
     return client
         .get(uri, headers: headers)

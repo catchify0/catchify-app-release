@@ -33,13 +33,13 @@ class GlassSurface extends StatelessWidget {
     super.key,
     required this.child,
     this.borderRadius,
-    this.blur = 18.0,
+    this.blur = 18,
     this.surfaceColor,
     this.borderColor,
     this.borderWidth = 0.8,
     this.padding,
     this.margin,
-    this.elevation = 0.0,
+    this.elevation = 0,
     this.shadowColor,
     this.disableBlur = false,
   });
@@ -90,14 +90,22 @@ class GlassSurface extends StatelessWidget {
     final scaffoldBg = Theme.of(context).scaffoldBackgroundColor;
     final isOled = isDark && scaffoldBg == AppColors.pureBlack;
 
-    final effectiveSurfaceColor = surfaceColor ??
+    final effectiveSurfaceColor =
+        surfaceColor ??
         (isDark
             ? (isOled
-                ? (shouldBypassBlur ? AppColors.pureBlackElevated : AppColors.glassSurfaceOled)
-                : (shouldBypassBlur ? AppColors.darkSurfaceElevated : AppColors.glassSurfaceDark))
-            : (shouldBypassBlur ? AppColors.lightSurfaceElevated : AppColors.glassSurfaceLight));
+                  ? (shouldBypassBlur
+                        ? AppColors.pureBlackElevated
+                        : AppColors.glassSurfaceOled)
+                  : (shouldBypassBlur
+                        ? AppColors.darkSurfaceElevated
+                        : AppColors.glassSurfaceDark))
+            : (shouldBypassBlur
+                  ? AppColors.lightSurfaceElevated
+                  : AppColors.glassSurfaceLight));
 
-    final effectiveBorderColor = borderColor ??
+    final effectiveBorderColor =
+        borderColor ??
         (isDark
             ? (isOled ? AppColors.glassBorderOled : AppColors.glassBorderDark)
             : AppColors.glassBorderLight);
@@ -124,10 +132,7 @@ class GlassSurface extends StatelessWidget {
           ],
         ),
       ),
-      child: Padding(
-        padding: EdgeInsets.all(borderWidth),
-        child: surface,
-      ),
+      child: Padding(padding: EdgeInsets.all(borderWidth), child: surface),
     );
 
     if (!shouldBypassBlur && blur > 0) {
@@ -139,10 +144,7 @@ class GlassSurface extends StatelessWidget {
         ),
       );
     } else {
-      content = ClipRRect(
-        borderRadius: effectiveRadius,
-        child: content,
-      );
+      content = ClipRRect(borderRadius: effectiveRadius, child: content);
     }
 
     if (elevation > 0) {

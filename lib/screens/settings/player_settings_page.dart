@@ -141,7 +141,11 @@ class _PlayerSettingsPageState extends State<PlayerSettingsPage> {
                 ),
                 FilledButton(
                   onPressed: () {
-                    addOrUpdateData<int>('settings', 'lyricsOffsetMs', currentOffset);
+                    addOrUpdateData<int>(
+                      'settings',
+                      'lyricsOffsetMs',
+                      currentOffset,
+                    );
                     lyricsOffsetNotifier.value = currentOffset;
                     activeSongLyricsOffsetNotifier.value = currentOffset;
                     setState(() {});
@@ -170,9 +174,7 @@ class _PlayerSettingsPageState extends State<PlayerSettingsPage> {
     }
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Now Playing & Visuals'),
-      ),
+      appBar: AppBar(title: const Text('Now Playing & Visuals')),
       body: SingleChildScrollView(
         padding: commonSingleChildScrollViewPadding,
         child: Column(
@@ -195,7 +197,8 @@ class _PlayerSettingsPageState extends State<PlayerSettingsPage> {
             CustomBar(
               'Player Background Style',
               FluentIcons.color_line_24_regular,
-              description: 'Customize background style of the active music player',
+              description:
+                  'Customize background style of the active music player',
               borderRadius: commonCustomBarRadiusFirst,
               trailing: Text(
                 currentStyleLabel,

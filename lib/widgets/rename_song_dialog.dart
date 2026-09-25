@@ -100,6 +100,7 @@ class _RenameSongDialogState extends State<RenameSongDialog> {
           children: [
             TextField(
               controller: _titleController,
+              textInputAction: TextInputAction.next,
               decoration: InputDecoration(
                 labelText: context.l10n!.name,
                 labelStyle: TextStyle(color: colorScheme.onSurfaceVariant),
@@ -117,6 +118,8 @@ class _RenameSongDialogState extends State<RenameSongDialog> {
             const SizedBox(height: 16),
             TextField(
               controller: _artistController,
+              textInputAction: TextInputAction.done,
+              onSubmitted: (_) => _handleRename(),
               decoration: InputDecoration(
                 labelText: context.l10n!.artist,
                 labelStyle: TextStyle(color: colorScheme.onSurfaceVariant),

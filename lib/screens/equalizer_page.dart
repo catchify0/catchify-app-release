@@ -140,7 +140,7 @@ class _EqualizerPageState extends State<EqualizerPage> {
   }
 
   Future<void> _applyPreset(String preset) async {
-    HapticFeedback.lightImpact();
+    await HapticFeedback.lightImpact();
     final presetGains = _getPresetGains(preset);
     for (var i = 0; i < presetGains.length; i++) {
       await audioHandler.setEqualizerBandGain(i, presetGains[i]);
@@ -251,7 +251,9 @@ class _EqualizerPageState extends State<EqualizerPage> {
                 // Enable/Disable Section
                 DecoratedBox(
                   decoration: BoxDecoration(
-                    color: colorScheme.surfaceContainerLow.withValues(alpha: 0.9),
+                    color: colorScheme.surfaceContainerLow.withValues(
+                      alpha: 0.9,
+                    ),
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(
                       color: colorScheme.outlineVariant.withValues(alpha: 0.4),
@@ -286,9 +288,10 @@ class _EqualizerPageState extends State<EqualizerPage> {
                                 _enabled
                                     ? context.l10n!.equalizerEnabledHint
                                     : context.l10n!.equalizerDisabledHint,
-                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                  color: colorScheme.onSurfaceVariant,
-                                ),
+                                style: Theme.of(context).textTheme.bodySmall
+                                    ?.copyWith(
+                                      color: colorScheme.onSurfaceVariant,
+                                    ),
                               ),
                             ],
                           ),
@@ -348,7 +351,9 @@ class _EqualizerPageState extends State<EqualizerPage> {
                 // Bands Section
                 DecoratedBox(
                   decoration: BoxDecoration(
-                    color: colorScheme.surfaceContainerLow.withValues(alpha: 0.9),
+                    color: colorScheme.surfaceContainerLow.withValues(
+                      alpha: 0.9,
+                    ),
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(
                       color: colorScheme.outlineVariant.withValues(alpha: 0.4),
@@ -369,10 +374,11 @@ class _EqualizerPageState extends State<EqualizerPage> {
                           alignment: Alignment.centerLeft,
                           child: Text(
                             context.l10n!.equalizerBands,
-                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              color: colorScheme.onSurface,
-                              fontWeight: FontWeight.w700,
-                            ),
+                            style: Theme.of(context).textTheme.titleMedium
+                                ?.copyWith(
+                                  color: colorScheme.onSurface,
+                                  fontWeight: FontWeight.w700,
+                                ),
                           ),
                         ),
                       ),
@@ -397,7 +403,8 @@ class _EqualizerPageState extends State<EqualizerPage> {
                                   color: colorScheme.surface,
                                   borderRadius: BorderRadius.circular(16),
                                   border: Border.all(
-                                    color: colorScheme.outlineVariant.withValues(alpha: 0.3),
+                                    color: colorScheme.outlineVariant
+                                        .withValues(alpha: 0.3),
                                   ),
                                 ),
                                 child: Padding(

@@ -174,4 +174,3 @@ abstract final class AppTextStyles {
     );
   }
 }
-

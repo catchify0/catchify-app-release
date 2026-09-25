@@ -78,7 +78,8 @@ class EmptyState extends StatelessWidget {
                 width: compact ? 56 : 72,
                 height: compact ? 56 : 72,
                 child: Center(
-                  child: iconWidget ??
+                  child:
+                      iconWidget ??
                       Icon(
                         icon,
                         size: compact ? 28 : 36,

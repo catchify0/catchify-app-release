@@ -101,8 +101,6 @@ class _ThemeSettingsPageState extends State<ThemeSettingsPage> {
     );
   }
 
-
-
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
@@ -270,7 +268,6 @@ class _ThemeSettingsPageState extends State<ThemeSettingsPage> {
                 );
               },
             ),
-
 
             const SizedBox(height: 24),
             const MiniPlayerBottomSpace(),

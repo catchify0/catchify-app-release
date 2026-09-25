@@ -107,7 +107,8 @@ class PlaylistBar extends StatelessWidget {
         onTap: onPressed ?? _getDefaultOnPressed(context, updatedPlaylist),
         child: Padding(
           padding:
-              barPadding ?? const EdgeInsets.symmetric(vertical: 10, horizontal: 14),
+              barPadding ??
+              const EdgeInsets.symmetric(vertical: 10, horizontal: 14),
           child: Row(
             children: [
               if (isFolder)
@@ -717,9 +718,7 @@ class PlaylistBar extends StatelessWidget {
           final folderPlaylists = List<Map>.from(
             folder['playlists'] as List? ?? [],
           );
-          final fi = folderPlaylists.indexWhere(
-            (p) => p['ytid'] == targetYtid,
-          );
+          final fi = folderPlaylists.indexWhere((p) => p['ytid'] == targetYtid);
           if (fi != -1) {
             folderPlaylists[fi] = result;
             folder['playlists'] = folderPlaylists;

@@ -73,10 +73,7 @@ abstract final class AppColors {
 }
 
 class AccentColorItem {
-  const AccentColorItem({
-    required this.name,
-    required this.color,
-  });
+  const AccentColorItem({required this.name, required this.color});
 
   final String name;
   final Color color;
@@ -100,4 +97,3 @@ const List<AccentColorItem> curatedAccentColors = [
 
 /// Backwards compatibility for existing code references
 final availableColors = curatedAccentColors.map((e) => e.color).toList();
-

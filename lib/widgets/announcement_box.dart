@@ -71,90 +71,89 @@ class AnnouncementBox extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
           clipBehavior: Clip.antiAlias,
           child: InkWell(
-          onTap: () {
-            final uri = Uri.tryParse(url);
-            if (uri != null && uri.hasScheme) {
-              launchURL(uri);
-            }
-          },
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: colorScheme.primary.withValues(alpha: 0.15),
-                    shape: BoxShape.circle,
+            onTap: () {
+              final uri = Uri.tryParse(url);
+              if (uri != null && uri.hasScheme) {
+                launchURL(uri);
+              }
+            },
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: colorScheme.primary.withValues(alpha: 0.15),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      icon,
+                      color: colorScheme.onPrimaryContainer,
+                      size: 24,
+                    ),
                   ),
-                  child: Icon(
-                    icon,
-                    color: colorScheme.onPrimaryContainer,
-                    size: 24,
-                  ),
-                ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        message,
-                        style: TextStyle(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 15,
-                          color: colorScheme.onPrimaryContainer,
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          message,
+                          style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 15,
+                            color: colorScheme.onPrimaryContainer,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 2,
                         ),
-                        overflow: TextOverflow.ellipsis,
-                        maxLines: 2,
-                      ),
-                      const SizedBox(height: 4),
-                      Row(
-                        children: [
-                          Text(
-                            context.l10n!.tapToView,
-                            style: TextStyle(
-                              fontSize: 12,
+                        const SizedBox(height: 4),
+                        Row(
+                          children: [
+                            Text(
+                              context.l10n!.tapToView,
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: colorScheme.onPrimaryContainer
+                                    .withValues(alpha: 0.7),
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            Icon(
+                              FluentIcons.arrow_right_16_regular,
+                              size: 12,
                               color: colorScheme.onPrimaryContainer.withValues(
                                 alpha: 0.7,
                               ),
                             ),
-                          ),
-                          const SizedBox(width: 4),
-                          Icon(
-                            FluentIcons.arrow_right_16_regular,
-                            size: 12,
-                            color: colorScheme.onPrimaryContainer.withValues(
-                              alpha: 0.7,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-                if (onDismiss != null)
-                  IconButton(
-                    icon: Icon(
-                      FluentIcons.dismiss_circle_24_regular,
-                      color: colorScheme.onPrimaryContainer.withValues(
-                        alpha: 0.7,
-                      ),
-                    ),
-                    onPressed: onDismiss,
-                    style: IconButton.styleFrom(
-                      minimumSize: const Size(
-                        AppTokens.minInteractiveSize,
-                        AppTokens.minInteractiveSize,
-                      ),
+                          ],
+                        ),
+                      ],
                     ),
                   ),
-              ],
+                  if (onDismiss != null)
+                    IconButton(
+                      icon: Icon(
+                        FluentIcons.dismiss_circle_24_regular,
+                        color: colorScheme.onPrimaryContainer.withValues(
+                          alpha: 0.7,
+                        ),
+                      ),
+                      onPressed: onDismiss,
+                      style: IconButton.styleFrom(
+                        minimumSize: const Size(
+                          AppTokens.minInteractiveSize,
+                          AppTokens.minInteractiveSize,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
             ),
           ),
         ),
       ),
-    ),
-  );
-}
+    );
+  }
 }

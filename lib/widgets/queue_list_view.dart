@@ -221,10 +221,9 @@ class _QueueWidgetState extends State<QueueWidget> {
                   final nextValue = !autoPlay;
                   playNextSongAutomatically.value = nextValue;
                   unawaited(
-                    Hive.box('settings').put(
-                      'playNextSongAutomatically',
-                      nextValue,
-                    ),
+                    Hive.box(
+                      'settings',
+                    ).put('playNextSongAutomatically', nextValue),
                   );
                 },
                 icon: Icon(
@@ -445,9 +444,7 @@ class QueueTile extends StatelessWidget {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(14),
           side: isCurrentSong
-              ? BorderSide(
-                  color: colorScheme.primary.withValues(alpha: 0.28),
-                )
+              ? BorderSide(color: colorScheme.primary.withValues(alpha: 0.28))
               : BorderSide.none,
         ),
         child: InkWell(
@@ -558,13 +555,18 @@ class _ArtworkThumbnail extends StatelessWidget {
       ytid,
       song['artworkPath']?.toString() ?? song['artWorkPath']?.toString(),
     );
-    final imageUrl = song['lowResImage']?.toString() ??
+    final imageUrl =
+        song['lowResImage']?.toString() ??
         song['image']?.toString() ??
         song['highResImage']?.toString() ??
         '';
 
-    final isHorizontal = ArtworkService.isYouTubeThumbnailUrl(imageUrl) ||
-        (artworkPath != null && ArtworkService.isYouTubeThumbnailUrl(song['highResImage']?.toString() ?? ''));
+    final isHorizontal =
+        ArtworkService.isYouTubeThumbnailUrl(imageUrl) ||
+        (artworkPath != null &&
+            ArtworkService.isYouTubeThumbnailUrl(
+              song['highResImage']?.toString() ?? '',
+            ));
     final thumbWidth = isHorizontal ? 72.0 : size;
     final thumbHeight = isHorizontal ? 40.0 : size;
 
@@ -583,7 +585,10 @@ class _ArtworkThumbnail extends StatelessWidget {
 
     if (imageUrl.isEmpty) return _fallback(thumbWidth, thumbHeight);
 
-    final cachePx = (math.max(thumbWidth, thumbHeight) * 2).round().clamp(64, 256);
+    final cachePx = (math.max(thumbWidth, thumbHeight) * 2).round().clamp(
+      64,
+      256,
+    );
 
     return CachedNetworkImage(
       width: thumbWidth,

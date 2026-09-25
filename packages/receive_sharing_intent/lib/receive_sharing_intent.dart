@@ -159,4 +159,5 @@ class SharedMediaFile {
   final SharedMediaType type;
 }
 
+// ignore: constant_identifier_names
 enum SharedMediaType { IMAGE, VIDEO, FILE }

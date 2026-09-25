@@ -185,7 +185,9 @@ Future<void> checkAppUpdates({bool manual = false}) async {
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: SingleChildScrollView(
-                  child: AutoFormatText(text: releasesResponse['body'] as String? ?? ''),
+                  child: AutoFormatText(
+                    text: releasesResponse['body'] as String? ?? '',
+                  ),
                 ),
               ),
             ],
@@ -210,7 +212,7 @@ Future<void> checkAppUpdates({bool manual = false}) async {
                     final ipaUrl = _extractIpaUrl(releasesResponse, map);
                     final releaseHtmlUrl =
                         releasesResponse['html_url']?.toString() ??
-                            'https://github.com/catchify0/catchify0.github.io/releases/latest';
+                        'https://github.com/catchify0/catchify0.github.io/releases/latest';
                     await launchURL(Uri.parse(ipaUrl ?? releaseHtmlUrl));
                     return;
                   }
@@ -293,7 +295,8 @@ Future<String> getCPUArchitecture() async {
   // dart:ffi's Abi.current() is a built-in zero-dependency way to read the
   // native ABI at runtime on every platform Flutter supports.
   if (Platform.isAndroid) {
-    final abi = Abi.current().toString(); // e.g. 'androidArm64', 'androidArm', 'androidX64'
+    final abi = Abi.current()
+        .toString(); // e.g. 'androidArm64', 'androidArm', 'androidX64'
     return abi.contains('Arm64') ? 'aarch64' : abi;
   }
   // Desktop/Linux fallback — keep using uname.

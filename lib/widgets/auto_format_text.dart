@@ -22,15 +22,16 @@
 import 'package:flutter/material.dart';
 
 class AutoFormatText extends StatelessWidget {
-  AutoFormatText({super.key, required this.text});
+  const AutoFormatText({super.key, required this.text});
   final String text;
+
+  static final RegExp _boldExp = RegExp(r'\*\*(.*?)\*\*');
 
   @override
   Widget build(BuildContext context) {
     final spans = <TextSpan>[];
 
-    final boldExp = RegExp(r'\*\*(.*?)\*\*');
-    final matches = boldExp.allMatches(text);
+    final matches = _boldExp.allMatches(text);
     final textStyle = Theme.of(context).textTheme.bodyMedium;
 
     var currentTextIndex = 0;

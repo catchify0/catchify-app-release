@@ -65,12 +65,16 @@ class _TopChartsPageState extends State<TopChartsPage> {
 
   Future<_ChartsData> _fetchChartsData({bool forceRefresh = false}) async {
     final results = await Future.wait([
-      getTrendingSongsForYou(limit: 50, forceRefresh: forceRefresh)
-          .catchError((_) => <Map<String, dynamic>>[]),
-      getTrendingCommunityPlaylists(forceRefresh: forceRefresh)
-          .catchError((_) => <Map<String, dynamic>>[]),
-      getSuggestedArtists(forceRefresh: forceRefresh)
-          .catchError((_) => <Map<String, dynamic>>[]),
+      getTrendingSongsForYou(
+        limit: 50,
+        forceRefresh: forceRefresh,
+      ).catchError((_) => <Map<String, dynamic>>[]),
+      getTrendingCommunityPlaylists(
+        forceRefresh: forceRefresh,
+      ).catchError((_) => <Map<String, dynamic>>[]),
+      getSuggestedArtists(
+        forceRefresh: forceRefresh,
+      ).catchError((_) => <Map<String, dynamic>>[]),
     ]);
 
     return _ChartsData(
@@ -184,7 +188,8 @@ class _TopChartsPageState extends State<TopChartsPage> {
               return Center(
                 child: ErrorState(
                   message: 'Unable to load charts right now.',
-                  onRetry: () => setState(() => _loadCharts(forceRefresh: true)),
+                  onRetry: () =>
+                      setState(() => _loadCharts(forceRefresh: true)),
                 ),
               );
             }
@@ -197,7 +202,8 @@ class _TopChartsPageState extends State<TopChartsPage> {
               return Center(
                 child: ErrorState(
                   message: 'No charts data available for this region.',
-                  onRetry: () => setState(() => _loadCharts(forceRefresh: true)),
+                  onRetry: () =>
+                      setState(() => _loadCharts(forceRefresh: true)),
                 ),
               );
             }
@@ -232,8 +238,9 @@ class _TopChartsPageState extends State<TopChartsPage> {
                             },
                             labelStyle: TextStyle(
                               fontSize: 13,
-                              fontWeight:
-                                  isSelected ? FontWeight.w700 : FontWeight.w500,
+                              fontWeight: isSelected
+                                  ? FontWeight.w700
+                                  : FontWeight.w500,
                               color: isSelected
                                   ? colorScheme.onPrimary
                                   : colorScheme.onSurface,
@@ -242,8 +249,9 @@ class _TopChartsPageState extends State<TopChartsPage> {
                             backgroundColor: colorScheme.surfaceContainerHigh,
                             side: BorderSide.none,
                             shape: RoundedRectangleBorder(
-                              borderRadius:
-                                  BorderRadius.circular(AppTokens.radiusPill),
+                              borderRadius: BorderRadius.circular(
+                                AppTokens.radiusPill,
+                              ),
                             ),
                           ),
                         );
@@ -253,7 +261,8 @@ class _TopChartsPageState extends State<TopChartsPage> {
                 ),
 
                 // Featured #1 Trending Banner
-                if ((_selectedCategory == 'All' || _selectedCategory == 'Top Songs') &&
+                if ((_selectedCategory == 'All' ||
+                        _selectedCategory == 'Top Songs') &&
                     data.trendingSongs.isNotEmpty)
                   SliverToBoxAdapter(
                     child: Padding(
@@ -270,7 +279,8 @@ class _TopChartsPageState extends State<TopChartsPage> {
                   ),
 
                 // Top Songs Section
-                if ((_selectedCategory == 'All' || _selectedCategory == 'Top Songs') &&
+                if ((_selectedCategory == 'All' ||
+                        _selectedCategory == 'Top Songs') &&
                     data.trendingSongs.isNotEmpty) ...[
                   SliverToBoxAdapter(
                     child: SectionHeader(
@@ -338,7 +348,8 @@ class _TopChartsPageState extends State<TopChartsPage> {
                 ],
 
                 // Trending Community Playlists Section
-                if ((_selectedCategory == 'All' || _selectedCategory == 'Playlists') &&
+                if ((_selectedCategory == 'All' ||
+                        _selectedCategory == 'Playlists') &&
                     data.trendingPlaylists.isNotEmpty) ...[
                   const SliverToBoxAdapter(
                     child: SizedBox(height: AppTokens.sectionGap),
@@ -377,7 +388,8 @@ class _TopChartsPageState extends State<TopChartsPage> {
                 ],
 
                 // Top Artists Section
-                if ((_selectedCategory == 'All' || _selectedCategory == 'Artists') &&
+                if ((_selectedCategory == 'All' ||
+                        _selectedCategory == 'Artists') &&
                     data.topArtists.isNotEmpty) ...[
                   const SliverToBoxAdapter(
                     child: SizedBox(height: AppTokens.sectionGap),
@@ -409,9 +421,7 @@ class _TopChartsPageState extends State<TopChartsPage> {
                   ),
                 ],
 
-                const SliverToBoxAdapter(
-                  child: MiniPlayerBottomSpace(),
-                ),
+                const SliverToBoxAdapter(child: MiniPlayerBottomSpace()),
               ],
             );
           },
@@ -527,10 +537,7 @@ class _HeroTrendingBanner extends StatelessWidget {
         ? (List<Map<String, dynamic>>.from(allSongs)..shuffle())
         : allSongs;
     await audioHandler.playPlaylistSong(
-      playlist: {
-        'title': 'Top Charts - $countryName',
-        'list': list,
-      },
+      playlist: {'title': 'Top Charts - $countryName', 'list': list},
       songIndex: 0,
     );
   }
@@ -686,9 +693,7 @@ class _HeroTrendingBanner extends StatelessWidget {
 
           // Dark wash overlay for contrast
           Positioned.fill(
-            child: ColoredBox(
-              color: Colors.black.withValues(alpha: 0.62),
-            ),
+            child: ColoredBox(color: Colors.black.withValues(alpha: 0.62)),
           ),
 
           // Foreground Content: True 1:1 Square artwork + details
@@ -810,11 +815,7 @@ class _HeroTrendingBanner extends StatelessWidget {
       child: const Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            FluentIcons.trophy_16_filled,
-            size: 13,
-            color: Colors.black,
-          ),
+          Icon(FluentIcons.trophy_16_filled, size: 13, color: Colors.black),
           SizedBox(width: 4),
           Text(
             '#1 IN TRENDING TODAY',

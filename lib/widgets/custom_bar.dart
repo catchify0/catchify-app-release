@@ -108,8 +108,9 @@ class CustomBar extends StatelessWidget {
                         decoration: BoxDecoration(
                           color: enabled
                               ? effectiveIconColor.withValues(alpha: 0.12)
-                              : colorScheme.surfaceContainerHighest
-                                  .withValues(alpha: 0.5),
+                              : colorScheme.surfaceContainerHighest.withValues(
+                                  alpha: 0.5,
+                                ),
                           borderRadius: BorderRadius.circular(
                             AppTokens.radiusControl,
                           ),

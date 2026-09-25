@@ -93,10 +93,9 @@ class _NowPlayingPageState extends State<NowPlayingPage>
     super.dispose();
   }
 
-  String _songKey(MediaItem metadata) =>
-      metadata.id.isNotEmpty
-          ? metadata.id
-          : '${metadata.artist ?? ''} - ${metadata.title}';
+  String _songKey(MediaItem metadata) => metadata.id.isNotEmpty
+      ? metadata.id
+      : '${metadata.artist ?? ''} - ${metadata.title}';
 
   void _loadLyrics(MediaItem metadata) {
     final key = _songKey(metadata);
@@ -145,8 +144,9 @@ class _NowPlayingPageState extends State<NowPlayingPage>
             final isPureBlackStyle = isDark && gradientStyle == 'pure_black';
 
             return Scaffold(
-              backgroundColor:
-                  isPureBlackStyle ? Colors.black : colorScheme.surface,
+              backgroundColor: isPureBlackStyle
+                  ? Colors.black
+                  : colorScheme.surface,
               body: Stack(
                 fit: StackFit.expand,
                 children: [
@@ -166,241 +166,273 @@ class _NowPlayingPageState extends State<NowPlayingPage>
                   SafeArea(
                     child: LayoutBuilder(
                       builder: (context, constraints) {
-                final uriStr = metadata.artUri?.toString() ??
-                    metadata.extras?['highResImage']?.toString() ??
-                    metadata.extras?['image']?.toString() ??
-                    '';
-                final isHorizontal =
-                    ArtworkService.isYouTubeThumbnailUrl(uriStr);
+                        final uriStr =
+                            metadata.artUri?.toString() ??
+                            metadata.extras?['highResImage']?.toString() ??
+                            metadata.extras?['image']?.toString() ??
+                            '';
+                        final isHorizontal =
+                            ArtworkService.isYouTubeThumbnailUrl(uriStr);
 
-                final double maxW;
-                final double maxH;
-                final isLandscape = size.width > size.height;
-                final isDesktop = size.width > 800;
+                        final double maxW;
+                        final double maxH;
+                        final isLandscape = size.width > size.height;
+                        final isDesktop = size.width > 800;
 
-                if (isDesktop) {
-                  maxH = size.height * 0.45;
-                  maxW = size.width * 0.50;
-                } else if (isLandscape) {
-                  maxH = size.height * 0.50;
-                  maxW = size.width * 0.45;
-                } else if (size.width < 360) {
-                  maxW = size.width * 0.85;
-                  maxH = size.height * 0.38;
-                } else if (size.width < 600) {
-                  maxW = size.width * 0.88;
-                  maxH = size.height * 0.40;
-                } else {
-                  maxW = size.width * 0.70;
-                  maxH = size.height * 0.42;
-                }
+                        if (isDesktop) {
+                          maxH = size.height * 0.45;
+                          maxW = size.width * 0.50;
+                        } else if (isLandscape) {
+                          maxH = size.height * 0.50;
+                          maxW = size.width * 0.45;
+                        } else if (size.width < 360) {
+                          maxW = size.width * 0.85;
+                          maxH = size.height * 0.38;
+                        } else if (size.width < 600) {
+                          maxW = size.width * 0.88;
+                          maxH = size.height * 0.40;
+                        } else {
+                          maxW = size.width * 0.70;
+                          maxH = size.height * 0.42;
+                        }
 
-                final double naturalArtworkWidth;
-                final double naturalArtworkHeight;
-                if (isHorizontal) {
-                  var w = maxW;
-                  var h = w * 9.0 / 16.0;
-                  if (h > maxH) {
-                    h = maxH;
-                    w = h * 16.0 / 9.0;
-                  }
-                  naturalArtworkWidth = w;
-                  naturalArtworkHeight = h;
-                } else {
-                  final s = math.min(maxW, maxH);
-                  naturalArtworkWidth = s;
-                  naturalArtworkHeight = s;
-                }
+                        final double naturalArtworkWidth;
+                        final double naturalArtworkHeight;
+                        if (isHorizontal) {
+                          var w = maxW;
+                          var h = w * 9.0 / 16.0;
+                          if (h > maxH) {
+                            h = maxH;
+                            w = h * 16.0 / 9.0;
+                          }
+                          naturalArtworkWidth = w;
+                          naturalArtworkHeight = h;
+                        } else {
+                          final s = math.min(maxW, maxH);
+                          naturalArtworkWidth = s;
+                          naturalArtworkHeight = s;
+                        }
 
-                final artworkLeft =
-                    (constraints.maxWidth - naturalArtworkWidth) / 2;
-                final artworkTop = _artworkTop(size);
-                const compactLeft = 18.0;
-                final compactW = isHorizontal ? 76.0 : 54.0;
-                final compactH = isHorizontal ? 42.0 : 54.0;
-                final compactTop = isHorizontal ? 14.0 : 8.0;
+                        final artworkLeft =
+                            (constraints.maxWidth - naturalArtworkWidth) / 2;
+                        final artworkTop = _artworkTop(size);
+                        const compactLeft = 18.0;
+                        final compactW = isHorizontal ? 76.0 : 54.0;
+                        final compactH = isHorizontal ? 42.0 : 54.0;
+                        final compactTop = isHorizontal ? 14.0 : 8.0;
 
-                return Stack(
-                  key: _stackKey,
-                  fit: StackFit.expand,
-                  clipBehavior: Clip.none,
-                  children: [
-                    // Normal Now Playing view (fades out as lyrics open, fades in as lyrics close)
-                    AnimatedBuilder(
-                      animation: _artworkCurve,
-                      builder: (context, child) {
-                        final progress = _artworkCurve.value;
-                        final opacity = (1.0 - progress).clamp(0.0, 1.0);
-                        if (opacity <= 0.0) return const SizedBox.shrink();
-                        return IgnorePointer(
-                          ignoring: progress > 0.5,
-                          child: Opacity(
-                            opacity: opacity,
-                            child: child,
-                          ),
-                        );
-                      },
-                      child: Column(
-                        key: const ValueKey('normal'),
-                        children: [
-                          _buildAppBar(
-                            context,
-                            colorScheme,
-                            metadata,
-                          ),
-                          Expanded(
-                            child: isLargeScreen
-                                ? _DesktopLayout(
-                                    metadata: metadata,
-                                    size: size,
-                                    adjustedIconSize: baseIconSize,
-                                    adjustedMiniIconSize: miniIconSize,
-                                    onLyricsTap: _openLyrics,
-                                    artworkVisible: !_artworkOverlayVisible,
-                                    artworkKey: _artworkKey,
-                                  )
-                                : _MobileLayout(
-                                    metadata: metadata,
-                                    size: size,
-                                    adjustedIconSize: baseIconSize,
-                                    adjustedMiniIconSize: miniIconSize,
-                                    isLargeScreen: isLargeScreen,
-                                    onLyricsTap: _openLyrics,
-                                    artworkVisible: !_artworkOverlayVisible,
-                                    artworkKey: _artworkKey,
+                        return Stack(
+                          key: _stackKey,
+                          fit: StackFit.expand,
+                          clipBehavior: Clip.none,
+                          children: [
+                            // Normal Now Playing view (fades out as lyrics open, fades in as lyrics close)
+                            AnimatedBuilder(
+                              animation: _artworkCurve,
+                              builder: (context, child) {
+                                final progress = _artworkCurve.value;
+                                final opacity = (1.0 - progress).clamp(
+                                  0.0,
+                                  1.0,
+                                );
+                                if (opacity <= 0.0)
+                                  return const SizedBox.shrink();
+                                return IgnorePointer(
+                                  ignoring: progress > 0.5,
+                                  child: Opacity(
+                                    opacity: opacity,
+                                    child: child,
                                   ),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    // Lyrics view (fades in as lyrics open, fades out as lyrics close)
-                    if (_showLyrics)
-                      AnimatedBuilder(
-                        animation: _artworkCurve,
-                        builder: (context, child) {
-                          final progress = _artworkCurve.value;
-                          final opacity = progress.clamp(0.0, 1.0);
-                          if (opacity <= 0.0) return const SizedBox.shrink();
-                          return IgnorePointer(
-                            ignoring: progress < 0.5,
-                            child: Opacity(
-                              opacity: opacity,
-                              child: child,
-                            ),
-                          );
-                        },
-                        child: _buildLyricsView(
-                          key: const ValueKey('lyrics'),
-                          metadata: metadata,
-                        ),
-                      ),
-
-                    // Floating artwork animation (smoothly flies between center and compact slot)
-                    if (_artworkOverlayVisible)
-                      AnimatedBuilder(
-                        animation: _artworkCurve,
-                        child: SongArtworkWidget(
-                          metadata: metadata,
-                          width: naturalArtworkWidth,
-                          height: naturalArtworkHeight,
-                          size: math.max(
-                            naturalArtworkWidth,
-                            naturalArtworkHeight,
-                          ),
-                          borderRadius: 16,
-                        ),
-                        builder: (context, staticArtwork) {
-                          final targetRect = _normalArtworkRect ??
-                              Rect.fromLTWH(
-                                artworkLeft,
-                                artworkTop,
-                                naturalArtworkWidth,
-                                naturalArtworkHeight,
-                              );
-                          final initialLeft = targetRect.left;
-                          final initialTop = targetRect.top;
-                          final initialWidth = targetRect.width;
-                          final initialHeight = targetRect.height;
-
-                          final progress = _artworkCurve.value;
-                          final currentWidth =
-                              lerpDouble(initialWidth, compactW, progress)!;
-                          final currentHeight =
-                              lerpDouble(initialHeight, compactH, progress)!;
-                          final currentLeft =
-                              lerpDouble(initialLeft, compactLeft, progress)!;
-                          final currentTop =
-                              lerpDouble(initialTop, compactTop, progress)!;
-                          final currentRadius =
-                              lerpDouble(16, 10, progress)!;
-                          final shadowAlpha =
-                              (1.0 - progress).clamp(0.0, 1.0);
-
-                          return Positioned(
-                            left: currentLeft,
-                            top: currentTop,
-                            width: currentWidth,
-                            height: currentHeight,
-                            child: IgnorePointer(
-                              child: DecoratedBox(
-                                decoration: BoxDecoration(
-                                  borderRadius:
-                                      BorderRadius.circular(currentRadius),
-                                  boxShadow: shadowAlpha > 0.02
-                                      ? [
-                                          BoxShadow(
-                                            color: colorScheme.primary
-                                                .withValues(
-                                              alpha: 0.28 * shadowAlpha,
-                                            ),
-                                            blurRadius: 32 * shadowAlpha,
-                                            offset: Offset(
-                                              0,
-                                              12 * shadowAlpha,
-                                            ),
-                                            spreadRadius: 2 * shadowAlpha,
+                                );
+                              },
+                              child: Column(
+                                key: const ValueKey('normal'),
+                                children: [
+                                  _buildAppBar(context, colorScheme, metadata),
+                                  Expanded(
+                                    child: isLargeScreen
+                                        ? _DesktopLayout(
+                                            metadata: metadata,
+                                            size: size,
+                                            adjustedIconSize: baseIconSize,
+                                            adjustedMiniIconSize: miniIconSize,
+                                            onLyricsTap: _openLyrics,
+                                            artworkVisible:
+                                                !_artworkOverlayVisible,
+                                            artworkKey: _artworkKey,
+                                          )
+                                        : _MobileLayout(
+                                            metadata: metadata,
+                                            size: size,
+                                            adjustedIconSize: baseIconSize,
+                                            adjustedMiniIconSize: miniIconSize,
+                                            isLargeScreen: isLargeScreen,
+                                            onLyricsTap: _openLyrics,
+                                            artworkVisible:
+                                                !_artworkOverlayVisible,
+                                            artworkKey: _artworkKey,
                                           ),
-                                          BoxShadow(
-                                            color: Colors.black.withValues(
-                                              alpha: 0.32 * shadowAlpha,
-                                            ),
-                                            blurRadius: 20 * shadowAlpha,
-                                            offset: Offset(
-                                              0,
-                                              8 * shadowAlpha,
-                                            ),
-                                          ),
-                                        ]
-                                      : null,
-                                ),
-                                child: ClipRRect(
-                                  borderRadius:
-                                      BorderRadius.circular(currentRadius),
-                                  child: FittedBox(
-                                    fit: BoxFit.cover,
-                                    child: SizedBox(
-                                      width: initialWidth,
-                                      height: initialHeight,
-                                      child: staticArtwork,
-                                    ),
                                   ),
-                                ),
+                                ],
                               ),
                             ),
-                          );
-                        },
-                      ),
-                  ],
-                );
-              },
-            ),
-          ),
-        ],
-      ),
-    );
-  },
-);
+
+                            // Lyrics view (fades in as lyrics open, fades out as lyrics close)
+                            if (_showLyrics)
+                              AnimatedBuilder(
+                                animation: _artworkCurve,
+                                builder: (context, child) {
+                                  final progress = _artworkCurve.value;
+                                  final opacity = progress.clamp(0.0, 1.0);
+                                  if (opacity <= 0.0)
+                                    return const SizedBox.shrink();
+                                  return IgnorePointer(
+                                    ignoring: progress < 0.5,
+                                    child: Opacity(
+                                      opacity: opacity,
+                                      child: child,
+                                    ),
+                                  );
+                                },
+                                child: _buildLyricsView(
+                                  key: const ValueKey('lyrics'),
+                                  metadata: metadata,
+                                ),
+                              ),
+
+                            // Floating artwork animation (smoothly flies between center and compact slot)
+                            if (_artworkOverlayVisible)
+                              AnimatedBuilder(
+                                animation: _artworkCurve,
+                                child: SongArtworkWidget(
+                                  metadata: metadata,
+                                  width: naturalArtworkWidth,
+                                  height: naturalArtworkHeight,
+                                  size: math.max(
+                                    naturalArtworkWidth,
+                                    naturalArtworkHeight,
+                                  ),
+                                  borderRadius: 16,
+                                ),
+                                builder: (context, staticArtwork) {
+                                  final targetRect =
+                                      _normalArtworkRect ??
+                                      Rect.fromLTWH(
+                                        artworkLeft,
+                                        artworkTop,
+                                        naturalArtworkWidth,
+                                        naturalArtworkHeight,
+                                      );
+                                  final initialLeft = targetRect.left;
+                                  final initialTop = targetRect.top;
+                                  final initialWidth = targetRect.width;
+                                  final initialHeight = targetRect.height;
+
+                                  final progress = _artworkCurve.value;
+                                  final currentWidth = lerpDouble(
+                                    initialWidth,
+                                    compactW,
+                                    progress,
+                                  )!;
+                                  final currentHeight = lerpDouble(
+                                    initialHeight,
+                                    compactH,
+                                    progress,
+                                  )!;
+                                  final currentLeft = lerpDouble(
+                                    initialLeft,
+                                    compactLeft,
+                                    progress,
+                                  )!;
+                                  final currentTop = lerpDouble(
+                                    initialTop,
+                                    compactTop,
+                                    progress,
+                                  )!;
+                                  final currentRadius = lerpDouble(
+                                    16,
+                                    10,
+                                    progress,
+                                  )!;
+                                  final shadowAlpha = (1.0 - progress).clamp(
+                                    0.0,
+                                    1.0,
+                                  );
+
+                                  return Positioned(
+                                    left: currentLeft,
+                                    top: currentTop,
+                                    width: currentWidth,
+                                    height: currentHeight,
+                                    child: IgnorePointer(
+                                      child: DecoratedBox(
+                                        decoration: BoxDecoration(
+                                          borderRadius: BorderRadius.circular(
+                                            currentRadius,
+                                          ),
+                                          boxShadow: shadowAlpha > 0.02
+                                              ? [
+                                                  BoxShadow(
+                                                    color: colorScheme.primary
+                                                        .withValues(
+                                                          alpha:
+                                                              0.28 *
+                                                              shadowAlpha,
+                                                        ),
+                                                    blurRadius:
+                                                        32 * shadowAlpha,
+                                                    offset: Offset(
+                                                      0,
+                                                      12 * shadowAlpha,
+                                                    ),
+                                                    spreadRadius:
+                                                        2 * shadowAlpha,
+                                                  ),
+                                                  BoxShadow(
+                                                    color: Colors.black
+                                                        .withValues(
+                                                          alpha:
+                                                              0.32 *
+                                                              shadowAlpha,
+                                                        ),
+                                                    blurRadius:
+                                                        20 * shadowAlpha,
+                                                    offset: Offset(
+                                                      0,
+                                                      8 * shadowAlpha,
+                                                    ),
+                                                  ),
+                                                ]
+                                              : null,
+                                        ),
+                                        child: ClipRRect(
+                                          borderRadius: BorderRadius.circular(
+                                            currentRadius,
+                                          ),
+                                          child: FittedBox(
+                                            fit: BoxFit.cover,
+                                            child: SizedBox(
+                                              width: initialWidth,
+                                              height: initialHeight,
+                                              child: staticArtwork,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
+                          ],
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
       },
     );
   }
@@ -424,21 +456,21 @@ class _NowPlayingPageState extends State<NowPlayingPage>
     // between AppBar (~56px) and BottomActions (~60px).
     const appBarHeight = 56.0;
     const bottomBarHeight = 60.0;
-    final availableFlexHeight =
-        (size.height - appBarHeight - bottomBarHeight).clamp(0.0, double.infinity);
+    final availableFlexHeight = (size.height - appBarHeight - bottomBarHeight)
+        .clamp(0.0, double.infinity);
     final flex5CenterY =
         appBarHeight + (availableFlexHeight * (5.0 / 9.0)) / 2.0;
     return (flex5CenterY - artworkSize / 2.0).clamp(16.0, size.height);
   }
 
   void _updateArtworkRect() {
-    final stackBox =
-        _stackKey.currentContext?.findRenderObject() as RenderBox?;
+    final stackBox = _stackKey.currentContext?.findRenderObject() as RenderBox?;
     final artworkBox =
         _artworkKey.currentContext?.findRenderObject() as RenderBox?;
     if (stackBox != null && artworkBox != null && artworkBox.hasSize) {
-      final offset =
-          stackBox.globalToLocal(artworkBox.localToGlobal(Offset.zero));
+      final offset = stackBox.globalToLocal(
+        artworkBox.localToGlobal(Offset.zero),
+      );
       _normalArtworkRect = offset & artworkBox.size;
     }
   }
@@ -466,10 +498,7 @@ class _NowPlayingPageState extends State<NowPlayingPage>
     });
   }
 
-  Widget _buildLyricsView({
-    required Key key,
-    required MediaItem metadata,
-  }) {
+  Widget _buildLyricsView({required Key key, required MediaItem metadata}) {
     _loadLyrics(metadata);
     final colorScheme = Theme.of(context).colorScheme;
     final size = MediaQuery.sizeOf(context);
@@ -551,7 +580,8 @@ class _NowPlayingPageState extends State<NowPlayingPage>
     ColorScheme colorScheme,
     MediaItem metadata,
   ) {
-    final uriStr = metadata.artUri?.toString() ??
+    final uriStr =
+        metadata.artUri?.toString() ??
         metadata.extras?['highResImage']?.toString() ??
         metadata.extras?['image']?.toString() ??
         '';
@@ -598,21 +628,20 @@ class _NowPlayingPageState extends State<NowPlayingPage>
                     letterSpacing: -0.2,
                   ),
                 ),
-                if (metadata.artist != null && metadata.artist!.isNotEmpty) ...
-                  [
-                    const SizedBox(height: 2),
-                    Text(
-                      metadata.artist!,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 12.5,
-                        fontWeight: FontWeight.w500,
-                        color: colorScheme.onSurfaceVariant,
-                        letterSpacing: 0.1,
-                      ),
+                if (metadata.artist != null && metadata.artist!.isNotEmpty) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    metadata.artist!,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w500,
+                      color: colorScheme.onSurfaceVariant,
+                      letterSpacing: 0.1,
                     ),
-                  ],
+                  ),
+                ],
               ],
             ),
           ),
@@ -644,8 +673,9 @@ class _NowPlayingPageState extends State<NowPlayingPage>
             iconSize: 18,
             tooltip: 'Close lyrics',
             style: IconButton.styleFrom(
-              backgroundColor: colorScheme.surfaceContainerHighest
-                  .withValues(alpha: 0.65),
+              backgroundColor: colorScheme.surfaceContainerHighest.withValues(
+                alpha: 0.65,
+              ),
               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
               padding: const EdgeInsets.all(8),
               minimumSize: const Size(38, 38),
@@ -712,11 +742,14 @@ class _NowPlayingPageState extends State<NowPlayingPage>
             child: Row(
               children: [
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
-                    color: colorScheme.surfaceContainerHighest
-                        .withValues(alpha: 0.6),
+                    color: colorScheme.surfaceContainerHighest.withValues(
+                      alpha: 0.6,
+                    ),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Row(
@@ -725,8 +758,9 @@ class _NowPlayingPageState extends State<NowPlayingPage>
                       Icon(
                         Icons.lyrics_outlined,
                         size: 11,
-                        color: colorScheme.onSurfaceVariant
-                            .withValues(alpha: 0.65),
+                        color: colorScheme.onSurfaceVariant.withValues(
+                          alpha: 0.65,
+                        ),
                       ),
                       const SizedBox(width: 4),
                       Text(
@@ -735,8 +769,9 @@ class _NowPlayingPageState extends State<NowPlayingPage>
                           fontSize: 10,
                           fontWeight: FontWeight.w600,
                           letterSpacing: 0.3,
-                          color: colorScheme.onSurfaceVariant
-                              .withValues(alpha: 0.70),
+                          color: colorScheme.onSurfaceVariant.withValues(
+                            alpha: 0.70,
+                          ),
                         ),
                       ),
                     ],
@@ -788,8 +823,9 @@ class _NowPlayingPageState extends State<NowPlayingPage>
       tooltip: tooltip,
       color: colorScheme.onSurfaceVariant.withValues(alpha: 0.8),
       style: IconButton.styleFrom(
-        backgroundColor: colorScheme.surfaceContainerHighest
-            .withValues(alpha: 0.45),
+        backgroundColor: colorScheme.surfaceContainerHighest.withValues(
+          alpha: 0.45,
+        ),
         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
         padding: const EdgeInsets.all(7),
         minimumSize: const Size(32, 32),

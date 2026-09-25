@@ -44,7 +44,9 @@ class OfflineSearchPlaceholder extends StatelessWidget {
               DecoratedBox(
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.6),
+                  color: colorScheme.surfaceContainerHighest.withValues(
+                    alpha: 0.6,
+                  ),
                   border: Border.all(
                     color: colorScheme.outlineVariant.withValues(alpha: 0.5),
                   ),
