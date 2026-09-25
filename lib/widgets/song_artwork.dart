@@ -25,7 +25,6 @@ import 'package:audio_service/audio_service.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:catchify/widgets/no_artwork_cube.dart';
-import 'package:catchify/widgets/spinner.dart';
 
 class SongArtworkWidget extends StatelessWidget {
   const SongArtworkWidget({
@@ -126,7 +125,12 @@ class SongArtworkWidget extends StatelessWidget {
           ),
         );
       },
-      placeholder: (context, url) => const Spinner(),
+      placeholder: (context, url) => NullArtworkWidget(
+        iconSize: errorWidgetIconSize,
+        width: effectiveWidth,
+        height: effectiveHeight,
+        borderRadius: borderRadius,
+      ),
       errorWidget: (context, url, error) =>
           _buildFallbackNetworkImage(effectiveWidth, effectiveHeight, url),
     );
@@ -170,7 +174,12 @@ class SongArtworkWidget extends StatelessWidget {
             ),
           );
         },
-        placeholder: (context, url) => const Spinner(),
+        placeholder: (context, url) => NullArtworkWidget(
+          iconSize: errorWidgetIconSize,
+          width: effectiveWidth,
+          height: effectiveHeight,
+          borderRadius: borderRadius,
+        ),
         errorWidget: (context, url, error) => NullArtworkWidget(
           iconSize: errorWidgetIconSize,
           width: effectiveWidth,

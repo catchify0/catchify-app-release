@@ -2830,12 +2830,15 @@ Future<List<Map<String, dynamic>>> getMadeForYouRecommendations({
         } catch (_) {}
       }
 
-      for (final seed in seedIds) {
-        final radioTracks = await ytMusicClient.music
+      final radioFutures = seedIds.take(2).map((seed) {
+        return ytMusicClient.music
             .getRadioSongs(seed, limit: limit)
-            .timeout(const Duration(seconds: 5))
+            .timeout(const Duration(seconds: 4))
             .catchError((_) => <Video>[]);
+      }).toList();
 
+      final radioResults = await Future.wait(radioFutures);
+      for (final radioTracks in radioResults) {
         for (var i = 0; i < radioTracks.length; i++) {
           final track = radioTracks[i];
           final layout = returnSongLayout(liveRecs.length + i, track);
@@ -2854,22 +2857,24 @@ Future<List<Map<String, dynamic>>> getMadeForYouRecommendations({
           signals,
           limit: 2,
         );
-        for (final artist in topArtists) {
+        final artistFutures = topArtists.map((artist) {
           final artistName = artist['title']?.toString().trim() ?? '';
-          if (artistName.isNotEmpty) {
-            final artistTracks = await ytMusicClient.music
-                .searchSongs(artistName)
-                .timeout(const Duration(seconds: 4))
-                .catchError((_) => <Video>[]);
+          if (artistName.isEmpty) return Future.value(<Video>[]);
+          return ytMusicClient.music
+              .searchSongs(artistName)
+              .timeout(const Duration(seconds: 4))
+              .catchError((_) => <Video>[]);
+        }).toList();
 
-            for (var i = 0; i < artistTracks.length; i++) {
-              final track = artistTracks[i];
-              final layout = returnSongLayout(liveRecs.length + i, track);
-              if (!liveRecs.any((s) => s['ytid'] == layout['ytid'])) {
-                liveRecs.add(layout);
-              }
-              if (liveRecs.length >= limit * 2) break;
+        final artistResults = await Future.wait(artistFutures);
+        for (final artistTracks in artistResults) {
+          for (var i = 0; i < artistTracks.length; i++) {
+            final track = artistTracks[i];
+            final layout = returnSongLayout(liveRecs.length + i, track);
+            if (!liveRecs.any((s) => s['ytid'] == layout['ytid'])) {
+              liveRecs.add(layout);
             }
+            if (liveRecs.length >= limit * 2) break;
           }
         }
       } catch (_) {}
@@ -4152,11 +4157,20 @@ Future<List<HomeSection>> _loadUnifiedHomeFeed({
 
 Future<List<Map<String, dynamic>>> _timedHomeCategory(
   String category,
-  Future<List<Map<String, dynamic>>> future,
-) async {
+  Future<List<Map<String, dynamic>>> future, {
+  Duration timeout = const Duration(seconds: 7),
+}) async {
   final stopwatch = Stopwatch()..start();
   try {
-    final result = await future;
+    final result = await future.timeout(
+      timeout,
+      onTimeout: () {
+        logger.log(
+          '[HOME_LANGUAGE_CATEGORY_TIMEOUT] category=$category timed out after ${timeout.inSeconds}s',
+        );
+        return const [];
+      },
+    );
     logger.log(
       '[HOME_LANGUAGE_CATEGORY] category=$category duration_ms=${stopwatch.elapsedMilliseconds} items=${result.length}',
     );

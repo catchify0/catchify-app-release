@@ -105,7 +105,7 @@ class _HomePageState extends State<HomePage> {
     HapticFeedback.lightImpact();
     setState(() {
       _selectedMood = mood;
-      _initFutures(forceRefresh: true, source: 'mood');
+      _initFutures(source: 'mood');
     });
   }
 

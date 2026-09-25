@@ -1059,6 +1059,12 @@ class _OnlineArtwork extends StatelessWidget {
             fit: BoxFit.cover,
             memCacheWidth: cachePx,
             memCacheHeight: cachePx,
+            placeholder: (_, __) => NullArtworkWidget(
+              iconSize: 22,
+              width: width,
+              height: height,
+              borderRadius: 10,
+            ),
             imageBuilder: (context, imageProvider) {
               final imageWidget = Image(
                 image: imageProvider,
