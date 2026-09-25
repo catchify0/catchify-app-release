@@ -23,6 +23,7 @@ import 'package:fluentui_system_icons/fluentui_system_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:catchify/main.dart' show logger;
 import 'package:catchify/screens/playlist_page.dart';
+import 'package:catchify/theme/app_text_styles.dart';
 import 'package:catchify/services/artist_service.dart';
 import 'package:catchify/services/playlists_manager.dart';
 import 'package:catchify/services/settings_manager.dart';
@@ -126,11 +127,23 @@ class _ArtistPageState extends State<ArtistPage> {
       future: _artistFuture,
       builder: (context, snapshot) {
         if (snapshot.connectionState != ConnectionState.done) {
+          final title = widget.artistData?['title']?.toString();
           return Scaffold(
-            appBar: AppBar(),
+            appBar: AppBar(
+              scrolledUnderElevation: 0,
+              surfaceTintColor: Colors.transparent,
+              title: title != null
+                  ? Text(
+                      title,
+                      style: AppTextStyles.pageTitle.copyWith(
+                        color: Theme.of(context).colorScheme.onSurface,
+                      ),
+                    )
+                  : null,
+            ),
             body: SizedBox(
               height: MediaQuery.sizeOf(context).height - 100,
-              child: const Spinner(),
+              child: const Center(child: Spinner()),
             ),
           );
         }
@@ -153,7 +166,10 @@ class _ArtistPageState extends State<ArtistPage> {
 
   Widget _buildNotFoundPage() {
     return Scaffold(
-      appBar: AppBar(),
+      appBar: AppBar(
+        scrolledUnderElevation: 0,
+        surfaceTintColor: Colors.transparent,
+      ),
       body: const CustomScrollView(
         slivers: [
           EmptyPlaylistState(

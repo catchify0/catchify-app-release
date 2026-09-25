@@ -25,45 +25,45 @@ import 'package:flutter/material.dart';
 abstract final class AppTextStyles {
   // ── Display & Headings ──
   static const TextStyle display = TextStyle(
-    fontSize: 32,
-    fontWeight: FontWeight.w700,
-    letterSpacing: -0.6,
+    fontSize: 34,
+    fontWeight: FontWeight.w800,
+    letterSpacing: -0.7,
     height: 1.2,
   );
 
   static const TextStyle pageTitle = TextStyle(
-    fontSize: 24,
-    fontWeight: FontWeight.w700,
-    letterSpacing: -0.4,
-    height: 1.25,
+    fontSize: 26,
+    fontWeight: FontWeight.w800,
+    letterSpacing: -0.6,
+    height: 1.2,
   );
 
   static const TextStyle sectionTitle = TextStyle(
-    fontSize: 19,
-    fontWeight: FontWeight.w700,
-    letterSpacing: -0.25,
-    height: 1.3,
+    fontSize: 21,
+    fontWeight: FontWeight.w800,
+    letterSpacing: -0.45,
+    height: 1.25,
   );
 
   static const TextStyle sectionSubtitle = TextStyle(
     fontSize: 13,
-    fontWeight: FontWeight.w400,
+    fontWeight: FontWeight.w500,
     letterSpacing: -0.1,
     height: 1.3,
   );
 
   // ── Card & Row Typography ──
   static const TextStyle cardTitle = TextStyle(
-    fontSize: 13.5,
-    fontWeight: FontWeight.w600,
-    letterSpacing: -0.1,
+    fontSize: 14,
+    fontWeight: FontWeight.w700,
+    letterSpacing: -0.2,
     height: 1.25,
   );
 
   static const TextStyle cardSubtitle = TextStyle(
-    fontSize: 12,
+    fontSize: 12.5,
     fontWeight: FontWeight.w400,
-    letterSpacing: 0,
+    letterSpacing: -0.05,
     height: 1.25,
   );
 

@@ -25,6 +25,7 @@ import 'package:catchify/constants/app_constants.dart';
 import 'package:catchify/extensions/l10n.dart';
 import 'package:catchify/services/playlists_manager.dart';
 import 'package:catchify/services/settings_manager.dart';
+import 'package:catchify/theme/app_text_styles.dart';
 import 'package:catchify/utilities/app_utils.dart';
 import 'package:catchify/utilities/flutter_toast.dart';
 import 'package:catchify/utilities/playlist_utils.dart';
@@ -189,26 +190,36 @@ class _PlaylistFolderPageState extends State<PlaylistFolderPage> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(16),
-            child: Container(
-              width: 120,
-              height: 120,
-              color: colorScheme.surfaceContainerHighest,
-              child: Icon(
-                FluentIcons.folder_24_filled,
-                size: 56,
-                color: colorScheme.primary,
+          DecoratedBox(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: colorScheme.primary.withValues(alpha: 0.22),
+                  blurRadius: 22,
+                  offset: const Offset(0, 6),
+                ),
+              ],
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(20),
+              child: Container(
+                width: 120,
+                height: 120,
+                color: colorScheme.surfaceContainerHighest,
+                child: Icon(
+                  FluentIcons.folder_24_filled,
+                  size: 56,
+                  color: colorScheme.primary,
+                ),
               ),
             ),
           ),
           const SizedBox(height: 20),
           Text(
             _folderName,
-            style: theme.textTheme.headlineSmall?.copyWith(
-              fontWeight: FontWeight.w700,
+            style: AppTextStyles.pageTitle.copyWith(
               color: colorScheme.onSurface,
-              letterSpacing: -0.3,
             ),
             overflow: TextOverflow.ellipsis,
             maxLines: 2,

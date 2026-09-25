@@ -391,6 +391,9 @@ class RadioService {
 
           songsToAdd.add(sMap);
           session.seenTrackIds.add(sid);
+          if (session.seenTrackIds.length > 250) {
+            session.seenTrackIds.remove(session.seenTrackIds.first);
+          }
           if (songsToAdd.length >= limit) break;
         }
       }

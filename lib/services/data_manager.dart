@@ -27,6 +27,7 @@ import 'package:hive/hive.dart';
 import 'package:catchify/extensions/l10n.dart';
 import 'package:catchify/main.dart' show logger;
 import 'package:catchify/services/artwork_service.dart';
+import 'package:catchify/services/io_service.dart';
 
 // Cache durations for different types of data
 const Duration songCacheDuration = Duration(hours: 1, minutes: 30);
@@ -478,10 +479,51 @@ Future<void> pruneExpiredCacheEntries() async {
   }
 }
 
+/// Cleans orphaned temporary, restore, or backup files older than 7 days
+/// from the application and tracks directories to prevent storage leaks.
+Future<void> _cleanOrphanedTempFiles() async {
+  try {
+    final now = DateTime.now();
+    const maxAge = Duration(days: 7);
+    final dirsToScan = <Directory>[];
+
+    try {
+      if (applicationDirPath.isNotEmpty) {
+        dirsToScan
+          ..add(Directory(applicationDirPath))
+          ..add(Directory('$applicationDirPath/${FilePaths.tracksDir}'));
+      }
+    } catch (_) {}
+
+    for (final dir in dirsToScan) {
+      if (!await dir.exists()) continue;
+      await for (final entity in dir.list(followLinks: false)) {
+        if (entity is File) {
+          final path = entity.path;
+          if (path.endsWith('.tmp') ||
+              path.endsWith('.restore.tmp') ||
+              path.endsWith('.restore.bak')) {
+            try {
+              final stat = await entity.stat();
+              if (now.difference(stat.modified) > maxAge) {
+                await entity.delete();
+                logger.log('Removed orphaned temp file: $path');
+              }
+            } catch (_) {}
+          }
+        }
+      }
+    }
+  } catch (e, st) {
+    logger.log('Error cleaning orphaned temp files', error: e, stackTrace: st);
+  }
+}
+
 /// Compacts all open Hive boxes asynchronously to recover disk space and defragment database files.
 Future<void> compactAllBoxes() async {
   await pruneExpiredCacheEntries();
   await ArtworkService.instance.pruneOldArtworkCache();
+  await _cleanOrphanedTempFiles();
 
   const boxNames = ['user', 'settings', 'cache', 'userNoBackup'];
   for (final name in boxNames) {

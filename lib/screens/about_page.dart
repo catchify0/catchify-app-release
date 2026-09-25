@@ -25,6 +25,7 @@ import 'package:catchify/constants/version.dart';
 import 'package:catchify/services/update_manager.dart';
 import 'package:catchify/utilities/url_launcher.dart';
 import 'package:catchify/extensions/l10n.dart';
+import 'package:catchify/theme/app_text_styles.dart';
 
 class AboutPage extends StatelessWidget {
   const AboutPage({super.key});
@@ -36,7 +37,12 @@ class AboutPage extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(context.l10n!.about),
+        title: Text(
+          context.l10n!.about,
+          style: AppTextStyles.pageTitle.copyWith(
+            color: colorScheme.onSurface,
+          ),
+        ),
         surfaceTintColor: Colors.transparent,
       ),
       body: SafeArea(

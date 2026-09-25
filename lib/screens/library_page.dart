@@ -38,6 +38,7 @@ import 'package:catchify/utilities/flutter_toast.dart';
 import 'package:catchify/utilities/offline_playlist_dialogs.dart';
 import 'package:catchify/utilities/playlist_dialogs.dart';
 import 'package:catchify/constants/app_tokens.dart';
+import 'package:catchify/theme/app_text_styles.dart';
 import 'package:catchify/widgets/confirmation_dialog.dart';
 import 'package:catchify/widgets/empty_state.dart';
 import 'package:catchify/widgets/mini_player_bottom_space.dart';
@@ -71,8 +72,33 @@ class _LibraryPageState extends State<LibraryPage> {
   Widget build(BuildContext context) {
     final isOffline = offlineMode.value;
 
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Scaffold(
-      appBar: AppBar(title: Text(context.l10n?.library ?? 'Library')),
+      appBar: AppBar(
+        title: Text(
+          context.l10n?.library ?? 'Library',
+          style: AppTextStyles.pageTitle,
+        ),
+        actions: [
+          if (!isOffline)
+            IconButton(
+              icon: const Icon(FluentIcons.add_24_regular),
+              tooltip: 'Create playlist',
+              style: IconButton.styleFrom(
+                backgroundColor: colorScheme.surfaceContainerHighest
+                    .withValues(alpha: 0.55),
+                shape: const CircleBorder(),
+                padding: const EdgeInsets.all(8),
+              ),
+              onPressed: () {
+                HapticFeedback.lightImpact();
+                showCreatePlaylistDialog(context);
+              },
+            ),
+          const SizedBox(width: 8),
+        ],
+      ),
       body: AnimatedBuilder(
         animation: Listenable.merge([
           userLikedSongsList,
@@ -88,32 +114,51 @@ class _LibraryPageState extends State<LibraryPage> {
           offlineMode,
         ]),
         builder: (context, _) {
-          final likedSongs = LibraryService.instance.loadLikedSongs();
-          final playlistsData = LibraryService.instance.loadPlaylists(
-            isOffline: isOffline,
-          );
-          final folders = playlistsData['folders'] ?? [];
-          final customPlaylists = playlistsData['customPlaylists'] ?? [];
-          final likedPlaylists = playlistsData['likedPlaylists'] ?? [];
-          final offlinePlaylists = playlistsData['offlinePlaylists'] ?? [];
-          final recents = LibraryService.instance.loadRecentlyPlayed();
-          final downloads = LibraryService.instance.loadDownloads();
-          final offlineSongs = downloads['offlineSongs'] as List? ?? [];
-          final localSongs = downloads['localSongs'] as List? ?? [];
+          final isFilterAll = _selectedFilter == LibraryFilter.all;
+          final needLiked =
+              isFilterAll || _selectedFilter == LibraryFilter.likedSongs;
+          final needPlaylists =
+              isFilterAll || _selectedFilter == LibraryFilter.playlists;
+          final needRecents =
+              isFilterAll || _selectedFilter == LibraryFilter.recent;
+          final needDownloads =
+              isFilterAll || _selectedFilter == LibraryFilter.downloads;
 
           // Offline mode screen when no local content exists
           if (isOffline) {
             final hasLocalContent =
-                offlineSongs.isNotEmpty ||
-                localSongs.isNotEmpty ||
-                offlinePlaylists.isNotEmpty ||
-                customPlaylists.isNotEmpty ||
-                folders.isNotEmpty;
+                userOfflineSongs.value.isNotEmpty ||
+                userLocalSongs.value.isNotEmpty ||
+                offlinePlaylistService.offlinePlaylists.value.isNotEmpty ||
+                userCustomPlaylists.value.isNotEmpty ||
+                userPlaylistFolders.value.isNotEmpty;
 
             if (!hasLocalContent) {
               return _buildOfflineEmptyState(context);
             }
           }
+
+          final likedSongs = needLiked
+              ? LibraryService.instance.loadLikedSongs()
+              : const <dynamic>[];
+          final playlistsData = needPlaylists
+              ? LibraryService.instance.loadPlaylists(isOffline: isOffline)
+              : const <String, List<dynamic>>{};
+          final folders = playlistsData['folders'] ?? const <dynamic>[];
+          final customPlaylists =
+              playlistsData['customPlaylists'] ?? const <dynamic>[];
+          final likedPlaylists =
+              playlistsData['likedPlaylists'] ?? const <dynamic>[];
+          final offlinePlaylists =
+              playlistsData['offlinePlaylists'] ?? const <dynamic>[];
+          final recents = needRecents
+              ? LibraryService.instance.loadRecentlyPlayed()
+              : const <dynamic>[];
+          final downloads = needDownloads
+              ? LibraryService.instance.loadDownloads()
+              : const <String, List<dynamic>>{};
+          final offlineSongs = downloads['offlineSongs'] as List? ?? const [];
+          final localSongs = downloads['localSongs'] as List? ?? const [];
 
           final hasLiked = likedSongs.isNotEmpty;
           final hasPlaylists =
@@ -269,7 +314,7 @@ class _LibraryPageState extends State<LibraryPage> {
         .clamp(AppTokens.minInteractiveSize, 64.0);
 
     return Padding(
-      padding: const EdgeInsets.only(top: 12, bottom: 12),
+      padding: const EdgeInsets.only(top: 8, bottom: 12),
       child: SizedBox(
         height: chipStripHeight,
         child: ListView.separated(
@@ -290,67 +335,74 @@ class _LibraryPageState extends State<LibraryPage> {
                 child: InkWell(
                   onTap: () {
                     if (_selectedFilter != filter) {
-                      HapticFeedback.lightImpact();
+                      HapticFeedback.selectionClick();
                       setState(() {
                         _selectedFilter = filter;
                       });
                     }
                   },
                   borderRadius: BorderRadius.circular(AppTokens.radiusPill),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 220),
+                  child: AnimatedScale(
+                    scale: isSelected ? 1.0 : 0.96,
+                    duration: const Duration(milliseconds: 200),
                     curve: Curves.easeOutCubic,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 8,
-                    ),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(AppTokens.radiusPill),
-                      gradient: isSelected
-                          ? LinearGradient(
-                              colors: [
-                                colorScheme.primary,
-                                colorScheme.primary.withValues(alpha: 0.82),
-                              ],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            )
-                          : null,
-                      color: isSelected
-                          ? null
-                          : colorScheme.surfaceContainerHighest.withValues(
-                              alpha: 0.42,
-                            ),
-                      border: Border.all(
-                        color: isSelected
-                            ? colorScheme.primary.withValues(alpha: 0.9)
-                            : colorScheme.onSurface.withValues(alpha: 0.1),
-                        width: 1,
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      curve: Curves.easeOutCubic,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
                       ),
-                      boxShadow: isSelected
-                          ? [
-                              BoxShadow(
-                                color: colorScheme.primary.withValues(
-                                  alpha: 0.28,
-                                ),
-                                blurRadius: 12,
-                                offset: const Offset(0, 4),
+                      decoration: BoxDecoration(
+                        borderRadius:
+                            BorderRadius.circular(AppTokens.radiusPill),
+                        gradient: isSelected
+                            ? LinearGradient(
+                                colors: [
+                                  colorScheme.primary,
+                                  colorScheme.primary.withValues(alpha: 0.85),
+                                ],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              )
+                            : null,
+                        color: isSelected
+                            ? null
+                            : colorScheme.surfaceContainerHighest.withValues(
+                                alpha: 0.45,
                               ),
-                            ]
-                          : null,
-                    ),
-                    child: Center(
-                      child: Text(
-                        _filterLabel(filter, context),
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: isSelected
-                              ? FontWeight.w600
-                              : FontWeight.w500,
-                          letterSpacing: -0.2,
+                        border: Border.all(
                           color: isSelected
-                              ? colorScheme.onPrimary
-                              : colorScheme.onSurface.withValues(alpha: 0.9),
+                              ? colorScheme.primary.withValues(alpha: 0.9)
+                              : colorScheme.outlineVariant
+                                  .withValues(alpha: 0.35),
+                        ),
+                        boxShadow: isSelected
+                            ? [
+                                BoxShadow(
+                                  color: colorScheme.primary.withValues(
+                                    alpha: 0.32,
+                                  ),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 3),
+                                ),
+                              ]
+                            : null,
+                      ),
+                      child: Center(
+                        child: Text(
+                          _filterLabel(filter, context),
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: isSelected
+                                ? FontWeight.w700
+                                : FontWeight.w600,
+                            letterSpacing: -0.2,
+                            color: isSelected
+                                ? colorScheme.onPrimary
+                                : colorScheme.onSurface
+                                    .withValues(alpha: 0.85),
+                          ),
                         ),
                       ),
                     ),
@@ -475,111 +527,141 @@ class _LibraryPageState extends State<LibraryPage> {
   Widget _buildLikedSongsHeroCard(BuildContext context, List<dynamic> songs) {
     final colorScheme = Theme.of(context).colorScheme;
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            colorScheme.primary.withValues(alpha: 0.2),
-            colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: colorScheme.primary.withValues(alpha: 0.25),
-          width: 1,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: colorScheme.primary.withValues(alpha: 0.12),
-            blurRadius: 16,
-            offset: const Offset(0, 6),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 48,
-            height: 48,
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () {
+            HapticFeedback.lightImpact();
+            context.push('/library/userSongs/liked');
+          },
+          borderRadius: BorderRadius.circular(22),
+          child: Ink(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  colorScheme.primary,
-                  colorScheme.primary.withValues(alpha: 0.8),
+                  colorScheme.primary.withValues(alpha: 0.22),
+                  colorScheme.surfaceContainerHighest.withValues(alpha: 0.55),
                 ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(22),
+              border: Border.all(
+                color: colorScheme.primary.withValues(alpha: 0.28),
+              ),
               boxShadow: [
                 BoxShadow(
-                  color: colorScheme.primary.withValues(alpha: 0.35),
-                  blurRadius: 10,
-                  offset: const Offset(0, 3),
+                  color: colorScheme.primary.withValues(alpha: 0.12),
+                  blurRadius: 16,
+                  offset: const Offset(0, 6),
                 ),
               ],
             ),
-            child: Icon(
-              FluentIcons.heart_24_filled,
-              color: colorScheme.onPrimary,
-              size: 24,
-            ),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
+            child: Row(
               children: [
-                Text(
-                  context.l10n?.likedSongs ?? 'Liked Songs',
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 15.5,
-                    letterSpacing: -0.2,
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        colorScheme.primary,
+                        colorScheme.primary.withValues(alpha: 0.8),
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(14),
+                    boxShadow: [
+                      BoxShadow(
+                        color: colorScheme.primary.withValues(alpha: 0.35),
+                        blurRadius: 10,
+                        offset: const Offset(0, 3),
+                      ),
+                    ],
+                  ),
+                  child: Icon(
+                    FluentIcons.heart_24_filled,
+                    color: colorScheme.onPrimary,
+                    size: 24,
                   ),
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  '${songs.length} ${songs.length == 1 ? "song" : "songs"}',
-                  style: TextStyle(
-                    fontSize: 12.5,
-                    color: colorScheme.onSurfaceVariant,
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        context.l10n?.likedSongs ?? 'Liked Songs',
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 16,
+                          letterSpacing: -0.2,
+                        ),
+                      ),
+                      const SizedBox(height: 3),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: colorScheme.primary.withValues(alpha: 0.14),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Text(
+                          '${songs.length} ${songs.length == 1 ? "song" : "songs"}',
+                          style: TextStyle(
+                            fontSize: 11.5,
+                            fontWeight: FontWeight.w600,
+                            color: colorScheme.primary,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
+                ),
+                IconButton.filledTonal(
+                  icon: const Icon(FluentIcons.arrow_shuffle_20_filled),
+                  iconSize: 20,
+                  tooltip: context.l10n?.shuffle ?? 'Shuffle',
+                  onPressed: () {
+                    HapticFeedback.lightImpact();
+                    LibraryService.instance.playAll(
+                      songs,
+                      title: context.l10n?.likedSongs ?? 'Liked Songs',
+                      shuffle: true,
+                    );
+                  },
+                ),
+                const SizedBox(width: 8),
+                IconButton.filled(
+                  icon: const Icon(FluentIcons.play_20_filled),
+                  iconSize: 20,
+                  tooltip: context.l10n?.play ?? 'Play',
+                  style: IconButton.styleFrom(
+                    backgroundColor: colorScheme.primary,
+                    foregroundColor: colorScheme.onPrimary,
+                    disabledBackgroundColor:
+                        colorScheme.surfaceContainerHighest,
+                    disabledForegroundColor: colorScheme.onSurfaceVariant,
+                  ),
+                  onPressed: () {
+                    HapticFeedback.lightImpact();
+                    LibraryService.instance.playAll(
+                      songs,
+                      title: context.l10n?.likedSongs ?? 'Liked Songs',
+                    );
+                  },
                 ),
               ],
             ),
           ),
-          IconButton.filledTonal(
-            icon: const Icon(FluentIcons.arrow_shuffle_20_filled),
-            iconSize: 20,
-            tooltip: context.l10n?.shuffle ?? 'Shuffle',
-            onPressed: () => LibraryService.instance.playAll(
-              songs,
-              title: context.l10n?.likedSongs ?? 'Liked Songs',
-              shuffle: true,
-            ),
-          ),
-          const SizedBox(width: 8),
-          IconButton.filled(
-            icon: const Icon(FluentIcons.play_20_filled),
-            iconSize: 20,
-            tooltip: context.l10n?.play ?? 'Play',
-            style: IconButton.styleFrom(
-              backgroundColor: colorScheme.primary,
-              foregroundColor: colorScheme.onPrimary,
-              disabledBackgroundColor: colorScheme.surfaceContainerHighest,
-              disabledForegroundColor: colorScheme.onSurfaceVariant,
-            ),
-            onPressed: () => LibraryService.instance.playAll(
-              songs,
-              title: context.l10n?.likedSongs ?? 'Liked Songs',
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -752,6 +834,8 @@ class _LibraryPageState extends State<LibraryPage> {
     required List localSongs,
     required List offlinePlaylists,
   }) {
+    final hasOffline = offlineSongs.isNotEmpty;
+
     return [
       SliverToBoxAdapter(
         child: Column(
@@ -760,24 +844,28 @@ class _LibraryPageState extends State<LibraryPage> {
               title: context.l10n?.offlineSongs ?? 'Downloads & Offline',
               icon: FluentIcons.cloud_off_24_filled,
             ),
-            PlaylistBar(
-              context.l10n?.offlineSongs ?? 'Offline songs',
-              onPressed: () => context.push('/library/userSongs/offline'),
-              cubeIcon: FluentIcons.cloud_off_24_regular,
-              borderRadius: commonCustomBarRadiusFirst,
-              showBuildActions: false,
-            ),
+            if (hasOffline)
+              _buildDownloadsHeroCard(context, offlineSongs, localSongs)
+            else
+              PlaylistBar(
+                context.l10n?.offlineSongs ?? 'Offline songs',
+                onPressed: () => context.push('/library/userSongs/offline'),
+                cubeIcon: FluentIcons.cloud_off_24_regular,
+                borderRadius: commonCustomBarRadiusFirst,
+                showBuildActions: false,
+              ),
             PlaylistBar(
               Localizations.localeOf(context).languageCode == 'ta'
                   ? 'உள்ளகப் பாடல்கள்'
                   : 'Local songs',
               onPressed: () => context.push('/library/userSongs/local'),
               cubeIcon: FluentIcons.music_note_2_24_regular,
-              borderRadius: offlinePlaylists.isEmpty
+              borderRadius: offlinePlaylists.isEmpty && !hasOffline
                   ? commonCustomBarRadiusLast
-                  : BorderRadius.zero,
+                  : commonCustomBarRadius,
               showBuildActions: false,
             ),
+            const SizedBox(height: 6),
           ],
         ),
       ),
@@ -789,6 +877,151 @@ class _LibraryPageState extends State<LibraryPage> {
         ),
       const SliverToBoxAdapter(child: SizedBox(height: 16)),
     ];
+  }
+
+  Widget _buildDownloadsHeroCard(
+    BuildContext context,
+    List offlineSongs,
+    List localSongs,
+  ) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () {
+            HapticFeedback.lightImpact();
+            context.push('/library/userSongs/offline');
+          },
+          borderRadius: BorderRadius.circular(22),
+          child: Ink(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  colorScheme.secondary.withValues(alpha: 0.18),
+                  colorScheme.surfaceContainerHighest.withValues(alpha: 0.55),
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(22),
+              border: Border.all(
+                color: colorScheme.secondary.withValues(alpha: 0.28),
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: colorScheme.secondary.withValues(alpha: 0.10),
+                  blurRadius: 16,
+                  offset: const Offset(0, 6),
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        colorScheme.secondary,
+                        colorScheme.secondary.withValues(alpha: 0.8),
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(14),
+                    boxShadow: [
+                      BoxShadow(
+                        color: colorScheme.secondary.withValues(alpha: 0.35),
+                        blurRadius: 10,
+                        offset: const Offset(0, 3),
+                      ),
+                    ],
+                  ),
+                  child: Icon(
+                    FluentIcons.arrow_download_24_filled,
+                    color: colorScheme.onSecondary,
+                    size: 24,
+                  ),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        context.l10n?.offlineSongs ?? 'Offline Songs',
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 16,
+                          letterSpacing: -0.2,
+                        ),
+                      ),
+                      const SizedBox(height: 3),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: colorScheme.secondary.withValues(alpha: 0.14),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Text(
+                          '${offlineSongs.length} ${offlineSongs.length == 1 ? "song" : "songs"} downloaded',
+                          style: TextStyle(
+                            fontSize: 11.5,
+                            fontWeight: FontWeight.w600,
+                            color: colorScheme.secondary,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                if (offlineSongs.isNotEmpty) ...[
+                  IconButton.filledTonal(
+                    icon: const Icon(FluentIcons.arrow_shuffle_20_filled),
+                    iconSize: 20,
+                    tooltip: context.l10n?.shuffle ?? 'Shuffle',
+                    onPressed: () {
+                      HapticFeedback.lightImpact();
+                      LibraryService.instance.playAll(
+                        offlineSongs,
+                        title: context.l10n?.offlineSongs ?? 'Offline Songs',
+                        shuffle: true,
+                      );
+                    },
+                  ),
+                  const SizedBox(width: 8),
+                  IconButton.filled(
+                    icon: const Icon(FluentIcons.play_20_filled),
+                    iconSize: 20,
+                    tooltip: context.l10n?.play ?? 'Play',
+                    style: IconButton.styleFrom(
+                      backgroundColor: colorScheme.secondary,
+                      foregroundColor: colorScheme.onSecondary,
+                    ),
+                    onPressed: () {
+                      HapticFeedback.lightImpact();
+                      LibraryService.instance.playAll(
+                        offlineSongs,
+                        title: context.l10n?.offlineSongs ?? 'Offline Songs',
+                      );
+                    },
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
   List<Widget> _buildDownloadsFullSlivers(

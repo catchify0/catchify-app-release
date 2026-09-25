@@ -21,8 +21,10 @@
 
 import 'package:fluentui_system_icons/fluentui_system_icons.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:catchify/constants/app_constants.dart';
 import 'package:catchify/extensions/l10n.dart';
+import 'package:catchify/theme/app_text_styles.dart';
 import 'package:catchify/main.dart' show logger, audioHandler;
 import 'package:catchify/services/audio_permission_service.dart';
 import 'package:catchify/services/common_services.dart';
@@ -99,7 +101,15 @@ class _UserSongsPageState extends State<UserSongsPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: offlineMode.value ? Text(title) : null,
+        title: offlineMode.value
+            ? Text(
+                title,
+                style: AppTextStyles.pageTitle.copyWith(
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
+              )
+            : null,
+        surfaceTintColor: Colors.transparent,
         actions: [
           if (isLocalSongs)
             IconButton(
@@ -200,43 +210,80 @@ class _UserSongsPageState extends State<UserSongsPage> {
             child: Row(
               children: [
                 Expanded(
-                  child: FilledButton.icon(
-                    icon: const Icon(FluentIcons.play_24_filled),
-                    label: Text(context.l10n!.play),
-                    onPressed: () {
-                      final songsList = _currentSongsList;
-                      var sortedList = songsList;
-                      if (isOfflineSongs) {
-                        sortedList = _sortOfflineSongsLocal(
-                          songsList,
-                          _getCurrentOfflineSortType(),
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: colorScheme.primary.withValues(alpha: 0.35),
+                          blurRadius: 14,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: FilledButton.icon(
+                      style: FilledButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                      ),
+                      icon: const Icon(FluentIcons.play_24_filled, size: 22),
+                      label: Text(
+                        context.l10n!.play,
+                        style: const TextStyle(fontWeight: FontWeight.w700),
+                      ),
+                      onPressed: () async {
+                        await HapticFeedback.mediumImpact();
+                        final songsList = _currentSongsList;
+                        var sortedList = songsList;
+                        if (isOfflineSongs) {
+                          sortedList = _sortOfflineSongsLocal(
+                            songsList,
+                            _getCurrentOfflineSortType(),
+                          );
+                        }
+                        final playlist = {
+                          'ytid': '',
+                          'title': title,
+                          'source': 'user-created',
+                          'list': sortedList,
+                        };
+                        await audioHandler.playPlaylistSong(
+                          playlist: playlist,
+                          songIndex: 0,
                         );
-                      }
-                      final playlist = {
-                        'ytid': '',
-                        'title': title,
-                        'source': 'user-created',
-                        'list': sortedList,
-                      };
-                      audioHandler.playPlaylistSong(
-                        playlist: playlist,
-                        songIndex: 0,
-                      );
-                    },
+                      },
+                    ),
                   ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: FilledButton.icon(
                     style: FilledButton.styleFrom(
-                      backgroundColor: colorScheme.secondaryContainer,
-                      foregroundColor: colorScheme.onSecondaryContainer,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        side: BorderSide(
+                          color: colorScheme.onSurface.withValues(alpha: 0.08),
+                        ),
+                      ),
+                      backgroundColor: colorScheme.surfaceContainerHighest
+                          .withValues(alpha: 0.7),
+                      foregroundColor: colorScheme.onSurface,
                     ),
-                    icon: const Icon(FluentIcons.arrow_shuffle_24_filled),
-                    label: Text(context.l10n!.shuffle),
+                    icon: const Icon(
+                      FluentIcons.arrow_shuffle_24_filled,
+                      size: 22,
+                    ),
+                    label: Text(
+                      context.l10n!.shuffle,
+                      style: const TextStyle(fontWeight: FontWeight.w700),
+                    ),
                     onPressed: () async {
                       final songsList = _currentSongsList;
                       if (songsList.isEmpty) return;
+                      await HapticFeedback.mediumImpact();
                       var sortedList = songsList;
                       if (isOfflineSongs) {
                         sortedList = _sortOfflineSongsLocal(

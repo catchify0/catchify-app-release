@@ -22,6 +22,7 @@
 import 'package:fluentui_system_icons/fluentui_system_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:catchify/extensions/l10n.dart';
+import 'package:catchify/theme/app_text_styles.dart';
 
 class PlaylistHeader extends StatelessWidget {
   const PlaylistHeader(
@@ -92,10 +93,8 @@ class PlaylistHeader extends StatelessWidget {
           const SizedBox(height: 24),
           Text(
             title,
-            style: const TextStyle(
-              fontWeight: FontWeight.w800,
-              fontSize: 22,
-              letterSpacing: -0.5,
+            style: AppTextStyles.pageTitle.copyWith(
+              color: colorScheme.onSurface,
               height: 1.25,
             ),
             overflow: TextOverflow.ellipsis,

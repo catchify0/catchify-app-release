@@ -31,6 +31,8 @@ import 'package:youtube_music_explode_dart/youtube_music_explode_dart.dart';
 
 YoutubeMusicExplode get ytMusicClient => ProxyManager().getMusicClientSync();
 final Map<String, Future<void>> _artistCatalogOperationTails = {};
+final Map<String, Map<String, dynamic>> _resolvedArtistMemoryCache = {};
+const int _maxResolvedArtistMemoryCache = 60;
 
 Future<List<Map<String, dynamic>>> searchVerifiedArtists(
   String query, {
@@ -82,6 +84,14 @@ Future<Map<String, dynamic>?> resolveArtist(
 }) async {
   final normalizedLookup = lookup.trim();
   if (normalizedLookup.isEmpty || normalizedLookup == 'null') return null;
+
+  final memCacheKey =
+      '$normalizedLookup|${sourceSongId ?? ''}|${preferredName ?? ''}|$preferredVerified';
+  final cachedMemoryArtist = _resolvedArtistMemoryCache.remove(memCacheKey);
+  if (cachedMemoryArtist != null) {
+    _resolvedArtistMemoryCache[memCacheKey] = cachedMemoryArtist;
+    return Map<String, dynamic>.from(cachedMemoryArtist);
+  }
 
   final displayName = preferredName?.trim();
   if (preferredVerified &&
@@ -158,6 +168,11 @@ Future<Map<String, dynamic>?> resolveArtist(
       '"$normalizedLookup"; sourceSongId=$normalizedSourceSongId; '
       'preferredName=$displayName; terms=${terms.join(' | ')}',
     );
+  } else {
+    if (_resolvedArtistMemoryCache.length >= _maxResolvedArtistMemoryCache) {
+      _resolvedArtistMemoryCache.remove(_resolvedArtistMemoryCache.keys.first);
+    }
+    _resolvedArtistMemoryCache[memCacheKey] = artist;
   }
 
   return artist;

@@ -20,7 +20,9 @@
  */
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:catchify/constants/app_tokens.dart';
+import 'package:catchify/widgets/glass_surface.dart';
 
 /// Data class representing an item in the [PillNavigationBar].
 class PillNavigationItem {
@@ -73,39 +75,48 @@ class PillNavigationBar extends StatelessWidget {
 
     final bottomPadding = MediaQuery.paddingOf(context).bottom;
 
-    return Container(
-      decoration: BoxDecoration(
-        color: surfaceColor,
-        border: Border(
-          top: BorderSide(
-            color: theme.colorScheme.outlineVariant.withValues(alpha: 0.18),
-            width: 0.6,
-          ),
-        ),
-      ),
+    return Padding(
       padding: EdgeInsets.only(
-        left: 12,
-        right: 12,
-        top: 8,
+        left: 14,
+        right: 14,
         bottom: bottomPadding > 0 ? bottomPadding : 10,
+        top: 2,
       ),
-      child: SizedBox(
-        height: 54,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: List.generate(items.length, (index) {
-            final isSelected = index == selectedIndex;
-            final item = items[index];
+      child: GlassSurface(
+        borderRadius: BorderRadius.circular(32),
+        blur: 24,
+        surfaceColor: isDark
+            ? (theme.colorScheme.surface == Colors.black
+                ? Colors.black.withValues(alpha: 0.78)
+                : const Color(0xFF101016).withValues(alpha: 0.82))
+            : theme.colorScheme.surface.withValues(alpha: 0.86),
+        borderColor: isDark
+            ? Colors.white.withValues(alpha: 0.12)
+            : theme.colorScheme.outlineVariant.withValues(alpha: 0.28),
+        elevation: 18,
+        shadowColor: Colors.black.withValues(alpha: isDark ? 0.38 : 0.12),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+        child: SizedBox(
+          height: 52,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: List.generate(items.length, (index) {
+              final isSelected = index == selectedIndex;
+              final item = items[index];
 
-            return _PillNavigationItemWidget(
-              item: item,
-              isSelected: isSelected,
-              activeColor: primary,
-              unselectedColor: unselectedIconColor,
-              pillBackgroundColor: pillBackgroundColor,
-              onTap: () => onDestinationSelected(index),
-            );
-          }),
+              return _PillNavigationItemWidget(
+                item: item,
+                isSelected: isSelected,
+                activeColor: primary,
+                unselectedColor: unselectedIconColor,
+                pillBackgroundColor: pillBackgroundColor,
+                onTap: () {
+                  HapticFeedback.selectionClick();
+                  onDestinationSelected(index);
+                },
+              );
+            }),
+          ),
         ),
       ),
     );
@@ -153,6 +164,21 @@ class _PillNavigationItemWidget extends StatelessWidget {
             decoration: BoxDecoration(
               color: isSelected ? pillBackgroundColor : Colors.transparent,
               borderRadius: BorderRadius.circular(AppTokens.radiusPill),
+              border: isSelected
+                  ? Border.all(
+                      color: activeColor.withValues(alpha: 0.32),
+                      width: 0.8,
+                    )
+                  : null,
+              boxShadow: isSelected
+                  ? [
+                      BoxShadow(
+                        color: activeColor.withValues(alpha: 0.2),
+                        blurRadius: 12,
+                        offset: const Offset(0, 2),
+                      ),
+                    ]
+                  : null,
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,

@@ -29,6 +29,7 @@ import 'package:catchify/services/download_manager.dart';
 import 'package:catchify/services/listening_stats_service.dart';
 import 'package:catchify/services/playlist_download_service.dart';
 import 'package:catchify/services/settings_manager.dart';
+import 'package:catchify/theme/app_text_styles.dart';
 import 'package:catchify/utilities/artwork_provider.dart';
 import 'package:catchify/utilities/flutter_toast.dart';
 import 'package:catchify/widgets/confirmation_dialog.dart';
@@ -151,7 +152,13 @@ class _StorageCachePageState extends State<StorageCachePage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Storage & Cache'),
+        title: Text(
+          'Storage & Cache',
+          style: AppTextStyles.pageTitle.copyWith(
+            color: colorScheme.onSurface,
+          ),
+        ),
+        surfaceTintColor: Colors.transparent,
       ),
       body: SingleChildScrollView(
         padding: commonSingleChildScrollViewPadding,

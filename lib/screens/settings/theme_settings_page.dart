@@ -114,7 +114,12 @@ class _ThemeSettingsPageState extends State<ThemeSettingsPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(context.l10n?.themeAndAppUI ?? 'Theme & Appearance'),
+        title: Text(
+          context.l10n?.themeAndAppUI ?? 'Theme & Appearance',
+          style: AppTextStyles.pageTitle.copyWith(
+            color: colorScheme.onSurface,
+          ),
+        ),
         surfaceTintColor: Colors.transparent,
       ),
       body: SingleChildScrollView(

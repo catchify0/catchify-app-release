@@ -228,13 +228,17 @@ class _MiniPlayerBodyState extends State<_MiniPlayerBody>
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: colorScheme.shadow.withValues(alpha: 0.14),
-                        blurRadius: 20,
+                        color: Colors.black.withValues(
+                          alpha: Theme.of(context).brightness == Brightness.dark
+                              ? 0.36
+                              : 0.16,
+                        ),
+                        blurRadius: 24,
                         offset: const Offset(0, 8),
                       ),
                       BoxShadow(
-                        color: colorScheme.primary.withValues(alpha: 0.06),
-                        blurRadius: 14,
+                        color: colorScheme.primary.withValues(alpha: 0.1),
+                        blurRadius: 16,
                         offset: const Offset(0, 2),
                       ),
                     ],
@@ -243,12 +247,16 @@ class _MiniPlayerBodyState extends State<_MiniPlayerBody>
                     borderRadius: BorderRadius.circular(
                       MiniPlayer._borderRadius,
                     ),
+                    blur: 24,
                     padding: const EdgeInsets.symmetric(horizontal: 10),
-                    surfaceColor: colorScheme.surfaceContainerHighest
-                        .withValues(alpha: 0.78),
-                    borderColor: colorScheme.outlineVariant.withValues(
-                      alpha: 0.46,
-                    ),
+                    surfaceColor: Theme.of(context).brightness == Brightness.dark
+                        ? const Color(0xFF14141C).withValues(alpha: 0.82)
+                        : colorScheme.surfaceContainerHighest.withValues(
+                            alpha: 0.84,
+                          ),
+                    borderColor: Theme.of(context).brightness == Brightness.dark
+                        ? Colors.white.withValues(alpha: 0.14)
+                        : colorScheme.outlineVariant.withValues(alpha: 0.35),
                     child: Row(
                       children: [
                         _ArtworkWidget(metadata: metadata),
@@ -419,36 +427,46 @@ class _ControlsWidget extends StatelessWidget {
           playbackState: playbackState,
           metadata: metadata,
         ),
-        if (canGoNext) ...[
-          const SizedBox(width: 4),
-          IconButton(
-            onPressed: () {
-              HapticFeedback.lightImpact();
-              audioHandler.skipToNext();
-            },
-            splashColor: Colors.transparent,
-            highlightColor: Colors.transparent,
-            icon: Icon(
-              FluentIcons.next_24_filled,
-              color: colorScheme.primary,
-              size: 20,
-            ),
-            style: IconButton.styleFrom(
-              foregroundColor: colorScheme.primary,
-              padding: const EdgeInsets.all(4),
-              minimumSize: const Size(
-                AppTokens.minInteractiveSize,
-                AppTokens.minInteractiveSize,
-              ),
-              maximumSize: const Size(
-                AppTokens.minInteractiveSize,
-                AppTokens.minInteractiveSize,
-              ),
-              shape: const CircleBorder(),
-            ),
-            visualDensity: VisualDensity.compact,
+        AnimatedSwitcher(
+          duration: const Duration(milliseconds: 200),
+          transitionBuilder: (child, animation) => FadeTransition(
+            opacity: animation,
+            child: ScaleTransition(scale: animation, child: child),
           ),
-        ],
+          child: canGoNext
+              ? Padding(
+                  key: const ValueKey('mini_next_btn'),
+                  padding: const EdgeInsets.only(left: 4),
+                  child: IconButton(
+                    onPressed: () {
+                      HapticFeedback.lightImpact();
+                      audioHandler.skipToNext();
+                    },
+                    splashColor: Colors.transparent,
+                    highlightColor: Colors.transparent,
+                    icon: Icon(
+                      FluentIcons.next_24_filled,
+                      color: colorScheme.primary,
+                      size: 20,
+                    ),
+                    style: IconButton.styleFrom(
+                      foregroundColor: colorScheme.primary,
+                      padding: const EdgeInsets.all(4),
+                      minimumSize: const Size(
+                        AppTokens.minInteractiveSize,
+                        AppTokens.minInteractiveSize,
+                      ),
+                      maximumSize: const Size(
+                        AppTokens.minInteractiveSize,
+                        AppTokens.minInteractiveSize,
+                      ),
+                      shape: const CircleBorder(),
+                    ),
+                    visualDensity: VisualDensity.compact,
+                  ),
+                )
+              : const SizedBox.shrink(key: ValueKey('mini_next_empty')),
+        ),
       ],
     );
   }
@@ -531,14 +549,31 @@ class _CircularPlayButton extends StatelessWidget {
               },
               splashColor: Colors.transparent,
               highlightColor: Colors.transparent,
-              icon: Icon(
-                isCompleted
-                    ? FluentIcons.arrow_counterclockwise_24_filled
-                    : (isPlaying
-                          ? FluentIcons.pause_16_filled
-                          : FluentIcons.play_16_filled),
-                color: colorScheme.primary,
-                size: 22,
+              icon: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 180),
+                transitionBuilder: (child, animation) {
+                  return ScaleTransition(
+                    scale: animation,
+                    child: FadeTransition(
+                      opacity: animation,
+                      child: child,
+                    ),
+                  );
+                },
+                child: Icon(
+                  key: ValueKey(
+                    isCompleted
+                        ? 'mini_replay'
+                        : (isPlaying ? 'mini_pause' : 'mini_play'),
+                  ),
+                  isCompleted
+                      ? FluentIcons.arrow_counterclockwise_24_filled
+                      : (isPlaying
+                            ? FluentIcons.pause_16_filled
+                            : FluentIcons.play_16_filled),
+                  color: colorScheme.primary,
+                  size: 22,
+                ),
               ),
               visualDensity: VisualDensity.compact,
             ),

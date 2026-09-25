@@ -25,6 +25,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:fluentui_system_icons/fluentui_system_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:catchify/extensions/l10n.dart';
+import 'package:catchify/theme/app_text_styles.dart';
 import 'package:catchify/main.dart' show logger;
 import 'package:catchify/services/artist_service.dart' show ytMusicClient;
 import 'package:catchify/services/playlists_manager.dart';
@@ -385,7 +386,15 @@ class _ImportSpotifyPlaylistPageState extends State<ImportSpotifyPlaylistPage> {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     return Scaffold(
-      appBar: AppBar(title: Text(context.l10n!.importSpotifyPlaylistTitle)),
+      appBar: AppBar(
+        title: Text(
+          context.l10n!.importSpotifyPlaylistTitle,
+          style: AppTextStyles.pageTitle.copyWith(
+            color: colorScheme.onSurface,
+          ),
+        ),
+        surfaceTintColor: Colors.transparent,
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
         child: Column(

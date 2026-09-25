@@ -21,6 +21,7 @@
 
 import 'package:fluentui_system_icons/fluentui_system_icons.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:catchify/extensions/l10n.dart';
 import 'package:catchify/services/router_service.dart';
@@ -96,6 +97,7 @@ class _LanguageOnboardingPageState extends State<LanguageOnboardingPage> {
   }
 
   void _onCountrySelected(String countryCode) {
+    HapticFeedback.selectionClick();
     setState(() {
       _selectedCountry = countryCode;
       _currentStep = 1;
@@ -118,6 +120,7 @@ class _LanguageOnboardingPageState extends State<LanguageOnboardingPage> {
 
   Future<void> _completeOnboarding(String languageCode) async {
     if (_isProcessing) return;
+    await HapticFeedback.mediumImpact();
     setState(() {
       _isProcessing = true;
       _selectedLanguageCode = languageCode;

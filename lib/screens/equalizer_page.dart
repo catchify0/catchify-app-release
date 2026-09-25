@@ -29,6 +29,7 @@ import 'package:catchify/constants/app_constants.dart';
 import 'package:catchify/extensions/l10n.dart';
 import 'package:catchify/main.dart';
 import 'package:catchify/services/settings_manager.dart';
+import 'package:catchify/theme/app_text_styles.dart';
 import 'package:catchify/widgets/mini_player_bottom_space.dart';
 
 class EqualizerPage extends StatefulWidget {
@@ -140,7 +141,7 @@ class _EqualizerPageState extends State<EqualizerPage> {
   }
 
   Future<void> _applyPreset(String preset) async {
-    HapticFeedback.lightImpact();
+    await HapticFeedback.lightImpact();
     final presetGains = _getPresetGains(preset);
     for (var i = 0; i < presetGains.length; i++) {
       await audioHandler.setEqualizerBandGain(i, presetGains[i]);
@@ -200,7 +201,13 @@ class _EqualizerPageState extends State<EqualizerPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(context.l10n!.equalizer),
+        title: Text(
+          context.l10n!.equalizer,
+          style: AppTextStyles.pageTitle.copyWith(
+            color: colorScheme.onSurface,
+          ),
+        ),
+        surfaceTintColor: Colors.transparent,
         actions: [
           IconButton(
             icon: const Icon(FluentIcons.arrow_clockwise_24_filled),

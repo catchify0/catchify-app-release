@@ -191,7 +191,12 @@ class _SettingsPageState extends State<SettingsPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(context.l10n!.settings),
+        title: Text(
+          context.l10n!.settings,
+          style: AppTextStyles.pageTitle.copyWith(
+            color: colorScheme.onSurface,
+          ),
+        ),
         surfaceTintColor: Colors.transparent,
       ),
       body: SingleChildScrollView(
@@ -274,7 +279,6 @@ class _SettingsPageState extends State<SettingsPage> {
               'Music Language',
               FluentIcons.music_note_2_24_filled,
               description: 'Content preference for home feed & discovery',
-              borderRadius: commonCustomBarRadiusMiddle,
               trailing: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [

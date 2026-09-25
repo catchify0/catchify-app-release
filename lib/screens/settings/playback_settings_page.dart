@@ -26,6 +26,7 @@ import 'package:catchify/extensions/l10n.dart';
 import 'package:catchify/models/proxy_model.dart';
 import 'package:catchify/services/data_manager.dart';
 import 'package:catchify/services/settings_manager.dart';
+import 'package:catchify/theme/app_text_styles.dart';
 import 'package:catchify/utilities/flutter_bottom_sheet.dart';
 import 'package:catchify/utilities/flutter_toast.dart';
 import 'package:catchify/utilities/language_utils.dart';
@@ -88,7 +89,13 @@ class _PlaybackSettingsPageState extends State<PlaybackSettingsPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(context.l10n?.musicAndPlayback ?? 'Music & Playback'),
+        title: Text(
+          context.l10n?.musicAndPlayback ?? 'Music & Playback',
+          style: AppTextStyles.pageTitle.copyWith(
+            color: colorScheme.onSurface,
+          ),
+        ),
+        surfaceTintColor: Colors.transparent,
       ),
       body: SingleChildScrollView(
         padding: commonSingleChildScrollViewPadding,

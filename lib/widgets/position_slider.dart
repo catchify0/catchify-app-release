@@ -20,6 +20,7 @@
  */
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:catchify/main.dart';
 import 'package:catchify/models/position_data.dart';
 import 'package:catchify/utilities/formatter.dart';
@@ -37,6 +38,7 @@ class _PositionSliderState extends State<PositionSlider> {
   double? _dragEndValue;
   DateTime? _dragEndTime;
   Object? _currentMediaId;
+  bool _showRemainingTime = false;
   PositionData _positionData = PositionData(
     Duration.zero,
     Duration.zero,
@@ -92,18 +94,28 @@ class _PositionSliderState extends State<PositionSlider> {
               SliderTheme(
                 data: SliderTheme.of(context).copyWith(
                   activeTrackColor: colorScheme.primary,
-                  inactiveTrackColor: colorScheme.surfaceContainerHighest,
-                  secondaryActiveTrackColor: colorScheme.primary.withValues(alpha: 0.75),
+                  inactiveTrackColor: colorScheme.surfaceContainerHighest
+                      .withValues(alpha: 0.55),
+                  secondaryActiveTrackColor:
+                      colorScheme.primary.withValues(alpha: 0.35),
                   thumbColor: colorScheme.primary,
-                  overlayColor: colorScheme.primary.withValues(alpha: 0.14),
-                  trackHeight: 4,
-                  thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 7),
-                  overlayShape: const RoundSliderOverlayShape(overlayRadius: 16),
+                  overlayColor: colorScheme.primary.withValues(alpha: 0.16),
+                  trackHeight: _isDragging ? 6.0 : 4.5,
+                  thumbShape: RoundSliderThumbShape(
+                    enabledThumbRadius: _isDragging ? 10.0 : 6.5,
+                    elevation: _isDragging ? 6.0 : 2.0,
+                  ),
+                  overlayShape: RoundSliderOverlayShape(
+                    overlayRadius: _isDragging ? 22 : 16,
+                  ),
                   valueIndicatorShape: const PaddleSliderValueIndicatorShape(),
                 ),
                 child: Slider(
                   value: currentValue.clamp(0.0, maxDuration),
                   onChanged: (value) {
+                    if (!_isDragging) {
+                      HapticFeedback.selectionClick();
+                    }
                     setState(() {
                       _isDragging = true;
                       _dragValue = value;
@@ -111,6 +123,7 @@ class _PositionSliderState extends State<PositionSlider> {
                     });
                   },
                   onChangeEnd: (value) {
+                    HapticFeedback.lightImpact();
                     _dragEndValue = value;
                     _dragEndTime = DateTime.now();
                     audioHandler.seek(Duration(seconds: value.toInt()));
@@ -141,7 +154,9 @@ class _PositionSliderState extends State<PositionSlider> {
         : (currentSeconds < 0 ? 0 : currentSeconds);
 
     final positionText = formatDuration(displaySeconds);
-    final durationText = formatDuration(maxSeconds);
+    final durationText = _showRemainingTime
+        ? '-${formatDuration((maxSeconds - displaySeconds).clamp(0, maxSeconds))}'
+        : formatDuration(maxSeconds);
     final timeStyle = TextStyle(
       fontSize: 12.5,
       fontWeight: FontWeight.w600,
@@ -159,7 +174,16 @@ class _PositionSliderState extends State<PositionSlider> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(positionText, style: timeStyle),
-          Text(durationText, style: timeStyle),
+          GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: () {
+              HapticFeedback.selectionClick();
+              setState(() {
+                _showRemainingTime = !_showRemainingTime;
+              });
+            },
+            child: Text(durationText, style: timeStyle),
+          ),
         ],
       ),
     );
