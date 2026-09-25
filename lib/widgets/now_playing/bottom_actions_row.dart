@@ -31,7 +31,6 @@ import 'package:catchify/utilities/flutter_bottom_sheet.dart';
 import 'package:catchify/utilities/flutter_toast.dart';
 import 'package:catchify/utilities/mediaitem.dart';
 import 'package:catchify/utilities/playlist_dialogs.dart';
-import 'package:catchify/widgets/glass_surface.dart';
 import 'package:catchify/widgets/queue_list_view.dart';
 
 class BottomActionsRow extends StatefulWidget {
@@ -197,17 +196,27 @@ class _BottomActionsRowState extends State<BottomActionsRow> {
           ),
         ];
 
-        return GlassSurface(
-          blur: 24,
-          borderRadius: BorderRadius.circular(24),
-          surfaceColor:
-              colorScheme.surfaceContainerHigh.withValues(alpha: 0.55),
-          borderColor:
-              colorScheme.outlineVariant.withValues(alpha: 0.35),
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: actions,
+        return DecoratedBox(
+          decoration: BoxDecoration(
+            color: colorScheme.surfaceContainerHigh.withValues(alpha: 0.86),
+            borderRadius: BorderRadius.circular(22),
+            border: Border.all(
+              color: colorScheme.outlineVariant.withValues(alpha: 0.45),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: colorScheme.shadow.withValues(alpha: 0.08),
+                blurRadius: 18,
+                offset: const Offset(0, 8),
+              ),
+            ],
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(8),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: actions,
+            ),
           ),
         );
       },
@@ -239,8 +248,8 @@ class _BottomActionsRowState extends State<BottomActionsRow> {
           tooltip: tooltip,
           style: IconButton.styleFrom(
             backgroundColor: isActive
-                ? (activeColor ?? colorScheme.primary).withValues(alpha: 0.18)
-                : colorScheme.surfaceContainerLow.withValues(alpha: 0.65),
+                ? (activeColor ?? colorScheme.primary).withValues(alpha: 0.15)
+                : colorScheme.surfaceContainerLow.withValues(alpha: 0.8),
             tapTargetSize: MaterialTapTargetSize.shrinkWrap,
             padding: const EdgeInsets.all(10),
             minimumSize: const Size(
@@ -248,7 +257,7 @@ class _BottomActionsRowState extends State<BottomActionsRow> {
               AppTokens.minInteractiveSize,
             ),
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(12),
             ),
           ),
           onPressed: onPressed,
@@ -270,14 +279,14 @@ class _BottomActionsRowState extends State<BottomActionsRow> {
       iconSize: size,
       tooltip: tooltip,
       style: IconButton.styleFrom(
-        backgroundColor: colorScheme.surfaceContainerLow.withValues(alpha: 0.65),
+        backgroundColor: colorScheme.surfaceContainerLow.withValues(alpha: 0.8),
         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
         padding: const EdgeInsets.all(10),
         minimumSize: const Size(
           AppTokens.minInteractiveSize,
           AppTokens.minInteractiveSize,
         ),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
       onPressed: onPressed,
     );
@@ -320,8 +329,8 @@ class _BottomActionsRowState extends State<BottomActionsRow> {
           tooltip: tooltip,
           style: IconButton.styleFrom(
             backgroundColor: isActive
-                ? colorScheme.primary.withValues(alpha: 0.18)
-                : colorScheme.surfaceContainerLow.withValues(alpha: 0.65),
+                ? colorScheme.primary.withValues(alpha: 0.15)
+                : colorScheme.surfaceContainerLow.withValues(alpha: 0.8),
             tapTargetSize: MaterialTapTargetSize.shrinkWrap,
             padding: const EdgeInsets.all(10),
             minimumSize: const Size(
@@ -329,7 +338,7 @@ class _BottomActionsRowState extends State<BottomActionsRow> {
               AppTokens.minInteractiveSize,
             ),
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(12),
             ),
           ),
           onPressed: () {

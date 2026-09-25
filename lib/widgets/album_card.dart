@@ -26,7 +26,7 @@ import 'package:catchify/theme/app_text_styles.dart';
 import 'package:catchify/utilities/app_utils.dart';
 import 'package:catchify/widgets/playlist_cube.dart';
 
-class AlbumCard extends StatefulWidget {
+class AlbumCard extends StatelessWidget {
   const AlbumCard({
     super.key,
     required this.album,
@@ -39,20 +39,13 @@ class AlbumCard extends StatefulWidget {
   final double size;
 
   @override
-  State<AlbumCard> createState() => _AlbumCardState();
-}
-
-class _AlbumCardState extends State<AlbumCard> {
-  bool _isPressed = false;
-
-  @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final fullTitle = widget.album['title']?.toString() ?? '';
+    final fullTitle = album['title']?.toString() ?? '';
 
-    final isSingle = widget.album['isSingle'] == true;
-    final rawArtist = getDisplayArtist(widget.album);
-    final rawYear = widget.album['year']?.toString().trim() ?? '';
+    final isSingle = album['isSingle'] == true;
+    final rawArtist = getDisplayArtist(album);
+    final rawYear = album['year']?.toString().trim() ?? '';
 
     var displayTitle = fullTitle;
     var subtitle = '';
@@ -78,71 +71,59 @@ class _AlbumCardState extends State<AlbumCard> {
     final semanticLabel = rawArtist.isNotEmpty
         ? '$displayTitle, by $rawArtist'
         : displayTitle;
-    final disableAnimations =
-        MediaQuery.maybeOf(context)?.disableAnimations ?? false;
 
     return Semantics(
       label: semanticLabel,
       button: true,
-      child: AnimatedScale(
-        scale: _isPressed ? 0.96 : 1.0,
-        duration: disableAnimations
-            ? Duration.zero
-            : const Duration(milliseconds: 120),
-        curve: Curves.easeOutCubic,
-        child: SizedBox(
-          width: widget.size,
-          child: Material(
-            color: Colors.transparent,
+      child: SizedBox(
+        width: size,
+        child: Material(
+          color: Colors.transparent,
+          borderRadius: AppTokens.borderRadiusCard,
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
             borderRadius: AppTokens.borderRadiusCard,
-            clipBehavior: Clip.antiAlias,
-            child: InkWell(
-              borderRadius: AppTokens.borderRadiusCard,
-              overlayColor: WidgetStateProperty.resolveWith((states) {
-                if (states.contains(WidgetState.pressed)) {
-                  return colorScheme.primary.withValues(alpha: 0.08);
-                }
-                if (states.contains(WidgetState.hovered) ||
-                    states.contains(WidgetState.focused)) {
-                  return colorScheme.primary.withValues(alpha: 0.05);
-                }
-                return null;
-              }),
-              onTapDown: (_) => setState(() => _isPressed = true),
-              onTapUp: (_) => setState(() => _isPressed = false),
-              onTapCancel: () => setState(() => _isPressed = false),
-              onTap: widget.onTap,
-              child: Padding(
-                padding: const EdgeInsets.all(2),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    PlaylistCube(
-                      widget.album,
-                      size: widget.size,
-                      cubeIcon: FluentIcons.album_24_filled,
+            overlayColor: WidgetStateProperty.resolveWith((states) {
+              if (states.contains(WidgetState.pressed)) {
+                return colorScheme.primary.withValues(alpha: 0.08);
+              }
+              if (states.contains(WidgetState.hovered) ||
+                  states.contains(WidgetState.focused)) {
+                return colorScheme.primary.withValues(alpha: 0.05);
+              }
+              return null;
+            }),
+            onTap: onTap,
+            child: Padding(
+              padding: const EdgeInsets.all(2),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  PlaylistCube(
+                    album,
+                    size: size,
+                    cubeIcon: FluentIcons.album_24_filled,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    displayTitle,
+                    style: AppTextStyles.cardTitle.copyWith(
+                      color: colorScheme.onSurface,
                     ),
-                    const SizedBox(height: 8),
-                    Text(
-                      displayTitle,
-                      style: AppTextStyles.cardTitle.copyWith(
-                        color: colorScheme.onSurface,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    style: AppTextStyles.cardSubtitle.copyWith(
+                      color: colorScheme.onSurfaceVariant,
                     ),
-                    const SizedBox(height: 2),
-                    Text(
-                      subtitle,
-                      style: AppTextStyles.cardSubtitle.copyWith(
-                        color: colorScheme.onSurfaceVariant,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
               ),
             ),
           ),

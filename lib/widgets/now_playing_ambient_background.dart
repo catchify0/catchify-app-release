@@ -92,40 +92,23 @@ class NowPlayingAmbientBackground extends StatelessWidget {
         // Base tone matching theme surface
         ColoredBox(color: colorScheme.surface),
 
-        // Deep vibrant radial aura centered behind the artwork
-        Positioned.fill(
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              gradient: RadialGradient(
-                center: const Alignment(0, -0.28),
-                radius: 0.95,
-                colors: [
-                  colorScheme.primary.withValues(alpha: isDark ? 0.42 : 0.26),
-                  colorScheme.primary.withValues(alpha: 0),
-                ],
-                stops: const [0, 1],
-              ),
-            ),
-          ),
-        ),
-
         // Blurred artwork layer with smooth crossfade between songs
         RepaintBoundary(
           child: AnimatedSwitcher(
             duration: const Duration(milliseconds: 700),
-            switchInCurve: Curves.easeOutCubic,
-            switchOutCurve: Curves.easeInCubic,
+            switchInCurve: Curves.easeOut,
+            switchOutCurve: Curves.easeIn,
             child: imageProvider != null
                 ? ClipRect(
                     key: ValueKey<String>('art_$songKey'),
                     child: ImageFiltered(
                       imageFilter: ImageFilter.blur(
-                        sigmaX: 85,
-                        sigmaY: 85,
+                        sigmaX: 70,
+                        sigmaY: 70,
                         tileMode: TileMode.mirror,
                       ),
                       child: Transform.scale(
-                        scale: 1.42,
+                        scale: 1.35,
                         child: Image(
                           image: imageProvider,
                           fit: BoxFit.cover,

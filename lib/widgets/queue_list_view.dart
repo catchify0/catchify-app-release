@@ -26,7 +26,6 @@ import 'package:audio_service/audio_service.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:fluentui_system_icons/fluentui_system_icons.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:catchify/extensions/l10n.dart';
 import 'package:catchify/main.dart';
 import 'package:catchify/services/settings_manager.dart';
@@ -337,7 +336,6 @@ class _QueueWidgetState extends State<QueueWidget> {
       padding: const EdgeInsets.only(top: 4, bottom: 24, left: 8, right: 8),
       itemCount: _queue.length,
       onReorderItem: (oldIndex, newIndex) {
-        HapticFeedback.selectionClick();
         final movingId =
             _queue[oldIndex]['queueEntryId']?.toString() ??
             'legacy_${_queue[oldIndex]['ytid']}_$oldIndex';
@@ -426,19 +424,18 @@ class QueueTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return RepaintBoundary(
-      child: Dismissible(
-        key: ValueKey(queueEntryId),
-        confirmDismiss: confirmDismiss,
-        onDismissed: (_) => onDismissed(),
-        background: _DismissBackground(
-          alignment: Alignment.centerLeft,
-          colorScheme: colorScheme,
-        ),
-        secondaryBackground: _DismissBackground(
-          alignment: Alignment.centerRight,
-          colorScheme: colorScheme,
-        ),
+    return Dismissible(
+      key: ValueKey(queueEntryId),
+      confirmDismiss: confirmDismiss,
+      onDismissed: (_) => onDismissed(),
+      background: _DismissBackground(
+        alignment: Alignment.centerLeft,
+        colorScheme: colorScheme,
+      ),
+      secondaryBackground: _DismissBackground(
+        alignment: Alignment.centerRight,
+        colorScheme: colorScheme,
+      ),
       child: Material(
         color: isCurrentSong
             ? colorScheme.primary.withValues(alpha: 0.08)
@@ -504,15 +501,14 @@ class QueueTile extends StatelessWidget {
                   DecoratedBox(
                     decoration: BoxDecoration(
                       color: colorScheme.primary.withValues(alpha: 0.14),
-                      borderRadius: BorderRadius.circular(8),
+                      shape: BoxShape.circle,
                     ),
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 6,
-                        vertical: 5,
-                      ),
-                      child: _MiniEqualizerBars(
+                      padding: const EdgeInsets.all(4),
+                      child: Icon(
+                        FluentIcons.speaker_2_24_filled,
                         color: colorScheme.primary,
+                        size: 13,
                       ),
                     ),
                   ),
@@ -536,9 +532,8 @@ class QueueTile extends StatelessWidget {
           ),
         ),
       ),
-    ),
-  );
-}
+    );
+  }
 }
 
 class _ArtworkThumbnail extends StatelessWidget {
@@ -655,105 +650,6 @@ class _DismissBackground extends StatelessWidget {
         FluentIcons.delete_24_regular,
         color: colorScheme.onErrorContainer,
         size: 22,
-      ),
-    );
-  }
-}
-
-class _MiniEqualizerBars extends StatefulWidget {
-  const _MiniEqualizerBars({required this.color});
-  final Color color;
-
-  @override
-  State<_MiniEqualizerBars> createState() => _MiniEqualizerBarsState();
-}
-
-class _MiniEqualizerBarsState extends State<_MiniEqualizerBars>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _controller;
-  late final Animation<double> _anim1;
-  late final Animation<double> _anim2;
-  late final Animation<double> _anim3;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 600),
-    );
-    _anim1 = Tween<double>(begin: 4, end: 14).animate(
-      CurvedAnimation(
-        parent: _controller,
-        curve: const Interval(0, 0.7, curve: Curves.easeInOut),
-      ),
-    );
-    _anim2 = Tween<double>(begin: 8, end: 16).animate(
-      CurvedAnimation(
-        parent: _controller,
-        curve: const Interval(0.2, 0.9, curve: Curves.easeInOut),
-      ),
-    );
-    _anim3 = Tween<double>(begin: 5, end: 12).animate(
-      CurvedAnimation(
-        parent: _controller,
-        curve: const Interval(0.35, 1, curve: Curves.easeInOut),
-      ),
-    );
-
-    if (audioHandler.playbackState.value.playing) {
-      _controller.repeat(reverse: true);
-    }
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return StreamBuilder<PlaybackState>(
-      stream: audioHandler.playbackState,
-      initialData: audioHandler.playbackState.value,
-      builder: (context, snapshot) {
-        final isPlaying = snapshot.data?.playing ?? false;
-        if (isPlaying && !_controller.isAnimating) {
-          _controller.repeat(reverse: true);
-        } else if (!isPlaying && _controller.isAnimating) {
-          _controller.stop();
-        }
-
-        return SizedBox(
-          width: 14,
-          height: 16,
-          child: AnimatedBuilder(
-            animation: _controller,
-            builder: (context, _) {
-              return Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  _buildBar(isPlaying ? _anim1.value : 6),
-                  _buildBar(isPlaying ? _anim2.value : 12),
-                  _buildBar(isPlaying ? _anim3.value : 8),
-                ],
-              );
-            },
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildBar(double height) {
-    return Container(
-      width: 3,
-      height: height,
-      decoration: BoxDecoration(
-        color: widget.color,
-        borderRadius: BorderRadius.circular(1.5),
       ),
     );
   }

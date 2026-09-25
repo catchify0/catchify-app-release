@@ -25,7 +25,6 @@ import 'package:audio_service/audio_service.dart';
 import 'package:fluentui_system_icons/fluentui_system_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:volume_controller/volume_controller.dart';
-import 'package:catchify/main.dart';
 import 'package:catchify/services/settings_manager.dart';
 import 'package:catchify/widgets/song_artwork.dart';
 
@@ -60,7 +59,7 @@ class _NowPlayingArtworkState extends State<NowPlayingArtwork> {
 
   @override
   Widget build(BuildContext context) {
-    const borderRadius = 20.0;
+    const borderRadius = 16.0;
     final colorScheme = Theme.of(context).colorScheme;
     final screenWidth = widget.size.width;
     final screenHeight = widget.size.height;
@@ -76,171 +75,116 @@ class _NowPlayingArtworkState extends State<NowPlayingArtwork> {
                     ? screenWidth * 0.80
                     : screenWidth * 0.65;
 
-    final disableAnimations =
-        MediaQuery.maybeOf(context)?.disableAnimations ?? false;
-    final animDuration = disableAnimations
-        ? Duration.zero
-        : const Duration(milliseconds: 350);
-
-    return StreamBuilder<bool>(
-      stream: audioHandler.playbackState
-          .map((s) => s.playing)
-          .distinct(),
-      initialData: audioHandler.playbackState.valueOrNull?.playing ?? false,
-      builder: (context, playingSnapshot) {
-        final isPlaying = playingSnapshot.data ?? false;
-        final targetScale = isPlaying ? 1.0 : 0.92;
-
-        return GestureDetector(
-          behavior: HitTestBehavior.translucent,
-          onVerticalDragStart: (details) async {
-            if (!volumeGestureEnabled.value) return;
-            try {
-              _currentVolume = await VolumeController.instance.getVolume();
-              VolumeController.instance.showSystemUI = false;
-              _volumeHUDTimer?.cancel();
-              setState(() => _showVolumeHUD = true);
-            } catch (_) {}
-          },
-          onVerticalDragUpdate: (details) {
-            if (!volumeGestureEnabled.value) return;
-            try {
-              final delta = -details.primaryDelta! / 220.0;
-              _currentVolume = (_currentVolume + delta).clamp(0.0, 1.0);
-              VolumeController.instance.setVolume(_currentVolume);
-              setState(() => _showVolumeHUD = true);
-            } catch (_) {}
-          },
-          onVerticalDragEnd: (details) {
-            if (!volumeGestureEnabled.value) return;
-            _volumeHUDTimer?.cancel();
-            _volumeHUDTimer = Timer(const Duration(milliseconds: 1200), () {
-              if (mounted) setState(() => _showVolumeHUD = false);
-            });
-          },
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              AnimatedScale(
-                scale: targetScale,
-                duration: animDuration,
-                curve: Curves.easeOutCubic,
-                child: AnimatedContainer(
-                  key: widget.artworkKey,
-                  duration: animDuration,
-                  curve: Curves.easeOutCubic,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(borderRadius),
-                    boxShadow: [
-                      BoxShadow(
-                        color: colorScheme.primary.withValues(
-                          alpha: isPlaying ? 0.38 : 0.12,
-                        ),
-                        blurRadius: isPlaying ? 46 : 18,
-                        offset: Offset(0, isPlaying ? 16 : 6),
-                        spreadRadius: isPlaying ? 3 : 0,
-                      ),
-                      BoxShadow(
-                        color: Colors.black.withValues(
-                          alpha: isPlaying ? 0.40 : 0.18,
-                        ),
-                        blurRadius: isPlaying ? 24 : 10,
-                        offset: Offset(0, isPlaying ? 8 : 4),
-                      ),
-                    ],
-                  ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(borderRadius),
-                    child: DecoratedBox(
-                      decoration: BoxDecoration(
-                        border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.12),
-                          width: 0.8,
-                        ),
-                        borderRadius: BorderRadius.circular(borderRadius),
-                      ),
-                      position: DecorationPosition.foreground,
-                      child: SongArtworkWidget(
-                        metadata: widget.metadata,
-                        size: imageSize,
-                        errorWidgetIconSize: widget.size.width / 8,
-                        borderRadius: borderRadius,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              Positioned.fill(
-                child: IgnorePointer(
-                  ignoring: !_showVolumeHUD,
-                  child: AnimatedOpacity(
-                    opacity: _showVolumeHUD ? 1.0 : 0.0,
-                    duration: _showVolumeHUD
-                        ? const Duration(milliseconds: 150)
-                        : const Duration(milliseconds: 300),
-                    curve: Curves.easeInOut,
-                    child: AnimatedScale(
-                      scale: targetScale,
-                      duration: animDuration,
-                      curve: Curves.easeOutCubic,
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(borderRadius),
-                        child: DecoratedBox(
-                          decoration: BoxDecoration(
-                            color: Colors.black.withValues(alpha: 0.65),
-                          ),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                _currentVolume <= 0.01
-                                    ? FluentIcons.speaker_mute_24_filled
-                                    : _currentVolume < 0.4
-                                        ? FluentIcons.speaker_0_24_filled
-                                        : _currentVolume < 0.7
-                                            ? FluentIcons.speaker_1_24_filled
-                                            : FluentIcons.speaker_2_24_filled,
-                                size: 42,
-                                color: Colors.white,
-                              ),
-                              const SizedBox(height: 10),
-                              Text(
-                                '${(_currentVolume * 100).round()}%',
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 18,
-                                  letterSpacing: 0.5,
-                                ),
-                              ),
-                              const SizedBox(height: 12),
-                              SizedBox(
-                                width: imageSize * 0.55,
-                                child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(8),
-                                  child: LinearProgressIndicator(
-                                    value: _currentVolume,
-                                    minHeight: 6,
-                                    backgroundColor:
-                                        Colors.white.withValues(alpha: 0.3),
-                                    valueColor: AlwaysStoppedAnimation<Color>(
-                                      colorScheme.primary,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        );
+    return GestureDetector(
+      behavior: HitTestBehavior.translucent,
+      onVerticalDragStart: (details) async {
+        if (!volumeGestureEnabled.value) return;
+        try {
+          _currentVolume = await VolumeController.instance.getVolume();
+          VolumeController.instance.showSystemUI = false;
+          _volumeHUDTimer?.cancel();
+          setState(() => _showVolumeHUD = true);
+        } catch (_) {}
       },
+      onVerticalDragUpdate: (details) {
+        if (!volumeGestureEnabled.value) return;
+        try {
+          final delta = -details.primaryDelta! / 220.0;
+          _currentVolume = (_currentVolume + delta).clamp(0.0, 1.0);
+          VolumeController.instance.setVolume(_currentVolume);
+          setState(() => _showVolumeHUD = true);
+        } catch (_) {}
+      },
+      onVerticalDragEnd: (details) {
+        if (!volumeGestureEnabled.value) return;
+        _volumeHUDTimer?.cancel();
+        _volumeHUDTimer = Timer(const Duration(milliseconds: 1200), () {
+          if (mounted) setState(() => _showVolumeHUD = false);
+        });
+      },
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          DecoratedBox(
+            key: widget.artworkKey,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(borderRadius),
+              boxShadow: [
+                BoxShadow(
+                  color: colorScheme.primary.withValues(alpha: 0.28),
+                  blurRadius: 32,
+                  offset: const Offset(0, 12),
+                  spreadRadius: 2,
+                ),
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.32),
+                  blurRadius: 20,
+                  offset: const Offset(0, 8),
+                ),
+              ],
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(borderRadius),
+              child: SongArtworkWidget(
+                metadata: widget.metadata,
+                size: imageSize,
+                errorWidgetIconSize: widget.size.width / 8,
+                borderRadius: borderRadius,
+              ),
+            ),
+          ),
+          if (_showVolumeHUD)
+            Positioned.fill(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.55),
+                  borderRadius: BorderRadius.circular(borderRadius),
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      _currentVolume <= 0.01
+                          ? FluentIcons.speaker_mute_24_filled
+                          : _currentVolume < 0.4
+                              ? FluentIcons.speaker_0_24_filled
+                              : _currentVolume < 0.7
+                                  ? FluentIcons.speaker_1_24_filled
+                                  : FluentIcons.speaker_2_24_filled,
+                      size: 42,
+                      color: Colors.white,
+                    ),
+                    const SizedBox(height: 10),
+                    Text(
+                      '${(_currentVolume * 100).round()}%',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    SizedBox(
+                      width: imageSize * 0.55,
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: LinearProgressIndicator(
+                          value: _currentVolume,
+                          minHeight: 6,
+                          backgroundColor: Colors.white.withValues(alpha: 0.3),
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            colorScheme.primary,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+        ],
+      ),
     );
   }
 }

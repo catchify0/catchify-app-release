@@ -26,6 +26,7 @@ import 'package:audio_service/audio_service.dart';
 import 'package:fluentui_system_icons/fluentui_system_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:catchify/constants/app_tokens.dart';
 import 'package:catchify/extensions/l10n.dart';
 import 'package:catchify/main.dart';
 import 'package:catchify/services/common_services.dart';
@@ -254,7 +255,7 @@ class _NowPlayingPageState extends State<NowPlayingPage>
                         child: SongArtworkWidget(
                           metadata: metadata,
                           size: artworkSize,
-                          borderRadius: 20,
+                          borderRadius: 16,
                         ),
                         builder: (context, staticArtwork) {
                           final targetRect = _normalArtworkRect ??
@@ -276,7 +277,7 @@ class _NowPlayingPageState extends State<NowPlayingPage>
                           final currentTop =
                               lerpDouble(initialTop, compactTop, progress)!;
                           final currentRadius =
-                              lerpDouble(20, 10, progress)!;
+                              lerpDouble(16, 10, progress)!;
                           final shadowAlpha =
                               (1.0 - progress).clamp(0.0, 1.0);
 
@@ -740,83 +741,46 @@ class _NowPlayingPageState extends State<NowPlayingPage>
     MediaItem metadata,
   ) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 10, 20, 10),
+      padding: const EdgeInsets.fromLTRB(18, 10, 18, 12),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           IconButton(
-            iconSize: 22,
+            iconSize: 24,
             icon: const Icon(FluentIcons.chevron_down_24_regular),
             color: colorScheme.onSurfaceVariant,
-            tooltip: 'Dismiss',
-            style: IconButton.styleFrom(
-              backgroundColor:
-                  colorScheme.surfaceContainerHighest.withValues(alpha: 0.55),
-              shape: const CircleBorder(),
-              padding: const EdgeInsets.all(10),
-              minimumSize: const Size(40, 40),
+            padding: const EdgeInsets.all(10),
+            constraints: const BoxConstraints(
+              minWidth: AppTokens.minInteractiveSize,
+              minHeight: AppTokens.minInteractiveSize,
             ),
-            onPressed: () {
-              HapticFeedback.lightImpact();
-              Navigator.pop(context);
-            },
+            onPressed: () => Navigator.pop(context),
           ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-            decoration: BoxDecoration(
-              color:
-                  colorScheme.surfaceContainerHighest.withValues(alpha: 0.50),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: colorScheme.outlineVariant.withValues(alpha: 0.25),
-                width: 0.5,
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'NOW PLAYING',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 1.2,
+                  color: colorScheme.primary,
+                ),
               ),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 6,
-                  height: 6,
-                  decoration: BoxDecoration(
-                    color: colorScheme.primary,
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: colorScheme.primary.withValues(alpha: 0.6),
-                        blurRadius: 6,
-                        spreadRadius: 1,
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  'NOW PLAYING',
-                  style: TextStyle(
-                    fontSize: 10.5,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 1.3,
-                    color: colorScheme.onSurface.withValues(alpha: 0.85),
-                  ),
-                ),
-              ],
-            ),
+            ],
           ),
           IconButton(
-            iconSize: 20,
+            iconSize: 22,
             icon: const Icon(Icons.radio),
             tooltip: context.l10n?.startRadio ?? 'Start Radio',
             color: colorScheme.onSurfaceVariant,
-            style: IconButton.styleFrom(
-              backgroundColor:
-                  colorScheme.surfaceContainerHighest.withValues(alpha: 0.55),
-              shape: const CircleBorder(),
-              padding: const EdgeInsets.all(10),
-              minimumSize: const Size(40, 40),
+            padding: const EdgeInsets.all(10),
+            constraints: const BoxConstraints(
+              minWidth: AppTokens.minInteractiveSize,
+              minHeight: AppTokens.minInteractiveSize,
             ),
             onPressed: () {
-              HapticFeedback.lightImpact();
               final song = mediaItemToMap(metadata);
               showToast(
                 context,

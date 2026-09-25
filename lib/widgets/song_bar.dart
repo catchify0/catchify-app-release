@@ -571,73 +571,71 @@ class _SongBarState extends State<SongBar> {
         final isCurrentSong =
             currentId != null && currentId.isNotEmpty && currentId == _ytid;
 
-        return RepaintBoundary(
-          child: Material(
-            color: widget.backgroundColor ??
-                (isCurrentSong
-                    ? colorScheme.primary.withValues(alpha: 0.08)
-                    : colorScheme.surfaceContainerLow),
+        return Material(
+          color: widget.backgroundColor ??
+              (isCurrentSong
+                  ? colorScheme.primary.withValues(alpha: 0.08)
+                  : colorScheme.surfaceContainerLow),
+          borderRadius: activeRadius,
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
+            onTap: _handleSongTap,
             borderRadius: activeRadius,
-            clipBehavior: Clip.antiAlias,
-            child: InkWell(
-              onTap: _handleSongTap,
-              borderRadius: activeRadius,
-              splashColor: colorScheme.primary.withValues(alpha: 0.12),
-              highlightColor: colorScheme.primary.withValues(alpha: 0.06),
-              child: Padding(
-                padding:
-                    widget.barPadding ??
-                    const EdgeInsetsDirectional.symmetric(
-                      vertical: 10,
-                      horizontal: 12,
-                    ),
-                child: Row(
-                  children: [
-                    if (widget.rank != null) ...[
-                      SizedBox(
-                        width: 28,
-                        child: Text(
-                          '${widget.rank}',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            color: colorScheme.primary,
-                            fontSize: 14,
-                            fontWeight: FontWeight.w800,
-                          ),
+            splashColor: colorScheme.primary.withValues(alpha: 0.12),
+            highlightColor: colorScheme.primary.withValues(alpha: 0.06),
+            child: Padding(
+              padding:
+                  widget.barPadding ??
+                  const EdgeInsetsDirectional.symmetric(
+                    vertical: 10,
+                    horizontal: 12,
+                  ),
+              child: Row(
+                children: [
+                  if (widget.rank != null) ...[
+                    SizedBox(
+                      width: 28,
+                      child: Text(
+                        '${widget.rank}',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: colorScheme.primary,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w800,
                         ),
                       ),
-                      const SizedBox(width: 10),
-                    ],
-
-                    _buildAlbumArt(colorScheme),
-                    const SizedBox(width: 14),
-
-                    Expanded(
-                      child: _SongInfo(
-                        title: _songTitle,
-                        artist: _songArtist,
-                        plays: _plays,
-                        colorScheme: colorScheme,
-                        isCurrentSong: isCurrentSong,
-                      ),
                     ),
-
-                    OverflowMenuButton<String>(
-                      onSelected: (value) => _handleSongMenuAction(
-                        context: context,
-                        value: value,
-                        song: widget.song,
-                        ytid: _ytid,
-                        songLikeStatus: _songLikeStatus,
-                        songOfflineStatus: _songOfflineStatus,
-                        songDownloadStatus: _songDownloadStatus,
-                        onRemove: widget.onRemove,
-                        onRename: () => _handleRenameSong(context),
-                      ),
-                      itemBuilder: (context) => _buildMenuItems(context, colorScheme),
-                    ),
+                    const SizedBox(width: 10),
                   ],
-                ),
+
+                  _buildAlbumArt(colorScheme),
+                  const SizedBox(width: 14),
+
+                  Expanded(
+                    child: _SongInfo(
+                      title: _songTitle,
+                      artist: _songArtist,
+                      plays: _plays,
+                      colorScheme: colorScheme,
+                      isCurrentSong: isCurrentSong,
+                    ),
+                  ),
+
+                  OverflowMenuButton<String>(
+                    onSelected: (value) => _handleSongMenuAction(
+                      context: context,
+                      value: value,
+                      song: widget.song,
+                      ytid: _ytid,
+                      songLikeStatus: _songLikeStatus,
+                      songOfflineStatus: _songOfflineStatus,
+                      songDownloadStatus: _songDownloadStatus,
+                      onRemove: widget.onRemove,
+                      onRename: () => _handleRenameSong(context),
+                    ),
+                    itemBuilder: (context) => _buildMenuItems(context, colorScheme),
+                  ),
+                ],
               ),
             ),
           ),

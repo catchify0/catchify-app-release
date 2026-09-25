@@ -21,7 +21,6 @@ import 'package:catchify/constants/app_constants.dart';
 import 'package:catchify/extensions/l10n.dart';
 import 'package:catchify/services/data_manager.dart';
 import 'package:catchify/services/settings_manager.dart';
-import 'package:catchify/theme/app_text_styles.dart';
 import 'package:catchify/utilities/flutter_bottom_sheet.dart';
 import 'package:catchify/utilities/flutter_toast.dart';
 import 'package:catchify/widgets/bottom_sheet_bar.dart';
@@ -172,13 +171,7 @@ class _PlayerSettingsPageState extends State<PlayerSettingsPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          'Now Playing & Visuals',
-          style: AppTextStyles.pageTitle.copyWith(
-            color: colorScheme.onSurface,
-          ),
-        ),
-        surfaceTintColor: Colors.transparent,
+        title: const Text('Now Playing & Visuals'),
       ),
       body: SingleChildScrollView(
         padding: commonSingleChildScrollViewPadding,

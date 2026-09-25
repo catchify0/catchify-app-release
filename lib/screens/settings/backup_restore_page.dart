@@ -31,7 +31,6 @@ import 'package:catchify/services/data_manager.dart';
 import 'package:catchify/services/listening_stats_service.dart';
 import 'package:catchify/services/playlists_manager.dart';
 import 'package:catchify/services/settings_manager.dart';
-import 'package:catchify/theme/app_text_styles.dart';
 import 'package:catchify/utilities/flutter_toast.dart';
 import 'package:catchify/widgets/custom_bar.dart';
 import 'package:catchify/widgets/mini_player_bottom_space.dart';
@@ -279,13 +278,7 @@ class _BackupRestorePageState extends State<BackupRestorePage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          context.l10n?.backupAndRestore ?? 'Backup & Restore',
-          style: AppTextStyles.pageTitle.copyWith(
-            color: colorScheme.onSurface,
-          ),
-        ),
-        surfaceTintColor: Colors.transparent,
+        title: Text(context.l10n?.backupAndRestore ?? 'Backup & Restore'),
       ),
       body: SingleChildScrollView(
         padding: commonSingleChildScrollViewPadding,

@@ -485,14 +485,7 @@ class OfflinePlaylistService {
           progressNotifier.value.completed++;
           progressNotifier.notifyListeners();
         } else {
-          var success = await makeSongOffline(song);
-          // Auto-retry once on transient failure after a short delay
-          if (!success && !progressNotifier.value.isCancelled) {
-            await Future.delayed(const Duration(milliseconds: 500));
-            if (!progressNotifier.value.isCancelled) {
-              success = await makeSongOffline(song);
-            }
-          }
+          final success = await makeSongOffline(song);
           if (success) {
             progressNotifier.value.completed++;
           } else {
@@ -501,26 +494,12 @@ class OfflinePlaylistService {
           progressNotifier.notifyListeners();
         }
       } catch (e, stackTrace) {
-        var retrySuccess = false;
-        if (!progressNotifier.value.isCancelled) {
-          try {
-            await Future.delayed(const Duration(milliseconds: 500));
-            if (!progressNotifier.value.isCancelled) {
-              retrySuccess = await makeSongOffline(song);
-            }
-          } catch (_) {}
-        }
-
-        if (retrySuccess) {
-          progressNotifier.value.completed++;
-        } else {
-          logger.log(
-            'Failed to download song: ${song?['title']}',
-            error: e,
-            stackTrace: stackTrace,
-          );
-          progressNotifier.value.failed++;
-        }
+        logger.log(
+          'Failed to download song: ${song?['title']}',
+          error: e,
+          stackTrace: stackTrace,
+        );
+        progressNotifier.value.failed++;
         progressNotifier.notifyListeners();
       }
     }

@@ -104,16 +104,11 @@ class Logger {
 
     final file = _logFile;
     if (file != null) {
-      final shouldTrim = (_logCount % 50 == 0);
       _writeQueue = _writeQueue
           .then(
             (_) => file.writeAsString('$logMessage\n', mode: FileMode.append),
           )
-          .then((_) {
-            if (shouldTrim) {
-              return _trimLogFile(file);
-            }
-          })
+          .then((_) => _trimLogFile(file))
           .catchError((Object writeError, StackTrace writeStack) {
             if (kDebugMode) {
               debugPrint('[LOGGER_WRITE_ERROR] $writeError\n$writeStack');
@@ -132,7 +127,6 @@ class Logger {
       _logFile = file;
 
       if (await file.exists()) {
-        await _trimLogFile(file);
         final existing = await file.readAsLines();
         _logEntries
           ..clear()

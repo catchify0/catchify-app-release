@@ -26,7 +26,7 @@ import 'package:catchify/widgets/playlist_artwork.dart';
 
 /// Standardized music-first Playlist card.
 /// Artwork is the hero, followed by title and optional creator/subtitle.
-class PlaylistCard extends StatefulWidget {
+class PlaylistCard extends StatelessWidget {
   const PlaylistCard({
     super.key,
     required this.playlist,
@@ -39,126 +39,106 @@ class PlaylistCard extends StatefulWidget {
   final double size;
 
   @override
-  State<PlaylistCard> createState() => _PlaylistCardState();
-}
-
-class _PlaylistCardState extends State<PlaylistCard> {
-  bool _isPressed = false;
-
-  @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final title = widget.playlist['title']?.toString() ?? '';
-    final creator = getDisplayArtist(widget.playlist);
+    final title = playlist['title']?.toString() ?? '';
+    final creator = getDisplayArtist(playlist);
 
     final semanticLabel = creator.isNotEmpty
         ? '$title, playlist by $creator'
         : '$title, playlist';
-    final disableAnimations =
-        MediaQuery.maybeOf(context)?.disableAnimations ?? false;
 
     return Semantics(
       label: semanticLabel,
       button: true,
-      child: AnimatedScale(
-        scale: _isPressed ? 0.96 : 1.0,
-        duration: disableAnimations
-            ? Duration.zero
-            : const Duration(milliseconds: 120),
-        curve: Curves.easeOutCubic,
-        child: SizedBox(
-          width: widget.size,
-          child: Material(
-            color: Colors.transparent,
+      child: SizedBox(
+        width: size,
+        child: Material(
+          color: Colors.transparent,
+          borderRadius: BorderRadius.circular(AppTokens.radiusCard),
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
             borderRadius: BorderRadius.circular(AppTokens.radiusCard),
-            clipBehavior: Clip.antiAlias,
-            child: InkWell(
-              borderRadius: BorderRadius.circular(AppTokens.radiusCard),
-              overlayColor: WidgetStateProperty.resolveWith((states) {
-                if (states.contains(WidgetState.pressed)) {
-                  return colorScheme.primary.withValues(alpha: 0.08);
-                }
-                if (states.contains(WidgetState.hovered) ||
-                    states.contains(WidgetState.focused)) {
-                  return colorScheme.primary.withValues(alpha: 0.05);
-                }
-                return null;
-              }),
-              onTapDown: (_) => setState(() => _isPressed = true),
-              onTapUp: (_) => setState(() => _isPressed = false),
-              onTapCancel: () => setState(() => _isPressed = false),
-              onTap: widget.onTap,
-              child: Padding(
-                padding: const EdgeInsets.all(2),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    DecoratedBox(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(
-                          AppTokens.radiusCard,
+            overlayColor: WidgetStateProperty.resolveWith((states) {
+              if (states.contains(WidgetState.pressed)) {
+                return colorScheme.primary.withValues(alpha: 0.08);
+              }
+              if (states.contains(WidgetState.hovered) ||
+                  states.contains(WidgetState.focused)) {
+                return colorScheme.primary.withValues(alpha: 0.05);
+              }
+              return null;
+            }),
+            onTap: onTap,
+            child: Padding(
+              padding: const EdgeInsets.all(2),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  DecoratedBox(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(AppTokens.radiusCard),
+                      boxShadow: [
+                        BoxShadow(
+                          color: colorScheme.shadow.withValues(alpha: 0.14),
+                          blurRadius: 14,
+                          offset: const Offset(0, 5),
                         ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: colorScheme.shadow.withValues(alpha: 0.18),
-                            blurRadius: 16,
-                            offset: const Offset(0, 6),
+                      ],
+                    ),
+                    child: Stack(
+                      children: [
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(
+                            AppTokens.radiusCard,
                           ),
-                        ],
-                      ),
-                      child: Stack(
-                        children: [
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(
-                              AppTokens.radiusCard,
-                            ),
-                            child: PlaylistArtwork(
-                              playlistArtwork:
-                                  widget.playlist['highResImage'] ??
-                                  widget.playlist['image'],
-                              playlistTitle: title,
-                              songs: widget.playlist['list'] as List<dynamic>?,
-                              size: widget.size,
-                            ),
+                          child: PlaylistArtwork(
+                            playlistArtwork:
+                                playlist['highResImage'] ?? playlist['image'],
+                            playlistTitle: title,
+                            songs: playlist['list'] as List<dynamic>?,
+                            size: size,
                           ),
-                          Positioned.fill(
-                            child: DecoratedBox(
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(
-                                  AppTokens.radiusCard,
-                                ),
-                                border: Border.all(
-                                  color: Colors.white.withValues(alpha: 0.08),
+                        ),
+                        Positioned.fill(
+                          child: DecoratedBox(
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(
+                                AppTokens.radiusCard,
+                              ),
+                              border: Border.all(
+                                color: colorScheme.primary.withValues(
+                                  alpha: 0.12,
                                 ),
                               ),
                             ),
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 8),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    title,
+                    style: AppTextStyles.cardTitle.copyWith(
+                      color: colorScheme.onSurface,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  if (creator.isNotEmpty) ...[
+                    const SizedBox(height: 2),
                     Text(
-                      title,
-                      style: AppTextStyles.cardTitle.copyWith(
-                        color: colorScheme.onSurface,
+                      creator,
+                      style: AppTextStyles.cardSubtitle.copyWith(
+                        color: colorScheme.onSurfaceVariant,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    if (creator.isNotEmpty) ...[
-                      const SizedBox(height: 2),
-                      Text(
-                        creator,
-                        style: AppTextStyles.cardSubtitle.copyWith(
-                          color: colorScheme.onSurfaceVariant,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
                   ],
-                ),
+                ],
               ),
             ),
           ),

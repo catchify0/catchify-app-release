@@ -52,7 +52,6 @@ Widget buildPlaybackIconButton(
       if (processingState == AudioProcessingState.loading ||
           processingState == AudioProcessingState.buffering) {
         iconWidget = SizedBox(
-          key: const ValueKey('playback_loading'),
           width: iconSize,
           height: iconSize,
           child: CircularProgressIndicator(
@@ -64,7 +63,6 @@ Widget buildPlaybackIconButton(
         semanticLabel = context.l10n!.loading;
       } else if (processingState == AudioProcessingState.completed) {
         iconWidget = Icon(
-          key: const ValueKey('playback_completed'),
           useRoundedMaterialGlyphs
               ? Icons.replay_rounded
               : FluentIcons.arrow_counterclockwise_24_regular,
@@ -78,7 +76,6 @@ Widget buildPlaybackIconButton(
         semanticLabel = context.l10n!.replay;
       } else {
         iconWidget = Icon(
-          key: ValueKey('playback_${isPlaying ? "pause" : "play"}'),
           useRoundedMaterialGlyphs
               ? (isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded)
               : (isPlaying
@@ -97,26 +94,6 @@ Widget buildPlaybackIconButton(
         };
         semanticLabel = isPlaying ? context.l10n!.pause : context.l10n!.play;
       }
-
-      final disableAnimations =
-          MediaQuery.maybeOf(context)?.disableAnimations ?? false;
-      final transitionDuration = disableAnimations
-          ? Duration.zero
-          : const Duration(milliseconds: 180);
-
-      final animatedIcon = AnimatedSwitcher(
-        duration: transitionDuration,
-        transitionBuilder: (child, animation) {
-          return ScaleTransition(
-            scale: animation,
-            child: FadeTransition(
-              opacity: animation,
-              child: child,
-            ),
-          );
-        },
-        child: iconWidget,
-      );
 
       return DecoratedBox(
         decoration: BoxDecoration(
@@ -153,7 +130,7 @@ Widget buildPlaybackIconButton(
           child: Semantics(
             label: semanticLabel,
             button: true,
-            child: animatedIcon,
+            child: iconWidget,
           ),
         ),
       );

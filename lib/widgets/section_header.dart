@@ -103,40 +103,27 @@ class SectionHeader extends StatelessWidget {
           if (actionButton != null) ...[
             const SizedBox(width: 8),
             Align(
-              alignment: Alignment.centerRight,
+              alignment: Alignment.topCenter,
               child: DecoratedBox(
                 decoration: BoxDecoration(
-                  color: colorScheme.surfaceContainerHighest.withValues(
-                    alpha: 0.5,
-                  ),
-                  borderRadius: BorderRadius.circular(AppTokens.radiusPill),
-                  border: Border.all(
-                    color: colorScheme.outlineVariant.withValues(alpha: 0.22),
-                  ),
+                  color: colorScheme.primary.withValues(alpha: 0.12),
+                  borderRadius: AppTokens.borderRadiusControl,
                 ),
-                child: actionButton,
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(
+                    minWidth: AppTokens.minInteractiveSize,
+                    minHeight: AppTokens.minInteractiveSize,
+                  ),
+                  child: actionButton,
+                ),
               ),
             ),
           ] else if (onTap != null) ...[
             const SizedBox(width: 8),
-            DecoratedBox(
-              decoration: BoxDecoration(
-                color: colorScheme.surfaceContainerHighest.withValues(
-                  alpha: 0.35,
-                ),
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: colorScheme.outlineVariant.withValues(alpha: 0.18),
-                ),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(5),
-                child: Icon(
-                  FluentIcons.chevron_right_20_regular,
-                  size: 16,
-                  color: colorScheme.onSurfaceVariant,
-                ),
-              ),
+            Icon(
+              FluentIcons.chevron_right_20_regular,
+              size: 20,
+              color: colorScheme.onSurfaceVariant,
             ),
           ],
         ],

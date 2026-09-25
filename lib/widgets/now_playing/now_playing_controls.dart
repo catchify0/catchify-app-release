@@ -96,7 +96,7 @@ class NowPlayingControls extends StatelessWidget {
                     text: metadata.title,
                     fontColor: colorScheme.onSurface,
                     fontSize: titleFontSize * fontScale,
-                    fontWeight: FontWeight.w800,
+                    fontWeight: FontWeight.bold,
                   ),
                   SizedBox(height: spacing),
                   if (metadata.artist != null)
@@ -125,7 +125,7 @@ class NowPlayingControls extends StatelessWidget {
                                 text: metadata.artist!,
                                 fontColor: colorScheme.onSurfaceVariant,
                                 fontSize: artistFontSize * fontScale,
-                                fontWeight: FontWeight.w600,
+                                fontWeight: FontWeight.w500,
                               ),
                             ),
                           ),
@@ -326,11 +326,10 @@ class PlayerControlButtons extends StatelessWidget {
                                     audioHandler.skipToPrevious();
                                   },
                                   style: IconButton.styleFrom(
-                                    backgroundColor: colorScheme
-                                        .surfaceContainerHighest
-                                        .withValues(alpha: 0.65),
+                                    backgroundColor:
+                                        colorScheme.surfaceContainerHighest,
                                     shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(18),
+                                      borderRadius: BorderRadius.circular(16),
                                     ),
                                     padding: buttonPadding,
                                     minimumSize: const Size(
@@ -374,15 +373,13 @@ class PlayerControlButtons extends StatelessWidget {
                                             }
                                           : null,
                                       style: IconButton.styleFrom(
-                                        backgroundColor: colorScheme
-                                            .surfaceContainerHighest
-                                            .withValues(alpha: 0.65),
-                                        disabledBackgroundColor: colorScheme
-                                            .surfaceContainerHighest
-                                            .withValues(alpha: 0.35),
+                                        backgroundColor:
+                                            colorScheme.surfaceContainerHighest,
+                                        disabledBackgroundColor:
+                                            colorScheme.surfaceContainerHighest,
                                         shape: RoundedRectangleBorder(
                                           borderRadius: BorderRadius.circular(
-                                            18,
+                                            16,
                                           ),
                                         ),
                                         padding: buttonPadding,
@@ -428,60 +425,33 @@ class PlayerControlButtons extends StatelessWidget {
     return ValueListenableBuilder<bool>(
       valueListenable: shuffleNotifier,
       builder: (_, value, __) {
-        return AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          curve: Curves.easeInOut,
-          decoration: BoxDecoration(
-            color: value
+        return IconButton(
+          icon: Icon(
+            value
+                ? FluentIcons.arrow_shuffle_24_filled
+                : FluentIcons.arrow_shuffle_24_regular,
+            color: value ? colorScheme.onPrimary : colorScheme.onSurfaceVariant,
+          ),
+          tooltip: context.l10n!.shuffle,
+          iconSize: size,
+          constraints: buttonConstraints,
+          padding: buttonPadding,
+          style: IconButton.styleFrom(
+            backgroundColor: value
                 ? colorScheme.primary
-                : colorScheme.surfaceContainerHighest.withValues(alpha: 0.60),
-            borderRadius: BorderRadius.circular(14),
-            boxShadow: value
-                ? [
-                    BoxShadow(
-                      color: colorScheme.primary.withValues(alpha: 0.38),
-                      blurRadius: 10,
-                      offset: const Offset(0, 3),
-                    ),
-                  ]
-                : null,
-          ),
-          child: IconButton(
-            icon: AnimatedSwitcher(
-              duration: const Duration(milliseconds: 180),
-              transitionBuilder: (child, animation) => ScaleTransition(
-                scale: animation,
-                child: FadeTransition(opacity: animation, child: child),
-              ),
-              child: Icon(
-                key: ValueKey(value),
-                value
-                    ? FluentIcons.arrow_shuffle_24_filled
-                    : FluentIcons.arrow_shuffle_24_regular,
-                color: value
-                    ? colorScheme.onPrimary
-                    : colorScheme.onSurfaceVariant,
-              ),
+                : colorScheme.surfaceContainerHighest,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
             ),
-            tooltip: context.l10n!.shuffle,
-            iconSize: size,
-            constraints: buttonConstraints,
-            padding: buttonPadding,
-            style: IconButton.styleFrom(
-              backgroundColor: Colors.transparent,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-            onPressed: () {
-              HapticFeedback.lightImpact();
-              audioHandler.setShuffleMode(
-                value
-                    ? AudioServiceShuffleMode.none
-                    : AudioServiceShuffleMode.all,
-              );
-            },
           ),
+          onPressed: () {
+            HapticFeedback.lightImpact();
+            audioHandler.setShuffleMode(
+              value
+                  ? AudioServiceShuffleMode.none
+                  : AudioServiceShuffleMode.all,
+            );
+          },
         );
       },
     );
@@ -502,71 +472,45 @@ class PlayerControlButtons extends StatelessWidget {
           valueListenable: repeatNotifier,
           builder: (_, repeatMode, __) {
             final isActive = repeatMode != AudioServiceRepeatMode.none;
-            final icon = repeatMode == AudioServiceRepeatMode.one
-                ? FluentIcons.arrow_repeat_1_24_filled
-                : isActive
-                ? FluentIcons.arrow_repeat_all_24_filled
-                : FluentIcons.arrow_repeat_all_24_regular;
 
-            return AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              curve: Curves.easeInOut,
-              decoration: BoxDecoration(
+            return IconButton(
+              icon: Icon(
+                repeatMode == AudioServiceRepeatMode.one
+                    ? FluentIcons.arrow_repeat_1_24_filled
+                    : isActive
+                    ? FluentIcons.arrow_repeat_all_24_filled
+                    : FluentIcons.arrow_repeat_all_24_regular,
                 color: isActive
+                    ? colorScheme.onPrimary
+                    : colorScheme.onSurfaceVariant,
+              ),
+              tooltip: context.l10n!.repeat,
+              iconSize: size,
+              constraints: buttonConstraints,
+              padding: buttonPadding,
+              style: IconButton.styleFrom(
+                backgroundColor: isActive
                     ? colorScheme.primary
-                    : colorScheme.surfaceContainerHighest.withValues(alpha: 0.60),
-                borderRadius: BorderRadius.circular(14),
-                boxShadow: isActive
-                    ? [
-                        BoxShadow(
-                          color: colorScheme.primary.withValues(alpha: 0.38),
-                          blurRadius: 10,
-                          offset: const Offset(0, 3),
-                        ),
-                      ]
-                    : null,
-              ),
-              child: IconButton(
-                icon: AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 180),
-                  transitionBuilder: (child, animation) => ScaleTransition(
-                    scale: animation,
-                    child: FadeTransition(opacity: animation, child: child),
-                  ),
-                  child: Icon(
-                    key: ValueKey(repeatMode),
-                    icon,
-                    color: isActive
-                        ? colorScheme.onPrimary
-                        : colorScheme.onSurfaceVariant,
-                  ),
+                    : colorScheme.surfaceContainerHighest,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                tooltip: context.l10n!.repeat,
-                iconSize: size,
-                constraints: buttonConstraints,
-                padding: buttonPadding,
-                style: IconButton.styleFrom(
-                  backgroundColor: Colors.transparent,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                onPressed: () {
-                  HapticFeedback.lightImpact();
-                  final AudioServiceRepeatMode newMode;
-                  if (repeatMode == AudioServiceRepeatMode.none) {
-                    newMode = queue.length <= 1
-                        ? AudioServiceRepeatMode.one
-                        : AudioServiceRepeatMode.all;
-                  } else if (repeatMode == AudioServiceRepeatMode.all) {
-                    newMode = AudioServiceRepeatMode.one;
-                  } else {
-                    newMode = AudioServiceRepeatMode.none;
-                  }
-                  repeatNotifier.value = newMode;
-                  audioHandler.setRepeatMode(newMode);
-                },
               ),
+              onPressed: () {
+                HapticFeedback.lightImpact();
+                final AudioServiceRepeatMode newMode;
+                if (repeatMode == AudioServiceRepeatMode.none) {
+                  newMode = queue.length <= 1
+                      ? AudioServiceRepeatMode.one
+                      : AudioServiceRepeatMode.all;
+                } else if (repeatMode == AudioServiceRepeatMode.all) {
+                  newMode = AudioServiceRepeatMode.one;
+                } else {
+                  newMode = AudioServiceRepeatMode.none;
+                }
+                repeatNotifier.value = newMode;
+                audioHandler.setRepeatMode(newMode);
+              },
             );
           },
         );

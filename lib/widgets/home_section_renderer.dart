@@ -152,10 +152,8 @@ class HomeSectionRenderer extends StatelessWidget {
       );
     }
 
-    final colorScheme = Theme.of(context).colorScheme;
-
     return SizedBox(
-      height: chunkedSongs.map((c) => c.length).fold<int>(0, math.max) * 68.0 + 10.0,
+      height: chunkedSongs.map((c) => c.length).fold<int>(0, math.max) * 68.0,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         physics: const BouncingScrollPhysics(),
@@ -166,23 +164,8 @@ class HomeSectionRenderer extends StatelessWidget {
             const SizedBox(width: AppTokens.cardGap),
         itemBuilder: (context, colIndex) {
           final chunk = chunkedSongs[colIndex];
-          return Container(
+          return SizedBox(
             width: columnWidth,
-            decoration: BoxDecoration(
-              color: colorScheme.surfaceContainerLowest.withValues(alpha: 0.42),
-              borderRadius: BorderRadius.circular(18),
-              border: Border.all(
-                color: colorScheme.outlineVariant.withValues(alpha: 0.18),
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: colorScheme.shadow.withValues(alpha: 0.08),
-                  blurRadius: 16,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: List.generate(chunk.length, (rowIndex) {

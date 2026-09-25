@@ -69,9 +69,6 @@ class LrcLibService {
     'User-Agent': 'Catchify/1.0 (https://github.com/catchify0/catchify0.github.io)',
   };
 
-  /// Shared persistent HTTP client for connection reuse and keep-alive
-  static final http.Client _client = http.Client();
-
   /// In-memory LRU cache for fetched lyrics to prevent repeat network calls
   static final Map<String, String> _lyricsCache = {};
   static const int _maxLyricsCacheSize = 120;
@@ -201,7 +198,7 @@ class LrcLibService {
       }
 
       final uriWithQuery = uri.replace(queryParameters: queryParams);
-      final response = await _client
+      final response = await http
           .get(uriWithQuery, headers: _headers)
           .timeout(const Duration(seconds: 6));
 
@@ -224,7 +221,7 @@ class LrcLibService {
           retryParams['album_name'] = albumName.trim();
         }
         final retryUri = uri.replace(queryParameters: retryParams);
-        final retryResp = await _client
+        final retryResp = await http
             .get(retryUri, headers: _headers)
             .timeout(const Duration(seconds: 5));
 
@@ -313,7 +310,7 @@ class LrcLibService {
       if (albumName != null && albumName.trim().isNotEmpty) queryParams['album_name'] = albumName.trim();
 
       final uriWithQuery = uri.replace(queryParameters: queryParams);
-      final response = await _client
+      final response = await http
           .get(uriWithQuery, headers: _headers)
           .timeout(const Duration(seconds: 8));
 

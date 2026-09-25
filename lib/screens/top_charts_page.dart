@@ -23,7 +23,6 @@ import 'dart:math' as math;
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:fluentui_system_icons/fluentui_system_icons.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:catchify/constants/app_tokens.dart';
 import 'package:catchify/main.dart';
@@ -220,7 +219,6 @@ class _TopChartsPageState extends State<TopChartsPage> {
                             selected: isSelected,
                             onSelected: (selected) {
                               if (selected) {
-                                HapticFeedback.selectionClick();
                                 setState(() {
                                   _selectedCategory = category;
                                 });
@@ -276,7 +274,6 @@ class _TopChartsPageState extends State<TopChartsPage> {
                         icon: const Icon(FluentIcons.play_20_filled, size: 18),
                         label: const Text('Play All'),
                         onPressed: () async {
-                          await HapticFeedback.mediumImpact();
                           await audioHandler.playPlaylistSong(
                             playlist: {
                               'title': 'Top Charts - $countryName',
@@ -454,70 +451,33 @@ class _RankBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    LinearGradient? gradient;
-    Color? badgeColor;
+    Color badgeColor;
     Color textColor;
-    List<BoxShadow>? shadows;
 
     if (rank == 1) {
-      gradient = const LinearGradient(
-        colors: [Color(0xFFFFDF00), Color(0xFFD4AF37)],
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-      );
-      textColor = const Color(0xFF1A1A1A);
-      shadows = [
-        BoxShadow(
-          color: const Color(0xFFFFD700).withValues(alpha: 0.4),
-          blurRadius: 8,
-          offset: const Offset(0, 2),
-        ),
-      ];
+      badgeColor = const Color(0xFFFFD700); // Gold
+      textColor = Colors.black;
     } else if (rank == 2) {
-      gradient = const LinearGradient(
-        colors: [Color(0xFFE2E8F0), Color(0xFFA0AEC0)],
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-      );
-      textColor = const Color(0xFF1A1A1A);
-      shadows = [
-        BoxShadow(
-          color: const Color(0xFFA0AEC0).withValues(alpha: 0.35),
-          blurRadius: 6,
-          offset: const Offset(0, 2),
-        ),
-      ];
+      badgeColor = const Color(0xFFC0C0C0); // Silver
+      textColor = Colors.black;
     } else if (rank == 3) {
-      gradient = const LinearGradient(
-        colors: [Color(0xFFE5A65D), Color(0xFFB87333)],
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-      );
+      badgeColor = const Color(0xFFCD7F32); // Bronze
       textColor = Colors.white;
-      shadows = [
-        BoxShadow(
-          color: const Color(0xFFCD7F32).withValues(alpha: 0.35),
-          blurRadius: 6,
-          offset: const Offset(0, 2),
-        ),
-      ];
     } else {
-      badgeColor = theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5);
+      badgeColor = theme.colorScheme.surfaceContainerHighest;
       textColor = theme.colorScheme.onSurfaceVariant;
     }
 
     return Container(
-      width: 30,
-      height: 30,
+      width: 28,
+      height: 28,
       alignment: Alignment.center,
       decoration: BoxDecoration(
-        color: gradient == null ? badgeColor : null,
-        gradient: gradient,
-        borderRadius: BorderRadius.circular(8),
-        boxShadow: shadows,
+        color: rank <= 3 ? badgeColor : Colors.transparent,
+        borderRadius: BorderRadius.circular(6),
         border: rank > 3
             ? Border.all(
-                color: theme.colorScheme.outlineVariant.withValues(alpha: 0.35),
+                color: theme.colorScheme.outlineVariant.withValues(alpha: 0.4),
                 width: 0.8,
               )
             : null,
@@ -525,7 +485,7 @@ class _RankBadge extends StatelessWidget {
       child: Text(
         '$rank',
         style: TextStyle(
-          fontSize: rank <= 3 ? 13 : 12,
+          fontSize: 13,
           fontWeight: rank <= 3 ? FontWeight.w800 : FontWeight.w600,
           color: textColor,
         ),
@@ -554,21 +514,10 @@ class _HeroTrendingBanner extends StatelessWidget {
     final artist = topSong['artist']?.toString() ?? 'Top Artist';
 
     return Container(
-      height: 220,
+      height: 200,
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: colorScheme.primary.withValues(alpha: 0.22),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-          ),
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.35),
-            blurRadius: 16,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        borderRadius: BorderRadius.circular(AppTokens.radiusCard),
+        color: colorScheme.surfaceContainerHigh,
       ),
       clipBehavior: Clip.antiAlias,
       child: Stack(
@@ -582,15 +531,15 @@ class _HeroTrendingBanner extends StatelessWidget {
               errorWidget: (_, __, ___) => const SizedBox.shrink(),
             ),
 
-          // Dynamic Atmospheric Gradient Overlay
+          // Gradient Overlay
           Container(
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 colors: [
-                  Colors.black.withValues(alpha: 0.28),
-                  Colors.black.withValues(alpha: 0.88),
+                  Colors.black.withValues(alpha: 0.35),
+                  Colors.black.withValues(alpha: 0.85),
                 ],
               ),
             ),
@@ -598,26 +547,18 @@ class _HeroTrendingBanner extends StatelessWidget {
 
           // Content
           Padding(
-            padding: const EdgeInsets.all(18),
+            padding: const EdgeInsets.all(16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                // Glowing Gold Trophy Badge
+                // Badge
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [Color(0xFFFFDF00), Color(0xFFD4AF37)],
-                    ),
+                    color: const Color(0xFFFFD700),
                     borderRadius: BorderRadius.circular(AppTokens.radiusPill),
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFFFFD700).withValues(alpha: 0.4),
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
                   ),
                   child: const Row(
                     mainAxisSize: MainAxisSize.min,
@@ -625,16 +566,16 @@ class _HeroTrendingBanner extends StatelessWidget {
                       Icon(
                         FluentIcons.trophy_16_filled,
                         size: 14,
-                        color: Color(0xFF1A1A1A),
+                        color: Colors.black,
                       ),
-                      SizedBox(width: 6),
+                      SizedBox(width: 5),
                       Text(
                         '#1 IN TRENDING TODAY',
                         style: TextStyle(
-                          color: Color(0xFF1A1A1A),
+                          color: Colors.black,
                           fontSize: 11,
                           fontWeight: FontWeight.w800,
-                          letterSpacing: 0.6,
+                          letterSpacing: 0.5,
                         ),
                       ),
                     ],
@@ -649,9 +590,9 @@ class _HeroTrendingBanner extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
                     color: Colors.white,
-                    fontSize: 21,
+                    fontSize: 20,
                     fontWeight: FontWeight.w800,
-                    letterSpacing: -0.4,
+                    letterSpacing: -0.3,
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -662,22 +603,20 @@ class _HeroTrendingBanner extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.85),
+                    color: Colors.white.withValues(alpha: 0.8),
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
                 const SizedBox(height: 14),
 
-                // Action Buttons
+                // Buttons
                 Row(
                   children: [
                     ElevatedButton.icon(
                       style: ElevatedButton.styleFrom(
                         backgroundColor: colorScheme.primary,
                         foregroundColor: colorScheme.onPrimary,
-                        elevation: 4,
-                        shadowColor: colorScheme.primary.withValues(alpha: 0.4),
                         padding: const EdgeInsets.symmetric(
                           horizontal: 18,
                           vertical: 10,
@@ -693,7 +632,6 @@ class _HeroTrendingBanner extends StatelessWidget {
                         style: TextStyle(fontWeight: FontWeight.w700),
                       ),
                       onPressed: () async {
-                        await HapticFeedback.lightImpact();
                         await audioHandler.playPlaylistSong(
                           playlist: {
                             'title': 'Top Charts - $countryName',
@@ -706,14 +644,10 @@ class _HeroTrendingBanner extends StatelessWidget {
                     const SizedBox(width: 10),
                     OutlinedButton.icon(
                       style: OutlinedButton.styleFrom(
-                        backgroundColor: Colors.white.withValues(alpha: 0.14),
                         foregroundColor: Colors.white,
-                        side: BorderSide(
-                          color: Colors.white.withValues(alpha: 0.25),
-                          width: 0.9,
-                        ),
+                        side: const BorderSide(color: Colors.white38),
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
+                          horizontal: 14,
                           vertical: 10,
                         ),
                         shape: RoundedRectangleBorder(
@@ -728,7 +662,6 @@ class _HeroTrendingBanner extends StatelessWidget {
                         style: TextStyle(fontWeight: FontWeight.w600),
                       ),
                       onPressed: () async {
-                        await HapticFeedback.lightImpact();
                         final shuffledList = List<Map<String, dynamic>>.from(allSongs)
                           ..shuffle();
                         await audioHandler.playPlaylistSong(

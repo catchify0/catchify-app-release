@@ -204,7 +204,10 @@ class _HomePageState extends State<HomePage> {
 
   void _refreshHomeFeed() {
     if (!mounted) return;
-    setState(_initFutures);
+    setState(() {
+      // This setting only changes local personalization sections.
+      _initFutures();
+    });
   }
 
   void _retryHomeFeed() {
@@ -275,90 +278,57 @@ class _HomePageState extends State<HomePage> {
 
     return Scaffold(
       appBar: AppBar(
-        toolbarHeight: 90,
+        toolbarHeight: 84,
         titleSpacing: AppTokens.pagePadding,
-        backgroundColor: Colors.transparent,
-        elevation: 0,
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
-            Row(
-              children: [
-                Text(
-                  'Catchify',
-                  style: TextStyle(
-                    fontFamily: 'paytoneOne',
-                    fontSize: 16,
-                    fontWeight: FontWeight.w400,
-                    letterSpacing: 0.1,
-                    color: colorScheme.primary,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  '•',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  DateFormat('EEEE, d MMMM').format(DateTime.now()).toUpperCase(),
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 0.9,
-                    color: colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
-                  ),
-                ),
-              ],
+            Text(
+              'Catchify',
+              style: TextStyle(
+                fontFamily: 'paytoneOne',
+                fontSize: 18,
+                fontWeight: FontWeight.w400,
+                letterSpacing: 0.1,
+                color: Theme.of(context).colorScheme.primary,
+              ),
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: 3),
+            Text(
+              DateFormat(
+                'EEEE, d MMMM',
+              ).format(DateTime.now()).toUpperCase(),
+              style: TextStyle(
+                fontSize: 11.5,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.8,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+            ),
+            const SizedBox(height: 2),
             Text(
               _getGreeting(),
               style: AppTextStyles.pageTitle.copyWith(
-                fontSize: 27,
-                fontWeight: FontWeight.w900,
-                letterSpacing: -0.7,
-                height: 1.15,
+                fontWeight: FontWeight.w800,
+                letterSpacing: -0.6,
               ),
             ),
           ],
         ),
         actions: [
           Padding(
-            padding: const EdgeInsets.only(right: 16),
+            padding: const EdgeInsets.only(right: 12),
             child: Semantics(
               label: _getGreeting(),
               image: true,
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.42),
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: colorScheme.outlineVariant.withValues(alpha: 0.28),
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: colorScheme.primary.withValues(alpha: 0.12),
-                      blurRadius: 16,
-                      offset: const Offset(0, 3),
-                    ),
-                  ],
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(9),
-                  child: SvgPicture.asset(
-                    _getGreetingAsset(),
-                    width: 24,
-                    height: 24,
-                    colorFilter: ColorFilter.mode(
-                      colorScheme.primary,
-                      BlendMode.srcIn,
-                    ),
-                  ),
+              child: SvgPicture.asset(
+                _getGreetingAsset(),
+                width: 42,
+                height: 42,
+                colorFilter: ColorFilter.mode(
+                  colorScheme.primary,
+                  BlendMode.srcIn,
                 ),
               ),
             ),
@@ -476,67 +446,60 @@ class _HomePageState extends State<HomePage> {
               child: Material(
                 color: Colors.transparent,
                 child: InkWell(
-                  onTap: () {
-                    HapticFeedback.selectionClick();
-                    _onMoodSelected(mood);
-                  },
+                  onTap: () => _onMoodSelected(mood),
                   borderRadius: BorderRadius.circular(AppTokens.radiusPill),
-                  child: AnimatedScale(
-                    scale: isSelected ? 1.0 : 0.95,
-                    duration: const Duration(milliseconds: 180),
+                  child: AnimatedContainer(
+                    duration: AppTokens.motionStandard,
                     curve: Curves.easeOutCubic,
-                    child: AnimatedContainer(
-                      duration: AppTokens.motionStandard,
-                      curve: Curves.easeOutCubic,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 10,
-                      ),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(AppTokens.radiusPill),
-                        gradient: isSelected
-                            ? LinearGradient(
-                                colors: [
-                                  colorScheme.primary,
-                                  colorScheme.primary.withValues(alpha: 0.82),
-                                ],
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                              )
-                            : null,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 10,
+                    ),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(AppTokens.radiusPill),
+                      gradient: isSelected
+                          ? LinearGradient(
+                              colors: [
+                                colorScheme.primary,
+                                colorScheme.primary.withValues(alpha: 0.82),
+                              ],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            )
+                          : null,
+                      color: isSelected
+                          ? null
+                          : colorScheme.surfaceContainerHighest.withValues(
+                              alpha: 0.42,
+                            ),
+                      border: Border.all(
                         color: isSelected
-                            ? null
-                            : colorScheme.surfaceContainerHighest.withValues(
-                                alpha: 0.42,
-                              ),
-                        border: Border.all(
-                          color: isSelected
-                              ? colorScheme.primary.withValues(alpha: 0.9)
-                              : colorScheme.onSurface.withValues(alpha: 0.1),
-                        ),
-                        boxShadow: isSelected
-                            ? [
-                                BoxShadow(
-                                  color: colorScheme.primary.withValues(
-                                    alpha: 0.28,
-                                  ),
-                                  blurRadius: 12,
-                                  offset: const Offset(0, 4),
-                                ),
-                              ]
-                            : null,
+                            ? colorScheme.primary.withValues(alpha: 0.9)
+                            : colorScheme.onSurface.withValues(alpha: 0.1),
+                        width: 1,
                       ),
-                      child: Center(
-                        child: Text(
-                          mood,
-                          style: AppTextStyles.chip.copyWith(
-                            fontWeight: isSelected
-                                ? FontWeight.w600
-                                : FontWeight.w500,
-                            color: isSelected
-                                ? colorScheme.onPrimary
-                                : colorScheme.onSurface.withValues(alpha: 0.9),
-                          ),
+                      boxShadow: isSelected
+                          ? [
+                              BoxShadow(
+                                color: colorScheme.primary.withValues(
+                                  alpha: 0.28,
+                                ),
+                                blurRadius: 12,
+                                offset: const Offset(0, 4),
+                              ),
+                            ]
+                          : null,
+                    ),
+                    child: Center(
+                      child: Text(
+                        mood,
+                        style: AppTextStyles.chip.copyWith(
+                          fontWeight: isSelected
+                              ? FontWeight.w600
+                              : FontWeight.w500,
+                          color: isSelected
+                              ? colorScheme.onPrimary
+                              : colorScheme.onSurface.withValues(alpha: 0.9),
                         ),
                       ),
                     ),

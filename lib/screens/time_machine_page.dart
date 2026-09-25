@@ -32,7 +32,6 @@ import 'package:catchify/main.dart';
 import 'package:catchify/screens/user_songs_page.dart';
 import 'package:catchify/services/listening_stats_service.dart';
 import 'package:catchify/services/settings_manager.dart';
-import 'package:catchify/theme/app_text_styles.dart';
 import 'package:catchify/utilities/app_utils.dart';
 import 'package:catchify/utilities/flutter_toast.dart';
 import 'package:catchify/utilities/listening_stats_utils.dart';
@@ -96,15 +95,7 @@ class _TimeMachinePageState extends State<TimeMachinePage> {
     final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          context.l10n!.timeMachine,
-          style: AppTextStyles.pageTitle.copyWith(
-            color: colorScheme.onSurface,
-          ),
-        ),
-        surfaceTintColor: Colors.transparent,
-      ),
+      appBar: AppBar(title: Text(context.l10n!.timeMachine)),
       body: Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -135,18 +126,8 @@ class _TimeMachinePageState extends State<TimeMachinePage> {
       showAnnualRecap: showAnnualRecap,
     );
 
-    final colorScheme = Theme.of(context).colorScheme;
-
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          context.l10n!.timeMachine,
-          style: AppTextStyles.pageTitle.copyWith(
-            color: colorScheme.onSurface,
-          ),
-        ),
-        surfaceTintColor: Colors.transparent,
-      ),
+      appBar: AppBar(title: Text(context.l10n!.timeMachine)),
       body: ListView.builder(
         padding: const EdgeInsets.fromLTRB(10, 0, 10, 24),
         scrollCacheExtent: const ScrollCacheExtent.pixels(500),

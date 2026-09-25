@@ -41,18 +41,6 @@ PersistentBottomSheetController? showCustomBottomSheet(
           topLeft: Radius.circular(AppTokens.radiusSheet),
           topRight: Radius.circular(AppTokens.radiusSheet),
         ),
-        border: Border(
-          top: BorderSide(
-            color: colorScheme.outlineVariant.withValues(alpha: 0.28),
-          ),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: colorScheme.shadow.withValues(alpha: 0.22),
-            blurRadius: 28,
-            offset: const Offset(0, -6),
-          ),
-        ],
       ),
       padding: const EdgeInsets.symmetric(horizontal: 12),
       child: Column(
@@ -63,10 +51,10 @@ PersistentBottomSheetController? showCustomBottomSheet(
             child: GestureDetector(
               onTap: closeCurrentBottomSheet,
               child: Container(
-                width: 40,
-                height: 4.5,
+                width: 36,
+                height: 4,
                 decoration: BoxDecoration(
-                  color: colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
+                  color: colorScheme.onSurfaceVariant.withValues(alpha: 0.35),
                   borderRadius: BorderRadius.circular(AppTokens.radiusPill),
                 ),
               ),

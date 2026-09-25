@@ -67,9 +67,7 @@ String? _extractIpaUrl(
 
 Future<void> checkAppUpdates({bool manual = false}) async {
   try {
-    final response = await http
-        .get(Uri.parse(checkUrl))
-        .timeout(const Duration(seconds: 10));
+    final response = await http.get(Uri.parse(checkUrl));
 
     if (response.statusCode != 200) {
       logger.log(
@@ -107,9 +105,7 @@ Future<void> checkAppUpdates({bool manual = false}) async {
       return;
     }
 
-    final releasesRequest = await http
-        .get(Uri.parse(releasesUrl))
-        .timeout(const Duration(seconds: 10));
+    final releasesRequest = await http.get(Uri.parse(releasesUrl));
 
     if (releasesRequest.statusCode != 200) {
       logger.log(

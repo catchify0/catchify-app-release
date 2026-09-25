@@ -337,13 +337,10 @@ class _PlaylistPageState extends State<PlaylistPage> {
                         context.l10n!.play,
                         style: const TextStyle(fontWeight: FontWeight.w700),
                       ),
-                      onPressed: () async {
-                        await HapticFeedback.mediumImpact();
-                        await audioHandler.playPlaylistSong(
-                          playlist: _playlist,
-                          songIndex: 0,
-                        );
-                      },
+                      onPressed: () => audioHandler.playPlaylistSong(
+                        playlist: _playlist,
+                        songIndex: 0,
+                      ),
                     ),
                   ),
                 ),
@@ -373,7 +370,6 @@ class _PlaylistPageState extends State<PlaylistPage> {
                     onPressed: () async {
                       final songs = _playlist['list'] as List? ?? [];
                       if (songs.isEmpty) return;
-                      await HapticFeedback.mediumImpact();
                       await audioHandler.playPlaylistSong(
                         playlist: _playlist,
                         songIndex: 0,
