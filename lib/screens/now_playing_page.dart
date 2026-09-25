@@ -20,6 +20,7 @@
  */
 
 import 'dart:async';
+import 'dart:math' as math;
 import 'dart:ui' show lerpDouble;
 
 import 'package:audio_service/audio_service.dart';
@@ -29,6 +30,7 @@ import 'package:flutter/services.dart';
 import 'package:catchify/constants/app_tokens.dart';
 import 'package:catchify/extensions/l10n.dart';
 import 'package:catchify/main.dart';
+import 'package:catchify/services/artwork_service.dart';
 import 'package:catchify/services/common_services.dart';
 import 'package:catchify/services/settings_manager.dart';
 import 'package:catchify/utilities/flutter_toast.dart';
@@ -164,13 +166,59 @@ class _NowPlayingPageState extends State<NowPlayingPage>
                   SafeArea(
                     child: LayoutBuilder(
                       builder: (context, constraints) {
-                final artworkSize = _artworkSize(size);
-                final artworkLeft = (constraints.maxWidth - artworkSize) / 2;
+                final uriStr = metadata.artUri?.toString() ??
+                    metadata.extras?['highResImage']?.toString() ??
+                    metadata.extras?['image']?.toString() ??
+                    '';
+                final isHorizontal =
+                    ArtworkService.isYouTubeThumbnailUrl(uriStr);
+
+                final double maxW;
+                final double maxH;
+                final isLandscape = size.width > size.height;
+                final isDesktop = size.width > 800;
+
+                if (isDesktop) {
+                  maxH = size.height * 0.45;
+                  maxW = size.width * 0.50;
+                } else if (isLandscape) {
+                  maxH = size.height * 0.50;
+                  maxW = size.width * 0.45;
+                } else if (size.width < 360) {
+                  maxW = size.width * 0.85;
+                  maxH = size.height * 0.38;
+                } else if (size.width < 600) {
+                  maxW = size.width * 0.88;
+                  maxH = size.height * 0.40;
+                } else {
+                  maxW = size.width * 0.70;
+                  maxH = size.height * 0.42;
+                }
+
+                final double naturalArtworkWidth;
+                final double naturalArtworkHeight;
+                if (isHorizontal) {
+                  var w = maxW;
+                  var h = w * 9.0 / 16.0;
+                  if (h > maxH) {
+                    h = maxH;
+                    w = h * 16.0 / 9.0;
+                  }
+                  naturalArtworkWidth = w;
+                  naturalArtworkHeight = h;
+                } else {
+                  final s = math.min(maxW, maxH);
+                  naturalArtworkWidth = s;
+                  naturalArtworkHeight = s;
+                }
+
+                final artworkLeft =
+                    (constraints.maxWidth - naturalArtworkWidth) / 2;
                 final artworkTop = _artworkTop(size);
                 const compactLeft = 18.0;
-                // Must match the top padding of _buildLyricsHeader (fromLTRB(18,8,18,4))
-                // so the animated artwork lands exactly on the 58×58 SizedBox slot.
-                const compactTop = 8.0;
+                final compactW = isHorizontal ? 76.0 : 54.0;
+                final compactH = isHorizontal ? 42.0 : 54.0;
+                final compactTop = isHorizontal ? 14.0 : 8.0;
 
                 return Stack(
                   key: _stackKey,
@@ -248,13 +296,18 @@ class _NowPlayingPageState extends State<NowPlayingPage>
                         ),
                       ),
 
-                    // Floating artwork animation (smoothly flies between center and 58x58 slot)
+                    // Floating artwork animation (smoothly flies between center and compact slot)
                     if (_artworkOverlayVisible)
                       AnimatedBuilder(
                         animation: _artworkCurve,
                         child: SongArtworkWidget(
                           metadata: metadata,
-                          size: artworkSize,
+                          width: naturalArtworkWidth,
+                          height: naturalArtworkHeight,
+                          size: math.max(
+                            naturalArtworkWidth,
+                            naturalArtworkHeight,
+                          ),
                           borderRadius: 16,
                         ),
                         builder: (context, staticArtwork) {
@@ -262,16 +315,19 @@ class _NowPlayingPageState extends State<NowPlayingPage>
                               Rect.fromLTWH(
                                 artworkLeft,
                                 artworkTop,
-                                artworkSize,
-                                artworkSize,
+                                naturalArtworkWidth,
+                                naturalArtworkHeight,
                               );
                           final initialLeft = targetRect.left;
                           final initialTop = targetRect.top;
-                          final initialSize = targetRect.width;
+                          final initialWidth = targetRect.width;
+                          final initialHeight = targetRect.height;
 
                           final progress = _artworkCurve.value;
-                          final currentSize =
-                              lerpDouble(initialSize, 58, progress)!;
+                          final currentWidth =
+                              lerpDouble(initialWidth, compactW, progress)!;
+                          final currentHeight =
+                              lerpDouble(initialHeight, compactH, progress)!;
                           final currentLeft =
                               lerpDouble(initialLeft, compactLeft, progress)!;
                           final currentTop =
@@ -284,8 +340,8 @@ class _NowPlayingPageState extends State<NowPlayingPage>
                           return Positioned(
                             left: currentLeft,
                             top: currentTop,
-                            width: currentSize,
-                            height: currentSize,
+                            width: currentWidth,
+                            height: currentHeight,
                             child: IgnorePointer(
                               child: DecoratedBox(
                                 decoration: BoxDecoration(
@@ -324,8 +380,8 @@ class _NowPlayingPageState extends State<NowPlayingPage>
                                   child: FittedBox(
                                     fit: BoxFit.cover,
                                     child: SizedBox(
-                                      width: initialSize,
-                                      height: initialSize,
+                                      width: initialWidth,
+                                      height: initialHeight,
                                       child: staticArtwork,
                                     ),
                                   ),
@@ -495,13 +551,36 @@ class _NowPlayingPageState extends State<NowPlayingPage>
     ColorScheme colorScheme,
     MediaItem metadata,
   ) {
+    final uriStr = metadata.artUri?.toString() ??
+        metadata.extras?['highResImage']?.toString() ??
+        metadata.extras?['image']?.toString() ??
+        '';
+    final isHorizontal = ArtworkService.isYouTubeThumbnailUrl(uriStr);
+    final compactW = isHorizontal ? 76.0 : 54.0;
+    final compactH = isHorizontal ? 42.0 : 54.0;
+
     return Padding(
       padding: const EdgeInsets.fromLTRB(18, 8, 14, 6),
       child: Row(
         children: [
           // Placeholder slot — actual artwork is rendered by the parent
           // Stack via AnimatedBuilder (see _artworkOverlayVisible block).
-          const SizedBox(width: 58, height: 58),
+          // If overlay is not visible, render artwork directly as fallback.
+          SizedBox(
+            width: compactW,
+            height: compactH,
+            child: _artworkOverlayVisible
+                ? const SizedBox.shrink()
+                : ClipRRect(
+                    borderRadius: BorderRadius.circular(10),
+                    child: SongArtworkWidget(
+                      metadata: metadata,
+                      width: compactW,
+                      height: compactH,
+                      size: math.max(compactW, compactH),
+                    ),
+                  ),
+          ),
           const SizedBox(width: 14),
           Expanded(
             child: Column(
