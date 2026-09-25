@@ -626,6 +626,9 @@ class PlaylistBar extends StatelessWidget {
       if (currentPath.startsWith(NavigationManager.searchPath)) {
         return NavigationManager.searchPath;
       }
+      if (currentPath.startsWith(NavigationManager.chartsPath)) {
+        return NavigationManager.chartsPath;
+      }
       if (currentPath.startsWith(NavigationManager.libraryPath)) {
         return NavigationManager.libraryPath;
       }

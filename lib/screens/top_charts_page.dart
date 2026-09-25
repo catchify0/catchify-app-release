@@ -27,6 +27,7 @@ import 'package:go_router/go_router.dart';
 import 'package:catchify/constants/app_tokens.dart';
 import 'package:catchify/main.dart';
 import 'package:catchify/services/playlists_manager.dart';
+import 'package:catchify/services/router_service.dart';
 import 'package:catchify/services/settings_manager.dart';
 import 'package:catchify/theme/app_text_styles.dart';
 import 'package:catchify/utilities/language_utils.dart';
@@ -34,7 +35,7 @@ import 'package:catchify/widgets/artist_card.dart';
 import 'package:catchify/widgets/error_state.dart';
 import 'package:catchify/widgets/loading_skeleton.dart';
 import 'package:catchify/widgets/mini_player_bottom_space.dart';
-import 'package:catchify/widgets/playlist_cube.dart';
+import 'package:catchify/widgets/playlist_card.dart';
 import 'package:catchify/widgets/section_header.dart';
 import 'package:catchify/widgets/song_bar.dart';
 
@@ -62,9 +63,12 @@ class _TopChartsPageState extends State<TopChartsPage> {
 
   Future<_ChartsData> _fetchChartsData({bool forceRefresh = false}) async {
     final results = await Future.wait([
-      getTrendingSongsForYou(limit: 50, forceRefresh: forceRefresh),
-      getTrendingCommunityPlaylists(forceRefresh: forceRefresh),
-      getSuggestedArtists(forceRefresh: forceRefresh),
+      getTrendingSongsForYou(limit: 50, forceRefresh: forceRefresh)
+          .catchError((_) => <Map<String, dynamic>>[]),
+      getTrendingCommunityPlaylists(forceRefresh: forceRefresh)
+          .catchError((_) => <Map<String, dynamic>>[]),
+      getSuggestedArtists(forceRefresh: forceRefresh)
+          .catchError((_) => <Map<String, dynamic>>[]),
     ]);
 
     return _ChartsData(
@@ -345,7 +349,10 @@ class _TopChartsPageState extends State<TopChartsPage> {
                   ),
                   SliverToBoxAdapter(
                     child: SizedBox(
-                      height: AppTokens.playlistCardSize + 60,
+                      height: _getCardShelfHeight(
+                        context,
+                        AppTokens.playlistCardSize,
+                      ),
                       child: ListView.separated(
                         scrollDirection: Axis.horizontal,
                         physics: const BouncingScrollPhysics(),
@@ -357,27 +364,9 @@ class _TopChartsPageState extends State<TopChartsPage> {
                             const SizedBox(width: AppTokens.cardGap),
                         itemBuilder: (context, index) {
                           final playlist = data.trendingPlaylists[index];
-                          return SizedBox(
-                            width: AppTokens.playlistCardSize,
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                PlaylistCube(
-                                  playlist,
-                                  size: AppTokens.playlistCardSize,
-                                ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  playlist['title']?.toString() ?? '',
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: 13,
-                                  ),
-                                ),
-                              ],
-                            ),
+                          return PlaylistCard(
+                            playlist: playlist,
+                            onTap: () => _openPlaylist(context, playlist),
                           );
                         },
                       ),
@@ -426,6 +415,32 @@ class _TopChartsPageState extends State<TopChartsPage> {
           },
         ),
       ),
+    );
+  }
+
+  double _getCardShelfHeight(BuildContext context, double cardSize) {
+    final textScaler = MediaQuery.textScalerOf(context);
+    final titleHeight = textScaler.scale(19);
+    final subtitleHeight = textScaler.scale(17);
+    return math.max(206, cardSize + 18 + titleHeight + subtitleHeight);
+  }
+
+  void _openPlaylist(BuildContext context, Map playlist) {
+    final playlistId =
+        playlist['ytid']?.toString() ?? playlist['id']?.toString();
+    if (playlistId == null || playlistId.isEmpty || playlistId == 'null') {
+      return;
+    }
+    if (isArtistPlaylist(playlist)) {
+      context.push(
+        '${NavigationManager.chartsPath}/artist/${Uri.encodeComponent(playlistId)}',
+        extra: playlist,
+      );
+      return;
+    }
+    context.push(
+      '${NavigationManager.chartsPath}/playlist/${Uri.encodeComponent(playlistId)}',
+      extra: playlist,
     );
   }
 }

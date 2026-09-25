@@ -2703,27 +2703,38 @@ Future<List<Map<String, dynamic>>> getTrendingCommunityPlaylists({
 
       // 3. Supplement with general community playlists if still space
       if (livePlaylists.length < limit) {
-        final generalPlaylists = await ytMusicClient.music
-            .searchPlaylists('Workout driving favorites playlist', limit: limit)
-            .timeout(const Duration(seconds: 5))
-            .catchError((_) => <Map<String, dynamic>>[]);
+        final generalQueries = [
+          'Top Hits playlist',
+          'Today Trending Hits playlist',
+          'Workout driving favorites playlist',
+        ];
 
-        for (final pl in generalPlaylists) {
-          final title = pl['title']?.toString() ?? '';
-          if (_isForbiddenVideoPlaylist(title)) continue;
-          final rawThumb = pl['image']?.toString();
-          final highResThumb = rawThumb != null
-              ? formatArtworkResolution(rawThumb, 1080)
-              : rawThumb;
-          if (!livePlaylists.any((p) => p['ytid'] == pl['ytid'])) {
-            livePlaylists.add({
-              ...pl,
-              if (highResThumb != null) 'image': highResThumb,
-              if (highResThumb != null) 'highResImage': highResThumb,
-              'source': 'youtube-music-playlist',
-            });
-          }
+        for (final query in generalQueries) {
           if (livePlaylists.length >= limit) break;
+          try {
+            final generalPlaylists = await ytMusicClient.music
+                .searchPlaylists(query, limit: limit)
+                .timeout(const Duration(seconds: 5))
+                .catchError((_) => <Map<String, dynamic>>[]);
+
+            for (final pl in generalPlaylists) {
+              final title = pl['title']?.toString() ?? '';
+              if (_isForbiddenVideoPlaylist(title)) continue;
+              final rawThumb = pl['image']?.toString();
+              final highResThumb = rawThumb != null
+                  ? formatArtworkResolution(rawThumb, 1080)
+                  : rawThumb;
+              if (!livePlaylists.any((p) => p['ytid'] == pl['ytid'])) {
+                livePlaylists.add({
+                  ...pl,
+                  if (highResThumb != null) 'image': highResThumb,
+                  if (highResThumb != null) 'highResImage': highResThumb,
+                  'source': 'youtube-music-playlist',
+                });
+              }
+              if (livePlaylists.length >= limit) break;
+            }
+          } catch (_) {}
         }
       }
 
@@ -2748,7 +2759,7 @@ Future<List<Map<String, dynamic>>> getTrendingCommunityPlaylists({
     return livePlaylists.take(limit).toList();
   }
 
-  return const [];
+  return getFeaturedPlaylists(forceRefresh: forceRefresh, limit: limit);
 }
 
 /// Fetches fresh YouTube Music automix recommendations based on the user's recent & liked tracks.
