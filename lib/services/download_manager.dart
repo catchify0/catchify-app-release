@@ -22,7 +22,6 @@ import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
 import 'package:catchify/main.dart' show audioHandler, logger;
-import 'package:catchify/services/artwork_service.dart';
 import 'package:catchify/services/common_services.dart';
 import 'package:catchify/services/data_manager.dart';
 import 'package:catchify/services/io_service.dart';
@@ -851,8 +850,7 @@ class DownloadManager {
       if (response.statusCode == 200) {
         final file = File(targetPath);
         await file.parent.create(recursive: true);
-        final croppedBytes = await ArtworkService.cropCenterSquare(response.bodyBytes);
-        await file.writeAsBytes(croppedBytes);
+        await file.writeAsBytes(response.bodyBytes);
         if (await file.exists() && await file.length() > 0) {
           return file;
         }

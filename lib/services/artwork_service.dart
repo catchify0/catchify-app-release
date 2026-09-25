@@ -25,7 +25,6 @@ import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:catchify/main.dart' show logger;
-import 'package:catchify/services/proxy_manager.dart';
 import 'package:catchify/utilities/formatter.dart';
 import 'package:path_provider/path_provider.dart';
 
@@ -34,7 +33,6 @@ class ArtworkService {
   static final ArtworkService instance = ArtworkService._();
 
   static Directory? _cacheDir;
-  final Set<String> _processingYtids = <String>{};
 
   static String sanitizeId(String id) =>
       id.replaceAll(RegExp('[^A-Za-z0-9_-]'), '_');
@@ -173,7 +171,6 @@ class ArtworkService {
     void Function(Uri squareUri)? onSquareReady,
     int targetResolution = 1080,
   }) {
-    final ytid = song['ytid']?.toString() ?? song['id']?.toString() ?? '';
     final rawHighRes =
         (song['highResImage'] ?? song['image'] ?? '').toString().trim();
 
@@ -181,10 +178,6 @@ class ArtworkService {
     if (offlineArtworkPath != null && offlineArtworkPath.isNotEmpty) {
       final file = File(offlineArtworkPath);
       if (file.existsSync() && file.lengthSync() > 0) {
-        // If it's not known whether it's square, schedule background check/crop
-        if (onSquareReady != null && ytid.isNotEmpty) {
-          _processOfflineFileIfNeeded(ytid, file, onSquareReady);
-        }
         return Uri.file(file.path);
       }
     }
@@ -205,104 +198,7 @@ class ArtworkService {
       return Uri.parse(highResUrl);
     }
 
-    // 4. Check if we already have a cached square file for this ytid
-    if (ytid.isNotEmpty) {
-      final cached = _syncCheckCachedFile(ytid);
-      if (cached != null) {
-        return Uri.file(cached.path);
-      }
-    }
-
-    // 5. If YouTube thumbnail, trigger background crop and return 1080p URL
-    if (ytid.isNotEmpty &&
-        (isYouTubeThumbnailUrl(highResUrl) || onSquareReady != null)) {
-      _downloadAndCropInBackground(ytid, highResUrl, onSquareReady);
-    }
-
+    // 4. Return natural artwork URI directly (preserving square or horizontal aspect ratio)
     return Uri.tryParse(highResUrl) ?? Uri.parse('');
-  }
-
-  File? _syncCheckCachedFile(String ytid) {
-    if (_cacheDir == null) return null;
-    final file = File('${_cacheDir!.path}/sq_${sanitizeId(ytid)}.png');
-    if (file.existsSync() && file.lengthSync() > 0) {
-      return file;
-    }
-    return null;
-  }
-
-  void _downloadAndCropInBackground(
-    String ytid,
-    String imageUrl,
-    void Function(Uri squareUri)? onSquareReady,
-  ) {
-    if (_processingYtids.contains(ytid)) return;
-    _processingYtids.add(ytid);
-
-    Future<void>(() async {
-      try {
-        final cacheFile = await _cacheFileForYtid(ytid);
-        if (await cacheFile.exists() && await cacheFile.length() > 0) {
-          onSquareReady?.call(Uri.file(cacheFile.path));
-          return;
-        }
-
-        var response =
-            await ProxyManager().getProxiedResponse(Uri.parse(imageUrl));
-        if (response.statusCode != 200 &&
-            imageUrl.contains('maxresdefault.jpg')) {
-          final fallbackUrl =
-              imageUrl.replaceFirst('maxresdefault.jpg', 'hqdefault.jpg');
-          response =
-              await ProxyManager().getProxiedResponse(Uri.parse(fallbackUrl));
-        }
-
-        if (response.statusCode != 200 || response.bodyBytes.isEmpty) {
-          return;
-        }
-
-        final croppedBytes = await cropCenterSquare(response.bodyBytes);
-        await cacheFile.writeAsBytes(croppedBytes, flush: true);
-
-        if (await cacheFile.exists() && await cacheFile.length() > 0) {
-          onSquareReady?.call(Uri.file(cacheFile.path));
-        }
-      } catch (e, st) {
-        logger.log('ArtworkService: background crop failed for $ytid',
-            error: e, stackTrace: st);
-      } finally {
-        _processingYtids.remove(ytid);
-      }
-    });
-  }
-
-  void _processOfflineFileIfNeeded(
-    String ytid,
-    File file,
-    void Function(Uri squareUri) onSquareReady,
-  ) {
-    if (_processingYtids.contains(ytid)) return;
-    _processingYtids.add(ytid);
-
-    Future<void>(() async {
-      try {
-        final cacheFile = await _cacheFileForYtid(ytid);
-        if (await cacheFile.exists() && await cacheFile.length() > 0) {
-          onSquareReady(Uri.file(cacheFile.path));
-          return;
-        }
-
-        final bytes = await file.readAsBytes();
-        final croppedBytes = await cropCenterSquare(bytes);
-        if (croppedBytes != bytes) {
-          // It was cropped from 16:9; save square cache and overwrite offline file if desired
-          await cacheFile.writeAsBytes(croppedBytes, flush: true);
-          onSquareReady(Uri.file(cacheFile.path));
-        }
-      } catch (_) {
-      } finally {
-        _processingYtids.remove(ytid);
-      }
-    });
   }
 }

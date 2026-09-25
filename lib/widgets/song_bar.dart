@@ -1013,13 +1013,6 @@ class _OnlineArtwork extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isLetterboxed =
-        (lowResImageUrl.contains('i.ytimg.com') ||
-            lowResImageUrl.contains('img.youtube.com')) &&
-        (lowResImageUrl.contains('/hqdefault.') ||
-            lowResImageUrl.contains('/sddefault.') ||
-            lowResImageUrl.contains('/default.'));
-
     final cachePx = (size * 3).toInt().clamp(120, 200);
 
     return SizedBox(
@@ -1036,18 +1029,12 @@ class _OnlineArtwork extends StatelessWidget {
             memCacheWidth: cachePx,
             memCacheHeight: cachePx,
             imageBuilder: (context, imageProvider) {
-              Widget imageWidget = Image(
+              final imageWidget = Image(
                 image: imageProvider,
                 fit: BoxFit.cover,
                 width: size,
                 height: size,
               );
-
-              if (isLetterboxed) {
-                imageWidget = ClipRect(
-                  child: Transform.scale(scale: 1.34, child: imageWidget),
-                );
-              }
 
               return ClipRRect(
                 borderRadius: BorderRadius.circular(10),

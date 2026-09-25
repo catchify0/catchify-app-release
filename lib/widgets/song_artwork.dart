@@ -32,16 +32,26 @@ class SongArtworkWidget extends StatelessWidget {
     super.key,
     required this.size,
     required this.metadata,
+    this.width,
+    this.height,
+    this.fit = BoxFit.cover,
     this.borderRadius = 10.0,
     this.errorWidgetIconSize = 20.0,
   });
+
   final double size;
+  final double? width;
+  final double? height;
+  final BoxFit fit;
   final MediaItem metadata;
   final double borderRadius;
   final double errorWidgetIconSize;
 
   @override
   Widget build(BuildContext context) {
+    final effectiveWidth = width ?? size;
+    final effectiveHeight = height ?? size;
+
     if (metadata.artUri?.scheme == 'file') {
       String? localFilePath;
       try {
@@ -52,15 +62,15 @@ class SongArtworkWidget extends StatelessWidget {
           File(localFilePath).existsSync() &&
           File(localFilePath).lengthSync() > 0) {
         return SizedBox(
-          width: size,
-          height: size,
+          width: effectiveWidth,
+          height: effectiveHeight,
           child: ClipRRect(
             borderRadius: BorderRadius.circular(borderRadius),
             child: Image.file(
               File(localFilePath),
-              fit: BoxFit.cover,
+              fit: fit,
               errorBuilder: (context, error, stackTrace) =>
-                  _buildFallbackNetworkImage(),
+                  _buildFallbackNetworkImage(effectiveWidth, effectiveHeight),
             ),
           ),
         );
@@ -73,102 +83,89 @@ class SongArtworkWidget extends StatelessWidget {
           File(extraArtwork).existsSync() &&
           File(extraArtwork).lengthSync() > 0) {
         return SizedBox(
-          width: size,
-          height: size,
+          width: effectiveWidth,
+          height: effectiveHeight,
           child: ClipRRect(
             borderRadius: BorderRadius.circular(borderRadius),
             child: Image.file(
               File(extraArtwork),
-              fit: BoxFit.cover,
+              fit: fit,
               errorBuilder: (context, error, stackTrace) =>
-                  _buildFallbackNetworkImage(),
+                  _buildFallbackNetworkImage(effectiveWidth, effectiveHeight),
             ),
           ),
         );
       }
 
-      return _buildFallbackNetworkImage();
+      return _buildFallbackNetworkImage(effectiveWidth, effectiveHeight);
     }
 
     final imageUrl = metadata.artUri?.toString() ?? '';
     if (imageUrl.isEmpty || imageUrl.startsWith('file://')) {
-      return _buildFallbackNetworkImage();
+      return _buildFallbackNetworkImage(effectiveWidth, effectiveHeight);
     }
 
-    final isLetterboxed =
-        (imageUrl.contains('i.ytimg.com') || imageUrl.contains('img.youtube.com')) &&
-        (imageUrl.contains('/hqdefault.') ||
-         imageUrl.contains('/sddefault.') ||
-         imageUrl.contains('/default.'));
-
-    final targetMemSize = (size * 2).round().clamp(64, 512);
+    final targetMemWidth = (effectiveWidth * 2).round().clamp(64, 1280);
+    final targetMemHeight = (effectiveHeight * 2).round().clamp(64, 1280);
 
     return CachedNetworkImage(
-      width: size,
-      height: size,
-      memCacheWidth: targetMemSize,
-      memCacheHeight: targetMemSize,
+      width: effectiveWidth,
+      height: effectiveHeight,
+      memCacheWidth: targetMemWidth,
+      memCacheHeight: targetMemHeight,
       imageUrl: imageUrl,
       imageBuilder: (context, imageProvider) {
-        Widget imageWidget = Image(image: imageProvider, fit: BoxFit.cover);
-        if (isLetterboxed) {
-          imageWidget = ClipRect(
-            child: Transform.scale(
-              scale: 1.34,
-              child: imageWidget,
-            ),
-          );
-        }
         return ClipRRect(
           borderRadius: BorderRadius.circular(borderRadius),
-          child: imageWidget,
+          child: Image(
+            image: imageProvider,
+            fit: fit,
+            width: effectiveWidth,
+            height: effectiveHeight,
+          ),
         );
       },
       placeholder: (context, url) => const Spinner(),
-      errorWidget: (context, url, error) => _buildFallbackNetworkImage(url),
+      errorWidget: (context, url, error) =>
+          _buildFallbackNetworkImage(effectiveWidth, effectiveHeight, url),
     );
   }
 
-  Widget _buildFallbackNetworkImage([String? failedUrl]) {
-    final targetMemSize = (size * 2).round().clamp(64, 512);
+  Widget _buildFallbackNetworkImage(
+    double effectiveWidth,
+    double effectiveHeight, [
+    String? failedUrl,
+  ]) {
+    final targetMemWidth = (effectiveWidth * 2).round().clamp(64, 1280);
+    final targetMemHeight = (effectiveHeight * 2).round().clamp(64, 1280);
     var remoteUrl = metadata.extras?['highResImage']?.toString() ??
         metadata.extras?['image']?.toString() ??
         metadata.extras?['lowResImage']?.toString() ??
         '';
 
     if (failedUrl != null && failedUrl.contains('maxresdefault.jpg')) {
-      remoteUrl = failedUrl.replaceFirst('maxresdefault.jpg', 'hqdefault.jpg');
+      remoteUrl = failedUrl.replaceFirst('maxresdefault.jpg', 'mqdefault.jpg');
     } else if (remoteUrl.contains('maxresdefault.jpg') &&
         failedUrl == remoteUrl) {
-      remoteUrl = remoteUrl.replaceFirst('maxresdefault.jpg', 'hqdefault.jpg');
+      remoteUrl = remoteUrl.replaceFirst('maxresdefault.jpg', 'mqdefault.jpg');
     }
 
     if (remoteUrl.isNotEmpty && remoteUrl.startsWith('http')) {
-      final isRemoteLetterboxed =
-          (remoteUrl.contains('i.ytimg.com') || remoteUrl.contains('img.youtube.com')) &&
-          (remoteUrl.contains('/hqdefault.') ||
-           remoteUrl.contains('/sddefault.') ||
-           remoteUrl.contains('/default.'));
-
       return CachedNetworkImage(
-        width: size,
-        height: size,
-        memCacheWidth: targetMemSize,
-        memCacheHeight: targetMemSize,
+        width: effectiveWidth,
+        height: effectiveHeight,
+        memCacheWidth: targetMemWidth,
+        memCacheHeight: targetMemHeight,
         imageUrl: remoteUrl,
         imageBuilder: (context, imageProvider) {
-          Widget imageWidget = Image(image: imageProvider, fit: BoxFit.cover);
-          if (isRemoteLetterboxed) {
-            imageWidget = ClipRect(
-              child: Transform.scale(
-                scale: 1.34,
-                child: imageWidget,
-              ),
-            );
-          }
           return ClipRRect(
             borderRadius: BorderRadius.circular(borderRadius),
-            child: imageWidget,
+            child: Image(
+              image: imageProvider,
+              fit: fit,
+              width: effectiveWidth,
+              height: effectiveHeight,
+            ),
           );
         },
         placeholder: (context, url) => const Spinner(),
