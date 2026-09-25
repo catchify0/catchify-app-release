@@ -222,37 +222,36 @@ class _HomePageState extends State<HomePage> {
     _isRefreshing = true;
     final refreshGeneration = ++_feedGeneration;
     logger.log(
-      '[HOME_REFRESH_REQUEST] source=pull_to_refresh bypass=false '
-      'window=60s mode=background',
+      '[HOME_REFRESH_REQUEST] source=pull_to_refresh bypass=true mode=sync',
     );
 
-    unawaited(() async {
-      try {
-        final refreshedSections = await getUnifiedHomeFeed(
-          forceRefresh: true,
-          mood: _selectedMood,
-        );
+    try {
+      await HapticFeedback.mediumImpact();
+      final refreshedSections = await getUnifiedHomeFeed(
+        forceRefresh: true,
+        mood: _selectedMood,
+        bypassRefreshDeduplication: true,
+      );
 
-        if (mounted && refreshGeneration == _feedGeneration) {
-          setState(() {
-            _homeFeedFuture = Future.value(refreshedSections);
-          });
-        }
-      } catch (error, stackTrace) {
-        logger.log(
-          'Home feed pull-to-refresh failed',
-          error: error,
-          stackTrace: stackTrace,
-        );
-        if (mounted && refreshGeneration == _feedGeneration) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Unable to refresh home feed')),
-          );
-        }
-      } finally {
-        _isRefreshing = false;
+      if (mounted && refreshGeneration == _feedGeneration) {
+        setState(() {
+          _homeFeedFuture = Future.value(refreshedSections);
+        });
       }
-    }());
+    } catch (error, stackTrace) {
+      logger.log(
+        'Home feed pull-to-refresh failed',
+        error: error,
+        stackTrace: stackTrace,
+      );
+      if (mounted && refreshGeneration == _feedGeneration) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Unable to refresh home feed')),
+        );
+      }
+    } finally {
+      _isRefreshing = false;
+    }
   }
 
   String _getGreeting() {

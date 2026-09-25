@@ -478,47 +478,74 @@ class PersonalizationService {
     }
 
     // 3. "Because you listened to [Top Artist]"
-    final topArtists = rankArtists(signals, limit: 3);
-    if (topArtists.isNotEmpty) {
-      final topArtistName = topArtists.first['title']?.toString() ?? '';
-      if (topArtistName.isNotEmpty) {
-        final artistHistory = _findSongsByArtist([
-          ...signals.likedSongs,
-          ...signals.recentSongs,
-        ], topArtistName);
-        final playedIds = {
-          ...signals.likedSongs.map(_extractSongId),
-          ...signals.recentSongs.map(_extractSongId),
-        };
-        final freshArtistRecommendations = _findSongsByArtist(
-          relevantCandidates ?? const [],
-          topArtistName,
-        ).where((song) => !playedIds.contains(_extractSongId(song))).toList();
-        final artistSongs = <Map<String, dynamic>>[
-          ...freshArtistRecommendations,
-          ...artistHistory.where(
-            (song) => !freshArtistRecommendations.any(
-              (recommendation) =>
-                  _extractSongId(recommendation) == _extractSongId(song),
-            ),
-          ),
-        ].take(8).toList();
-        if (artistSongs.length >= 2) {
-          sections.add(
-            HomeSection(
-              title: 'Because you listened to $topArtistName',
-              subtitle: freshArtistRecommendations.isNotEmpty
-                  ? 'MORE FROM THIS ARTIST'
-                  : 'YOUR FAVORITES',
-              type: HomeContentType.songs,
-              contents: artistSongs,
-              isChunkedSongs: true,
-            ),
-          );
-          logger.log(
-            '[PERSONALIZATION_SECTION] title="Because you listened to $topArtistName" items=${artistSongs.length}',
-          );
+    final candidateArtists = <String>[];
+    for (final s in signals.recentSongs) {
+      final a = s['artist']?.toString().trim() ?? '';
+      if (a.isNotEmpty) {
+        final parts = a
+            .split(RegExp('[,&]'))
+            .map((p) => p.trim())
+            .where((p) => p.isNotEmpty);
+        for (final p in parts) {
+          if (!candidateArtists.any(
+            (c) => c.toLowerCase() == p.toLowerCase(),
+          )) {
+            candidateArtists.add(p);
+          }
         }
+      }
+      if (candidateArtists.length >= 3) break;
+    }
+    for (final artistEntry in rankArtists(signals, limit: 5)) {
+      final a = artistEntry['title']?.toString().trim() ?? '';
+      if (a.isNotEmpty &&
+          !candidateArtists.any((c) => c.toLowerCase() == a.toLowerCase())) {
+        candidateArtists.add(a);
+      }
+    }
+
+    final artistPlayedIds = {
+      ...signals.likedSongs.map(_extractSongId),
+      ...signals.recentSongs.map(_extractSongId),
+    };
+
+    for (final topArtistName in candidateArtists) {
+      final artistHistory = _findSongsByArtist([
+        ...signals.likedSongs,
+        ...signals.recentSongs,
+      ], topArtistName);
+
+      final freshArtistRecommendations =
+          _findSongsByArtist(relevantCandidates ?? const [], topArtistName)
+              .where((song) => !artistPlayedIds.contains(_extractSongId(song)))
+              .toList();
+
+      final artistSongs = <Map<String, dynamic>>[
+        ...freshArtistRecommendations,
+        ...artistHistory.where(
+          (song) => !freshArtistRecommendations.any(
+            (recommendation) =>
+                _extractSongId(recommendation) == _extractSongId(song),
+          ),
+        ),
+      ].take(8).toList();
+
+      if (artistSongs.length >= 2) {
+        sections.add(
+          HomeSection(
+            title: 'Because you listened to $topArtistName',
+            subtitle: freshArtistRecommendations.isNotEmpty
+                ? 'MORE FROM THIS ARTIST'
+                : 'YOUR FAVORITES',
+            type: HomeContentType.songs,
+            contents: artistSongs,
+            isChunkedSongs: true,
+          ),
+        );
+        logger.log(
+          '[PERSONALIZATION_SECTION] title="Because you listened to $topArtistName" items=${artistSongs.length}',
+        );
+        break;
       }
     }
 
@@ -539,19 +566,19 @@ class PersonalizationService {
     }
     */
 
-    // 5. "Your playlists"
-    final rankedPlaylists = rankPlaylists(signals, limit: 8);
-    if (rankedPlaylists.isNotEmpty) {
+    // 5. "Your playlists" — user-created custom playlists (liked playlists are handled in "Back to favorites")
+    if (signals.customPlaylists.isNotEmpty) {
+      final userPlaylists = signals.customPlaylists.take(8).toList();
       sections.add(
         HomeSection(
           title: 'Your playlists',
-          subtitle: 'CURATED & SAVED',
+          subtitle: 'CREATED BY YOU',
           type: HomeContentType.playlists,
-          contents: rankedPlaylists,
+          contents: userPlaylists,
         ),
       );
       logger.log(
-        '[PERSONALIZATION_SECTION] title="Your playlists" items=${rankedPlaylists.length}',
+        '[PERSONALIZATION_SECTION] title="Your playlists" items=${userPlaylists.length}',
       );
     }
 
@@ -575,7 +602,9 @@ class PersonalizationService {
     String artistName, {
     int limit = 8,
   }) {
-    final lowerTarget = artistName.toLowerCase();
+    final lowerTarget = artistName.toLowerCase().trim();
+    if (lowerTarget.isEmpty) return const [];
+    final cleanTarget = lowerTarget.replaceAll(RegExp(r'[\.\s\-]+'), '');
     final seen = <String>{};
     final matched = <Map<String, dynamic>>[];
 
@@ -583,8 +612,44 @@ class PersonalizationService {
       final id = _extractSongId(song);
       if (id.isEmpty || !seen.add(id)) continue;
 
-      final artist = song['artist']?.toString().toLowerCase() ?? '';
-      if (artist.contains(lowerTarget)) {
+      final artist = song['artist']?.toString().toLowerCase().trim() ?? '';
+      final author = song['author']?.toString().toLowerCase().trim() ?? '';
+
+      var isMatch = false;
+      if (artist.isNotEmpty) {
+        if (artist.contains(lowerTarget) ||
+            (cleanTarget.isNotEmpty &&
+                artist
+                    .replaceAll(RegExp(r'[\.\s\-]+'), '')
+                    .contains(cleanTarget))) {
+          isMatch = true;
+        }
+      }
+      if (!isMatch && author.isNotEmpty) {
+        if (author.contains(lowerTarget) ||
+            (cleanTarget.isNotEmpty &&
+                author
+                    .replaceAll(RegExp(r'[\.\s\-]+'), '')
+                    .contains(cleanTarget))) {
+          isMatch = true;
+        }
+      }
+      if (!isMatch && song['artists'] is List) {
+        for (final a in song['artists'] as List) {
+          final aName =
+              (a is Map ? a['name'] : a)?.toString().toLowerCase().trim() ?? '';
+          if (aName.contains(lowerTarget) ||
+              (cleanTarget.isNotEmpty &&
+                  aName
+                      .replaceAll(RegExp(r'[\.\s\-]+'), '')
+                      .contains(cleanTarget))) {
+            isMatch = true;
+            break;
+          }
+        }
+      }
+
+      if (isMatch) {
         matched.add(song);
         if (matched.length >= limit) break;
       }

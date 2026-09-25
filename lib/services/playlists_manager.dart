@@ -2847,6 +2847,33 @@ Future<List<Map<String, dynamic>>> getMadeForYouRecommendations({
         if (liveRecs.length >= limit) break;
       }
 
+      // Fetch fresh tracks by top listened artist for "Because you listened to <artist> / MORE FROM THIS ARTIST"
+      try {
+        final signals = PersonalizationService.instance.getUserSignals();
+        final topArtists = PersonalizationService.instance.rankArtists(
+          signals,
+          limit: 2,
+        );
+        for (final artist in topArtists) {
+          final artistName = artist['title']?.toString().trim() ?? '';
+          if (artistName.isNotEmpty) {
+            final artistTracks = await ytMusicClient.music
+                .searchSongs(artistName)
+                .timeout(const Duration(seconds: 4))
+                .catchError((_) => <Video>[]);
+
+            for (var i = 0; i < artistTracks.length; i++) {
+              final track = artistTracks[i];
+              final layout = returnSongLayout(liveRecs.length + i, track);
+              if (!liveRecs.any((s) => s['ytid'] == layout['ytid'])) {
+                liveRecs.add(layout);
+              }
+              if (liveRecs.length >= limit * 2) break;
+            }
+          }
+        }
+      } catch (_) {}
+
       if (liveRecs.isNotEmpty && Hive.isBoxOpen('cache')) {
         unawaited(addOrUpdateData('cache', cacheKey, liveRecs));
       }
@@ -3604,7 +3631,10 @@ Future<List<HomeSection>> getUnifiedHomeFeed({
     normalizedMood,
   ].join('|');
   var effectiveForceRefresh = forceRefresh;
-  if (forceRefresh && !bypassRefreshDeduplication) {
+  if (forceRefresh && bypassRefreshDeduplication) {
+    _recentHomeFeedRefreshes.remove(cacheRequestKey);
+    _recentHomeFeedResults.remove(cacheRequestKey);
+  } else if (forceRefresh && !bypassRefreshDeduplication) {
     final lastRefresh = _recentHomeFeedRefreshes[cacheRequestKey];
     if (lastRefresh != null &&
         DateTime.now().difference(lastRefresh) <
@@ -3623,6 +3653,10 @@ Future<List<HomeSection>> getUnifiedHomeFeed({
     if (effectiveForceRefresh) 'refresh' else 'cached',
     cacheRequestKey,
   ].join('|');
+
+  if (bypassRefreshDeduplication) {
+    _homeFeedInFlight.remove(requestKey);
+  }
 
   final existing = _homeFeedInFlight[requestKey];
   if (existing != null) {
@@ -3744,11 +3778,18 @@ Future<List<HomeSection>> _loadUnifiedHomeFeed({
             );
           } catch (_) {}
 
+          final combinedCandidates = <Map<String, dynamic>>[
+            ...madeForYouRecs,
+            for (final sec in cachedSections)
+              if (sec.type == HomeContentType.songs)
+                ...sec.contents.whereType<Map<String, dynamic>>(),
+          ];
+
           // Blend cached sections with fresh local personalization
           final personalizedSections = PersonalizationService.instance
               .buildPersonalizedSections(
                 mood: mood,
-                relevantCandidates: madeForYouRecs,
+                relevantCandidates: combinedCandidates,
               );
 
           final composedSections = HomeFeedComposer.compose(
@@ -3950,6 +3991,25 @@ Future<List<HomeSection>> _loadUnifiedHomeFeed({
         }
       }
 
+      // Add Trending songs if not present
+      if (!sections.any(
+        (s) => s.title.toLowerCase().contains('trending song'),
+      )) {
+        final trending = await getTrendingSongsForYou(
+          forceRefresh: forceRefresh,
+        );
+        if (trending.isNotEmpty) {
+          sections.add(
+            HomeSection(
+              title: 'Trending songs for you',
+              subtitle: 'POPULAR RIGHT NOW',
+              type: HomeContentType.songs,
+              contents: trending,
+            ),
+          );
+        }
+      }
+
       // Add Featured Playlists if not present
       if (!sections.any((s) => s.title.toLowerCase().contains('featured'))) {
         final featured = await getFeaturedPlaylists(forceRefresh: forceRefresh);
@@ -3960,6 +4020,23 @@ Future<List<HomeSection>> _loadUnifiedHomeFeed({
               subtitle: 'CURATED FOR YOU',
               type: HomeContentType.playlists,
               contents: featured,
+            ),
+          );
+        }
+      }
+
+      // Add Community Playlists if not present
+      if (!sections.any((s) => s.title.toLowerCase().contains('community'))) {
+        final community = await getTrendingCommunityPlaylists(
+          forceRefresh: forceRefresh,
+        );
+        if (community.isNotEmpty) {
+          sections.add(
+            HomeSection(
+              title: 'Trending community playlists',
+              subtitle: 'POPULAR PLAYLISTS',
+              type: HomeContentType.playlists,
+              contents: community,
             ),
           );
         }
@@ -3998,31 +4075,26 @@ Future<List<HomeSection>> _loadUnifiedHomeFeed({
           );
         }
       }
-
-      // Add Artists if not present
-      if (!sections.any((s) => s.title.toLowerCase().contains('artist'))) {
-        final artists = await getSuggestedArtists(forceRefresh: forceRefresh);
-        if (artists.isNotEmpty) {
-          sections.add(
-            HomeSection(
-              title: 'Artists for you',
-              subtitle: 'TOP ARTISTS',
-              type: HomeContentType.artists,
-              contents: artists,
-            ),
-          );
-        }
-      }
     } catch (_) {}
   }
 
   // 4. Generate fresh local personalization with relevant recommendations
   final madeForYouRecs = await madeForYouFuture;
 
+  final combinedCandidates = <Map<String, dynamic>>[
+    ...madeForYouRecs,
+    for (final sec in languageSections)
+      if (sec.type == HomeContentType.songs)
+        ...sec.contents.whereType<Map<String, dynamic>>(),
+    for (final sec in sections)
+      if (sec.type == HomeContentType.songs)
+        ...sec.contents.whereType<Map<String, dynamic>>(),
+  ];
+
   final personalizedSections = PersonalizationService.instance
       .buildPersonalizedSections(
         mood: mood,
-        relevantCandidates: madeForYouRecs,
+        relevantCandidates: combinedCandidates,
       );
 
   // 5. Compose final ordered feed through HomeFeedComposer with language-curated sections
@@ -4110,30 +4182,36 @@ Future<List<HomeSection>> _fetchLanguageCuratedSections({
       'quick_picks',
       getQuickPicksSongs(forceRefresh: forceRefresh),
     );
+    final trendingSongsFuture = _timedHomeCategory(
+      'trending_songs',
+      getTrendingSongsForYou(forceRefresh: forceRefresh),
+    );
     final featuredPlaylistsFuture = _timedHomeCategory(
       'featured_playlists',
       getFeaturedPlaylists(forceRefresh: forceRefresh),
+    );
+    final communityPlaylistsFuture = _timedHomeCategory(
+      'community_playlists',
+      getTrendingCommunityPlaylists(forceRefresh: forceRefresh),
     );
     final newReleasesFuture = _timedHomeCategory(
       'new_releases',
       getSuggestedNewReleases(forceRefresh: forceRefresh),
     );
-    final artistsFuture = _timedHomeCategory(
-      'artists',
-      getSuggestedArtists(forceRefresh: forceRefresh),
-    );
 
     final results = await Future.wait([
       quickPicksFuture,
+      trendingSongsFuture,
       featuredPlaylistsFuture,
+      communityPlaylistsFuture,
       newReleasesFuture,
-      artistsFuture,
     ]);
 
     final quickPicks = results[0];
-    final featuredPlaylists = results[1];
-    final newReleases = results[2];
-    final artists = results[3];
+    final trendingSongs = results[1];
+    final featuredPlaylists = results[2];
+    final communityPlaylists = results[3];
+    final newReleases = results[4];
 
     if (quickPicks.isNotEmpty) {
       curated.add(
@@ -4143,6 +4221,17 @@ Future<List<HomeSection>> _fetchLanguageCuratedSections({
           type: HomeContentType.songs,
           contents: quickPicks,
           isChunkedSongs: true,
+        ),
+      );
+    }
+
+    if (trendingSongs.isNotEmpty) {
+      curated.add(
+        HomeSection(
+          title: 'Trending songs for you',
+          subtitle: 'POPULAR RIGHT NOW',
+          type: HomeContentType.songs,
+          contents: trendingSongs,
         ),
       );
     }
@@ -4158,6 +4247,17 @@ Future<List<HomeSection>> _fetchLanguageCuratedSections({
       );
     }
 
+    if (communityPlaylists.isNotEmpty) {
+      curated.add(
+        HomeSection(
+          title: 'Trending community playlists',
+          subtitle: 'POPULAR PLAYLISTS',
+          type: HomeContentType.playlists,
+          contents: communityPlaylists,
+        ),
+      );
+    }
+
     if (newReleases.isNotEmpty) {
       curated.add(
         HomeSection(
@@ -4165,17 +4265,6 @@ Future<List<HomeSection>> _fetchLanguageCuratedSections({
           subtitle: 'FRESH TRACKS',
           type: HomeContentType.songs,
           contents: newReleases,
-        ),
-      );
-    }
-
-    if (artists.isNotEmpty) {
-      curated.add(
-        HomeSection(
-          title: 'Artists for you',
-          subtitle: 'TOP ARTISTS',
-          type: HomeContentType.artists,
-          contents: artists,
         ),
       );
     }

@@ -76,82 +76,234 @@ ThemeMode getThemeMode(int themeModeIndex) {
   if (useSystemColor.value &&
       lightColorScheme != null &&
       darkColorScheme != null) {
+    final systemLightAccent = lightColorScheme.primary;
+    final systemDarkAccent = darkColorScheme.primary;
+
     resolvedLight = lightColorScheme.copyWith(
       surface: AppColors.lightBackground,
       surfaceContainerLowest: AppColors.lightSurface,
-      surfaceContainerLow: AppColors.lightSurfaceElevated,
-      surfaceContainer: AppColors.lightSurfaceElevated,
-      surfaceContainerHigh: AppColors.lightSurfaceHighlight,
-      surfaceContainerHighest: AppColors.lightSurfaceHighlight,
+      surfaceContainerLow: Color.alphaBlend(
+        systemLightAccent.withValues(alpha: 0.02),
+        AppColors.lightSurfaceElevated,
+      ),
+      surfaceContainer: Color.alphaBlend(
+        systemLightAccent.withValues(alpha: 0.04),
+        AppColors.lightSurfaceElevated,
+      ),
+      surfaceContainerHigh: Color.alphaBlend(
+        systemLightAccent.withValues(alpha: 0.06),
+        AppColors.lightSurfaceHighlight,
+      ),
+      surfaceContainerHighest: Color.alphaBlend(
+        systemLightAccent.withValues(alpha: 0.08),
+        AppColors.lightSurfaceHighlight,
+      ),
       outline: AppColors.lightDivider,
+      outlineVariant: Color.alphaBlend(
+        systemLightAccent.withValues(alpha: 0.12),
+        const Color(0xFFE4E4E7),
+      ),
     );
 
     if (usePureBlackColor.value) {
       resolvedDark = darkColorScheme.copyWith(
         surface: AppColors.pureBlack,
         surfaceContainerLowest: AppColors.pureBlack,
-        surfaceContainerLow: AppColors.pureBlackElevated,
-        surfaceContainer: AppColors.pureBlackContainer,
-        surfaceContainerHigh: AppColors.pureBlackContainerHigh,
-        surfaceContainerHighest: AppColors.pureBlackContainerHigh,
-        outline: AppColors.darkDivider,
-        outlineVariant: const Color(0xFF272730),
+        surfaceContainerLow: Color.alphaBlend(
+          systemDarkAccent.withValues(alpha: 0.025),
+          AppColors.pureBlackElevated,
+        ),
+        surfaceContainer: Color.alphaBlend(
+          systemDarkAccent.withValues(alpha: 0.045),
+          AppColors.pureBlackContainer,
+        ),
+        surfaceContainerHigh: Color.alphaBlend(
+          systemDarkAccent.withValues(alpha: 0.07),
+          AppColors.pureBlackContainerHigh,
+        ),
+        surfaceContainerHighest: Color.alphaBlend(
+          systemDarkAccent.withValues(alpha: 0.095),
+          AppColors.pureBlackContainerHigh,
+        ),
+        outline: Color.alphaBlend(
+          systemDarkAccent.withValues(alpha: 0.10),
+          AppColors.darkDivider,
+        ),
+        outlineVariant: Color.alphaBlend(
+          systemDarkAccent.withValues(alpha: 0.14),
+          const Color(0xFF272730),
+        ),
       );
     } else {
       resolvedDark = darkColorScheme.copyWith(
-        surface: AppColors.darkBackground,
-        surfaceContainerLowest: AppColors.darkBackground,
-        surfaceContainerLow: AppColors.darkSurface,
-        surfaceContainer: AppColors.darkSurfaceElevated,
-        surfaceContainerHigh: AppColors.darkSurfaceHighlight,
-        surfaceContainerHighest: AppColors.darkSurfaceHighlight,
-        outline: AppColors.darkDivider,
-        outlineVariant: const Color(0xFF272730),
+        surface: Color.alphaBlend(
+          systemDarkAccent.withValues(alpha: 0.015),
+          AppColors.darkBackground,
+        ),
+        surfaceContainerLowest: Color.alphaBlend(
+          systemDarkAccent.withValues(alpha: 0.018),
+          AppColors.darkBackground,
+        ),
+        surfaceContainerLow: Color.alphaBlend(
+          systemDarkAccent.withValues(alpha: 0.035),
+          AppColors.darkSurface,
+        ),
+        surfaceContainer: Color.alphaBlend(
+          systemDarkAccent.withValues(alpha: 0.055),
+          AppColors.darkSurfaceElevated,
+        ),
+        surfaceContainerHigh: Color.alphaBlend(
+          systemDarkAccent.withValues(alpha: 0.075),
+          AppColors.darkSurfaceHighlight,
+        ),
+        surfaceContainerHighest: Color.alphaBlend(
+          systemDarkAccent.withValues(alpha: 0.10),
+          AppColors.darkSurfaceHighlight,
+        ),
+        outline: Color.alphaBlend(
+          systemDarkAccent.withValues(alpha: 0.10),
+          AppColors.darkDivider,
+        ),
+        outlineVariant: Color.alphaBlend(
+          systemDarkAccent.withValues(alpha: 0.15),
+          const Color(0xFF272730),
+        ),
       );
     }
   } else {
-    resolvedLight = ColorScheme.fromSeed(seedColor: primaryColorSetting)
-        .harmonized()
-        .copyWith(
-          surface: AppColors.lightBackground,
-          surfaceContainerLowest: AppColors.lightSurface,
-          surfaceContainerLow: AppColors.lightSurfaceElevated,
-          surfaceContainer: AppColors.lightSurfaceElevated,
-          surfaceContainerHigh: AppColors.lightSurfaceHighlight,
-          surfaceContainerHighest: AppColors.lightSurfaceHighlight,
-          outline: AppColors.lightDivider,
-        );
+    final accent = primaryColorSetting;
+    final onAccent = accent.computeLuminance() > 0.5
+        ? Colors.black
+        : Colors.white;
+
+    final lightBase = ColorScheme.fromSeed(seedColor: accent).harmonized();
+    resolvedLight = lightBase.copyWith(
+      primary: accent,
+      onPrimary: onAccent,
+      primaryContainer: Color.alphaBlend(
+        accent.withValues(alpha: 0.14),
+        Colors.white,
+      ),
+      onPrimaryContainer: accent.computeLuminance() < 0.3
+          ? accent
+          : Color.alphaBlend(Colors.black.withValues(alpha: 0.35), accent),
+      surface: AppColors.lightBackground,
+      surfaceContainerLowest: AppColors.lightSurface,
+      surfaceContainerLow: Color.alphaBlend(
+        accent.withValues(alpha: 0.02),
+        AppColors.lightSurfaceElevated,
+      ),
+      surfaceContainer: Color.alphaBlend(
+        accent.withValues(alpha: 0.04),
+        AppColors.lightSurfaceElevated,
+      ),
+      surfaceContainerHigh: Color.alphaBlend(
+        accent.withValues(alpha: 0.06),
+        AppColors.lightSurfaceHighlight,
+      ),
+      surfaceContainerHighest: Color.alphaBlend(
+        accent.withValues(alpha: 0.08),
+        AppColors.lightSurfaceHighlight,
+      ),
+      outline: Color.alphaBlend(
+        accent.withValues(alpha: 0.06),
+        AppColors.lightDivider,
+      ),
+      outlineVariant: Color.alphaBlend(
+        accent.withValues(alpha: 0.12),
+        const Color(0xFFE4E4E7),
+      ),
+    );
+
+    final darkBase = ColorScheme.fromSeed(
+      seedColor: accent,
+      brightness: Brightness.dark,
+    ).harmonized();
 
     if (usePureBlackColor.value) {
-      resolvedDark =
-          ColorScheme.fromSeed(
-            seedColor: primaryColorSetting,
-            brightness: Brightness.dark,
-          ).harmonized().copyWith(
-            surface: AppColors.pureBlack,
-            surfaceContainerLowest: AppColors.pureBlack,
-            surfaceContainerLow: AppColors.pureBlackElevated,
-            surfaceContainer: AppColors.pureBlackContainer,
-            surfaceContainerHigh: AppColors.pureBlackContainerHigh,
-            surfaceContainerHighest: AppColors.pureBlackContainerHigh,
-            outline: AppColors.darkDivider,
-            outlineVariant: const Color(0xFF272730),
-          );
+      resolvedDark = darkBase.copyWith(
+        primary: accent,
+        onPrimary: onAccent,
+        primaryContainer: Color.alphaBlend(
+          accent.withValues(alpha: 0.22),
+          AppColors.pureBlackContainer,
+        ),
+        onPrimaryContainer: Color.alphaBlend(
+          accent.withValues(alpha: 0.90),
+          Colors.white,
+        ),
+        surface: AppColors.pureBlack,
+        surfaceContainerLowest: AppColors.pureBlack,
+        surfaceContainerLow: Color.alphaBlend(
+          accent.withValues(alpha: 0.025),
+          AppColors.pureBlackElevated,
+        ),
+        surfaceContainer: Color.alphaBlend(
+          accent.withValues(alpha: 0.045),
+          AppColors.pureBlackContainer,
+        ),
+        surfaceContainerHigh: Color.alphaBlend(
+          accent.withValues(alpha: 0.07),
+          AppColors.pureBlackContainerHigh,
+        ),
+        surfaceContainerHighest: Color.alphaBlend(
+          accent.withValues(alpha: 0.095),
+          AppColors.pureBlackContainerHigh,
+        ),
+        outline: Color.alphaBlend(
+          accent.withValues(alpha: 0.10),
+          AppColors.darkDivider,
+        ),
+        outlineVariant: Color.alphaBlend(
+          accent.withValues(alpha: 0.14),
+          const Color(0xFF272730),
+        ),
+      );
     } else {
-      resolvedDark =
-          ColorScheme.fromSeed(
-            seedColor: primaryColorSetting,
-            brightness: Brightness.dark,
-          ).harmonized().copyWith(
-            surface: AppColors.darkBackground,
-            surfaceContainerLowest: AppColors.darkBackground,
-            surfaceContainerLow: AppColors.darkSurface,
-            surfaceContainer: AppColors.darkSurfaceElevated,
-            surfaceContainerHigh: AppColors.darkSurfaceHighlight,
-            surfaceContainerHighest: AppColors.darkSurfaceHighlight,
-            outline: AppColors.darkDivider,
-            outlineVariant: const Color(0xFF272730),
-          );
+      resolvedDark = darkBase.copyWith(
+        primary: accent,
+        onPrimary: onAccent,
+        primaryContainer: Color.alphaBlend(
+          accent.withValues(alpha: 0.22),
+          AppColors.darkSurfaceElevated,
+        ),
+        onPrimaryContainer: Color.alphaBlend(
+          accent.withValues(alpha: 0.90),
+          Colors.white,
+        ),
+        surface: Color.alphaBlend(
+          accent.withValues(alpha: 0.015),
+          AppColors.darkBackground,
+        ),
+        surfaceContainerLowest: Color.alphaBlend(
+          accent.withValues(alpha: 0.018),
+          AppColors.darkBackground,
+        ),
+        surfaceContainerLow: Color.alphaBlend(
+          accent.withValues(alpha: 0.035),
+          AppColors.darkSurface,
+        ),
+        surfaceContainer: Color.alphaBlend(
+          accent.withValues(alpha: 0.055),
+          AppColors.darkSurfaceElevated,
+        ),
+        surfaceContainerHigh: Color.alphaBlend(
+          accent.withValues(alpha: 0.075),
+          AppColors.darkSurfaceHighlight,
+        ),
+        surfaceContainerHighest: Color.alphaBlend(
+          accent.withValues(alpha: 0.10),
+          AppColors.darkSurfaceHighlight,
+        ),
+        outline: Color.alphaBlend(
+          accent.withValues(alpha: 0.10),
+          AppColors.darkDivider,
+        ),
+        outlineVariant: Color.alphaBlend(
+          accent.withValues(alpha: 0.15),
+          const Color(0xFF272730),
+        ),
+      );
     }
   }
 
@@ -178,25 +330,9 @@ ThemeData getAppTheme(ColorScheme colorScheme) {
   final isPureBlack =
       colorScheme.brightness == Brightness.dark && usePureBlackColor.value;
 
-  final bgColor = isLight
-      ? AppColors.lightBackground
-      : (isPureBlack ? AppColors.pureBlack : AppColors.darkBackground);
-
-  final cardBgColor = isLight
-      ? colorScheme.surfaceContainerLow
-      : (isPureBlack ? AppColors.pureBlackElevated : AppColors.darkSurface);
-
-  // modified color scheme for pure black theme
-  final effectiveColorScheme = isPureBlack
-      ? colorScheme.copyWith(
-          surface: AppColors.pureBlack,
-          surfaceContainerLowest: AppColors.pureBlack,
-          surfaceContainerLow: AppColors.pureBlackElevated,
-          surfaceContainer: AppColors.pureBlackContainer,
-          surfaceContainerHigh: AppColors.pureBlackContainerHigh,
-          surfaceContainerHighest: AppColors.pureBlackContainerHigh,
-        )
-      : colorScheme;
+  final bgColor = colorScheme.surface;
+  final cardBgColor = colorScheme.surfaceContainerLow;
+  final effectiveColorScheme = colorScheme;
 
   return ThemeData(
     fontFamily: 'AnekTamil',
@@ -209,23 +345,12 @@ ThemeData getAppTheme(ColorScheme colorScheme) {
       color: cardBgColor,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppTokens.radiusLarge),
-        side: isLight
-            ? BorderSide(
-                color: effectiveColorScheme.outlineVariant.withValues(
-                  alpha: 0.5,
-                ),
-                width: AppTokens.borderSubtle,
-              )
-            : BorderSide(
-                color: isPureBlack
-                    ? effectiveColorScheme.outlineVariant.withValues(
-                        alpha: 0.28,
-                      )
-                    : effectiveColorScheme.outlineVariant.withValues(
-                        alpha: 0.15,
-                      ),
-                width: 0.8,
-              ),
+        side: BorderSide(
+          color: effectiveColorScheme.outlineVariant.withValues(
+            alpha: isLight ? 0.45 : (isPureBlack ? 0.32 : 0.25),
+          ),
+          width: isLight ? AppTokens.borderSubtle : 0.8,
+        ),
       ),
     ),
     appBarTheme: base.appBarTheme.copyWith(
@@ -267,11 +392,12 @@ ThemeData getAppTheme(ColorScheme colorScheme) {
       year2023: false,
       trackHeight: 12,
       thumbSize: WidgetStateProperty.all(const Size(6, 30)),
+      activeTrackColor: effectiveColorScheme.primary,
+      inactiveTrackColor: effectiveColorScheme.primary.withValues(alpha: 0.20),
+      thumbColor: effectiveColorScheme.primary,
     ),
     bottomSheetTheme: base.bottomSheetTheme.copyWith(
-      backgroundColor: isLight
-          ? colorScheme.surfaceContainerLow
-          : (isPureBlack ? AppColors.pureBlackElevated : null),
+      backgroundColor: effectiveColorScheme.surfaceContainerLow,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(
           top: Radius.circular(AppTokens.radiusSheet),
@@ -312,9 +438,7 @@ ThemeData getAppTheme(ColorScheme colorScheme) {
       contentPadding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
     ),
     dialogTheme: base.dialogTheme.copyWith(
-      backgroundColor: isLight
-          ? colorScheme.surfaceContainerLow
-          : (isPureBlack ? AppColors.pureBlackContainer : null),
+      backgroundColor: effectiveColorScheme.surfaceContainer,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppTokens.radiusLarge),
       ),
@@ -335,6 +459,8 @@ ThemeData getAppTheme(ColorScheme colorScheme) {
     filledButtonTheme: FilledButtonThemeData(
       style: FilledButton.styleFrom(
         minimumSize: const Size(64, AppTokens.buttonHeight),
+        backgroundColor: effectiveColorScheme.primary,
+        foregroundColor: effectiveColorScheme.onPrimary,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppTokens.radiusMedium),
         ),
