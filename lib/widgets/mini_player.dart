@@ -514,6 +514,11 @@ class _CircularPlayButton extends StatelessWidget {
         alignment: Alignment.center,
         children: [
           StreamBuilder<PositionData>(
+            initialData: PositionData(
+              audioHandler.playbackState.value.position,
+              audioHandler.playbackState.value.bufferedPosition,
+              metadata.duration ?? Duration.zero,
+            ),
             stream: audioHandler.positionDataStream,
             builder: (context, snapshot) {
               final posData = snapshot.data;
