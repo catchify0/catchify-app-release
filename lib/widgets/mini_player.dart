@@ -17,6 +17,7 @@
  *     For more information about Catchify, including how to contribute,
  *     please visit: https://github.com/catchify0/catchify0.github.io
  */
+import 'dart:math' as math;
 
 import 'package:audio_service/audio_service.dart';
 import 'package:fluentui_system_icons/fluentui_system_icons.dart';
@@ -484,7 +485,7 @@ class _ControlsWidget extends StatelessWidget {
   }
 }
 
-class _CircularPlayButton extends StatelessWidget {
+class _CircularPlayButton extends StatefulWidget {
   const _CircularPlayButton({
     required this.colorScheme,
     required this.playbackState,
@@ -496,12 +497,63 @@ class _CircularPlayButton extends StatelessWidget {
   final MediaItem metadata;
 
   @override
+  State<_CircularPlayButton> createState() => _CircularPlayButtonState();
+}
+
+class _CircularPlayButtonState extends State<_CircularPlayButton>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _loadingController;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadingController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1400),
+    );
+    if (_isStateLoading(widget.playbackState)) {
+      _loadingController.repeat();
+    }
+  }
+
+  bool _isStateLoading(PlaybackState state) {
+    return state.processingState == AudioProcessingState.loading ||
+        state.processingState == AudioProcessingState.buffering;
+  }
+
+  void _syncLoading(bool isLoading) {
+    if (isLoading) {
+      if (!_loadingController.isAnimating) {
+        _loadingController.repeat();
+      }
+    } else {
+      if (_loadingController.isAnimating) {
+        _loadingController
+          ..stop()
+          ..reset();
+      }
+    }
+  }
+
+  @override
+  void didUpdateWidget(_CircularPlayButton oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    _syncLoading(_isStateLoading(widget.playbackState));
+  }
+
+  @override
+  void dispose() {
+    _loadingController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return StreamBuilder<PlaybackState>(
-      initialData: playbackState,
+      initialData: widget.playbackState,
       stream: audioHandler.playbackState,
       builder: (context, playSnapshot) {
-        final currentPlayState = playSnapshot.data ?? playbackState;
+        final currentPlayState = playSnapshot.data ?? widget.playbackState;
         final processingState = currentPlayState.processingState;
         final isPlaying = currentPlayState.playing;
         final isLoading =
@@ -509,9 +561,11 @@ class _CircularPlayButton extends StatelessWidget {
             processingState == AudioProcessingState.buffering;
         final isCompleted = processingState == AudioProcessingState.completed;
 
+        _syncLoading(isLoading);
+
         return SizedBox(
-          width: 44,
-          height: 44,
+          width: 48,
+          height: 48,
           child: Stack(
             alignment: Alignment.center,
             children: [
@@ -519,7 +573,7 @@ class _CircularPlayButton extends StatelessWidget {
                 initialData: PositionData(
                   currentPlayState.position,
                   currentPlayState.bufferedPosition,
-                  metadata.duration ?? Duration.zero,
+                  widget.metadata.duration ?? Duration.zero,
                 ),
                 stream: audioHandler.positionDataStream,
                 builder: (context, snapshot) {
@@ -527,7 +581,7 @@ class _CircularPlayButton extends StatelessWidget {
                   final totalDuration =
                       (posData != null && posData.duration > Duration.zero)
                       ? posData.duration
-                      : (metadata.duration ?? Duration.zero);
+                      : (widget.metadata.duration ?? Duration.zero);
                   final progress =
                       (posData == null || totalDuration.inMilliseconds == 0)
                       ? 0.0
@@ -535,19 +589,23 @@ class _CircularPlayButton extends StatelessWidget {
                                 totalDuration.inMilliseconds)
                             .clamp(0.0, 1.0);
 
-                  return SizedBox(
-                    width: 42,
-                    height: 42,
-                    child: CircularProgressIndicator(
-                      value: isLoading ? null : progress,
-                      strokeWidth: 2.8,
-                      strokeCap: StrokeCap.round,
-                      backgroundColor: colorScheme.onSurface.withValues(
-                        alpha: 0.12,
-                      ),
-                      valueColor: AlwaysStoppedAnimation<Color>(
-                        colorScheme.primary,
-                      ),
+                  return RepaintBoundary(
+                    child: AnimatedBuilder(
+                      animation: _loadingController,
+                      builder: (context, _) {
+                        return CustomPaint(
+                          size: const Size(48, 48),
+                          painter: _CircularProgressPainter(
+                            progress: progress,
+                            isLoading: isLoading,
+                            animationValue: _loadingController.value,
+                            backgroundColor: widget.colorScheme.onSurface
+                                .withValues(alpha: 0.14),
+                            progressColor: widget.colorScheme.primary,
+                            strokeWidth: 3,
+                          ),
+                        );
+                      },
                     ),
                   );
                 },
@@ -571,7 +629,7 @@ class _CircularPlayButton extends StatelessWidget {
                       : (isPlaying
                             ? FluentIcons.pause_16_filled
                             : FluentIcons.play_16_filled),
-                  color: colorScheme.primary,
+                  color: widget.colorScheme.primary,
                   size: 20,
                 ),
                 visualDensity: VisualDensity.compact,
@@ -582,4 +640,97 @@ class _CircularPlayButton extends StatelessWidget {
       },
     );
   }
+}
+
+class _CircularProgressPainter extends CustomPainter {
+  _CircularProgressPainter({
+    required this.progress,
+    required this.isLoading,
+    required this.animationValue,
+    required this.backgroundColor,
+    required this.progressColor,
+    required this.strokeWidth,
+  });
+
+  final double progress;
+  final bool isLoading;
+  final double animationValue;
+  final Color backgroundColor;
+  final Color progressColor;
+  final double strokeWidth;
+
+  final waveAmplitude = 1.5;
+  final waveFrequency = 12.0;
+
+  Path _buildWavyArcPath(
+    Size size,
+    double startAngle,
+    double sweepAngle,
+    double animVal,
+  ) {
+    final cx = size.width / 2;
+    final cy = size.height / 2;
+    final baseRadius = (size.width - strokeWidth) / 2;
+    final steps = (sweepAngle.abs() * 180 / math.pi).round().clamp(4, 720);
+    final path = Path();
+
+    for (var i = 0; i <= steps; i++) {
+      final t = i / steps;
+      final angle = startAngle + sweepAngle * t;
+      final wave = waveAmplitude * math.sin(waveFrequency * angle + animVal);
+      final r = baseRadius + wave;
+      final x = cx + r * math.cos(angle);
+      final y = cy + r * math.sin(angle);
+      i == 0 ? path.moveTo(x, y) : path.lineTo(x, y);
+    }
+    return path;
+  }
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final trackPaint = Paint()
+      ..color = backgroundColor
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = strokeWidth
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
+
+    // Draw the full wavy background track (visible even when empty)
+    canvas.drawPath(
+      _buildWavyArcPath(size, -math.pi / 2, 2 * math.pi, 0),
+      trackPaint,
+    );
+
+    final progressPaint = Paint()
+      ..color = progressColor
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = strokeWidth
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
+
+    if (isLoading) {
+      // Merged loading state: animate wavy sweep arc along the track
+      final startAngle = -math.pi / 2 + animationValue * 2 * math.pi;
+      const sweepAngle = math.pi * 0.75;
+      final waveAnim = animationValue * 2 * math.pi * 2;
+      canvas.drawPath(
+        _buildWavyArcPath(size, startAngle, sweepAngle, waveAnim),
+        progressPaint,
+      );
+    } else if (progress > 0) {
+      // Determinate playback progress along the wavy track
+      canvas.drawPath(
+        _buildWavyArcPath(size, -math.pi / 2, 2 * math.pi * progress, 0),
+        progressPaint,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(_CircularProgressPainter old) =>
+      old.progress != progress ||
+      old.isLoading != isLoading ||
+      old.animationValue != animationValue ||
+      old.backgroundColor != backgroundColor ||
+      old.progressColor != progressColor;
 }
