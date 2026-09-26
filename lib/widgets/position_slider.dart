@@ -44,8 +44,20 @@ class _PositionSliderState extends State<PositionSlider> {
   );
 
   @override
+  void initState() {
+    super.initState();
+    _currentMediaId = audioHandler.mediaItem.valueOrNull?.id;
+    _positionData = PositionData(
+      audioHandler.playbackState.value.position,
+      audioHandler.playbackState.value.bufferedPosition,
+      audioHandler.mediaItem.valueOrNull?.duration ?? Duration.zero,
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
     return StreamBuilder<PositionData>(
+      initialData: _positionData,
       stream: audioHandler.positionDataStream,
       builder: (context, snapshot) {
         final mediaId = audioHandler.mediaItem.valueOrNull?.id;
