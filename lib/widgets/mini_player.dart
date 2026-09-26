@@ -18,8 +18,6 @@
  *     please visit: https://github.com/catchify0/catchify0.github.io
  */
 
-import 'dart:math' as math;
-
 import 'package:audio_service/audio_service.dart';
 import 'package:fluentui_system_icons/fluentui_system_icons.dart';
 import 'package:flutter/material.dart';
@@ -269,56 +267,42 @@ class _MiniPlayerBodyState extends State<_MiniPlayerBody>
                     borderColor: colorScheme.outlineVariant.withValues(
                       alpha: 0.46,
                     ),
-                    child: Stack(
+                    child: Row(
                       children: [
-                        Row(
-                          children: [
-                            _ArtworkWidget(metadata: metadata),
-                            Expanded(
-                              child: AnimatedSwitcher(
-                                duration: transitionDuration,
-                                switchInCurve: Curves.easeIn,
-                                switchOutCurve: Curves.easeOut,
-                                layoutBuilder:
-                                    (currentChild, previousChildren) => Stack(
-                                      alignment: Alignment.centerLeft,
-                                      children: [
-                                        ...previousChildren,
-                                        if (currentChild != null) currentChild,
-                                      ],
-                                    ),
-                                transitionBuilder: (child, animation) =>
-                                    FadeTransition(
-                                      opacity: animation,
-                                      child: child,
-                                    ),
-                                child: KeyedSubtree(
-                                  key: ValueKey(metadata.id),
-                                  child: _MetadataWidget(
-                                    title: metadata.title,
-                                    artist: metadata.artist,
-                                    colorScheme: colorScheme,
-                                  ),
+                        _ArtworkWidget(metadata: metadata),
+                        Expanded(
+                          child: AnimatedSwitcher(
+                            duration: transitionDuration,
+                            switchInCurve: Curves.easeIn,
+                            switchOutCurve: Curves.easeOut,
+                            layoutBuilder: (currentChild, previousChildren) =>
+                                Stack(
+                                  alignment: Alignment.centerLeft,
+                                  children: [
+                                    ...previousChildren,
+                                    if (currentChild != null) currentChild,
+                                  ],
                                 ),
+                            transitionBuilder: (child, animation) =>
+                                FadeTransition(
+                                  opacity: animation,
+                                  child: child,
+                                ),
+                            child: KeyedSubtree(
+                              key: ValueKey(metadata.id),
+                              child: _MetadataWidget(
+                                title: metadata.title,
+                                artist: metadata.artist,
+                                colorScheme: colorScheme,
                               ),
                             ),
-                            _ControlsWidget(
-                              colorScheme: colorScheme,
-                              playbackState: state.playbackState,
-                              metadata: metadata,
-                              hasNext: widget.hasNext,
-                            ),
-                          ],
-                        ),
-                        Positioned(
-                          left: 4,
-                          right: 4,
-                          bottom: 2,
-                          child: _MiniPlayerProgressBar(
-                            metadata: metadata,
-                            colorScheme: colorScheme,
-                            playbackState: state.playbackState,
                           ),
+                        ),
+                        _ControlsWidget(
+                          colorScheme: colorScheme,
+                          playbackState: state.playbackState,
+                          metadata: metadata,
+                          hasNext: widget.hasNext,
                         ),
                       ],
                     ),
@@ -329,81 +313,6 @@ class _MiniPlayerBodyState extends State<_MiniPlayerBody>
           );
         },
       ),
-    );
-  }
-}
-
-class _MiniPlayerProgressBar extends StatelessWidget {
-  const _MiniPlayerProgressBar({
-    required this.metadata,
-    required this.colorScheme,
-    required this.playbackState,
-  });
-
-  final MediaItem metadata;
-  final ColorScheme colorScheme;
-  final PlaybackState playbackState;
-
-  @override
-  Widget build(BuildContext context) {
-    final initialPos = PositionData(
-      playbackState.position,
-      playbackState.bufferedPosition,
-      metadata.duration ?? Duration.zero,
-    );
-
-    return StreamBuilder<PlaybackState>(
-      initialData: playbackState,
-      stream: audioHandler.playbackState,
-      builder: (context, playbackSnapshot) {
-        final currentPlayState = playbackSnapshot.data ?? playbackState;
-        final processingState = currentPlayState.processingState;
-        final isLoading =
-            processingState == AudioProcessingState.loading ||
-            processingState == AudioProcessingState.buffering;
-
-        return StreamBuilder<PositionData>(
-          initialData: initialPos,
-          stream: audioHandler.positionDataStream,
-          builder: (context, posSnapshot) {
-            final posData = posSnapshot.data ?? initialPos;
-            final totalDuration = (posData.duration > Duration.zero)
-                ? posData.duration
-                : (metadata.duration ?? Duration.zero);
-
-            final progress = (totalDuration.inMilliseconds == 0)
-                ? 0.0
-                : (posData.position.inMilliseconds /
-                          totalDuration.inMilliseconds)
-                      .clamp(0.0, 1.0);
-
-            return ClipRRect(
-              borderRadius: BorderRadius.circular(AppTokens.radiusPill),
-              child: SizedBox(
-                height: 2.5,
-                child: isLoading
-                    ? LinearProgressIndicator(
-                        backgroundColor: colorScheme.primary.withValues(
-                          alpha: 0.15,
-                        ),
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                          colorScheme.primary,
-                        ),
-                      )
-                    : LinearProgressIndicator(
-                        value: progress,
-                        backgroundColor: colorScheme.onSurface.withValues(
-                          alpha: 0.12,
-                        ),
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                          colorScheme.primary,
-                        ),
-                      ),
-              ),
-            );
-          },
-        );
-      },
     );
   }
 }
@@ -588,165 +497,89 @@ class _CircularPlayButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final processingState = playbackState.processingState;
-    final isPlaying = playbackState.playing;
-    final isLoading =
-        processingState == AudioProcessingState.loading ||
-        processingState == AudioProcessingState.buffering;
-    final isCompleted = processingState == AudioProcessingState.completed;
+    return StreamBuilder<PlaybackState>(
+      initialData: playbackState,
+      stream: audioHandler.playbackState,
+      builder: (context, playSnapshot) {
+        final currentPlayState = playSnapshot.data ?? playbackState;
+        final processingState = currentPlayState.processingState;
+        final isPlaying = currentPlayState.playing;
+        final isLoading =
+            processingState == AudioProcessingState.loading ||
+            processingState == AudioProcessingState.buffering;
+        final isCompleted = processingState == AudioProcessingState.completed;
 
-    return SizedBox(
-      width: 48,
-      height: 48,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          StreamBuilder<PositionData>(
-            initialData: PositionData(
-              audioHandler.playbackState.value.position,
-              audioHandler.playbackState.value.bufferedPosition,
-              metadata.duration ?? Duration.zero,
-            ),
-            stream: audioHandler.positionDataStream,
-            builder: (context, snapshot) {
-              final posData = snapshot.data;
-              final totalDuration =
-                  (posData != null && posData.duration > Duration.zero)
-                  ? posData.duration
-                  : (metadata.duration ?? Duration.zero);
-              final progress =
-                  (posData == null || totalDuration.inMilliseconds == 0)
-                  ? 0.0
-                  : (posData.position.inMilliseconds /
-                            totalDuration.inMilliseconds)
-                        .clamp(0.0, 1.0);
+        return SizedBox(
+          width: 44,
+          height: 44,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              StreamBuilder<PositionData>(
+                initialData: PositionData(
+                  currentPlayState.position,
+                  currentPlayState.bufferedPosition,
+                  metadata.duration ?? Duration.zero,
+                ),
+                stream: audioHandler.positionDataStream,
+                builder: (context, snapshot) {
+                  final posData = snapshot.data;
+                  final totalDuration =
+                      (posData != null && posData.duration > Duration.zero)
+                      ? posData.duration
+                      : (metadata.duration ?? Duration.zero);
+                  final progress =
+                      (posData == null || totalDuration.inMilliseconds == 0)
+                      ? 0.0
+                      : (posData.position.inMilliseconds /
+                                totalDuration.inMilliseconds)
+                            .clamp(0.0, 1.0);
 
-              return RepaintBoundary(
-                child: CustomPaint(
-                  size: const Size(48, 48),
-                  painter: _CircularProgressPainter(
-                    progress: progress,
-                    backgroundColor: colorScheme.onSurface.withValues(
-                      alpha: 0.12,
+                  return SizedBox(
+                    width: 42,
+                    height: 42,
+                    child: CircularProgressIndicator(
+                      value: isLoading ? null : progress,
+                      strokeWidth: 2.8,
+                      strokeCap: StrokeCap.round,
+                      backgroundColor: colorScheme.onSurface.withValues(
+                        alpha: 0.12,
+                      ),
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        colorScheme.primary,
+                      ),
                     ),
-                    progressColor: colorScheme.primary,
-                    strokeWidth: 3,
-                  ),
-                ),
-              );
-            },
-          ),
-          if (isLoading)
-            SizedBox(
-              width: 32,
-              height: 32,
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                valueColor: AlwaysStoppedAnimation<Color>(
-                  colorScheme.primary.withValues(alpha: 0.6),
-                ),
+                  );
+                },
               ),
-            ),
-          IconButton(
-            onPressed: () {
-              HapticFeedback.lightImpact();
-              if (isCompleted) {
-                audioHandler.playAgain();
-              } else if (isPlaying) {
-                audioHandler.pause();
-              } else {
-                audioHandler.play();
-              }
-            },
-            splashColor: Colors.transparent,
-            highlightColor: Colors.transparent,
-            icon: Icon(
-              isCompleted
-                  ? FluentIcons.arrow_counterclockwise_24_filled
-                  : (isPlaying
-                        ? FluentIcons.pause_16_filled
-                        : FluentIcons.play_16_filled),
-              color: colorScheme.primary,
-              size: isLoading ? 16 : 22,
-            ),
-            visualDensity: VisualDensity.compact,
+              IconButton(
+                onPressed: () {
+                  HapticFeedback.lightImpact();
+                  if (isCompleted) {
+                    audioHandler.playAgain();
+                  } else if (isPlaying) {
+                    audioHandler.pause();
+                  } else {
+                    audioHandler.play();
+                  }
+                },
+                splashColor: Colors.transparent,
+                highlightColor: Colors.transparent,
+                icon: Icon(
+                  isCompleted
+                      ? FluentIcons.arrow_counterclockwise_24_filled
+                      : (isPlaying
+                            ? FluentIcons.pause_16_filled
+                            : FluentIcons.play_16_filled),
+                  color: colorScheme.primary,
+                  size: 20,
+                ),
+                visualDensity: VisualDensity.compact,
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
-}
-
-class _CircularProgressPainter extends CustomPainter {
-  _CircularProgressPainter({
-    required this.progress,
-    required this.backgroundColor,
-    required this.progressColor,
-    required this.strokeWidth,
-  });
-
-  final double progress;
-  final Color backgroundColor;
-  final Color progressColor;
-  final double strokeWidth;
-
-  final waveAmplitude = 1.5;
-  final waveFrequency = 12.0;
-  final animationValue = 0.0;
-
-  Path _buildWavyArcPath(Size size, double startAngle, double sweepAngle) {
-    final cx = size.width / 2;
-    final cy = size.height / 2;
-    final baseRadius = (size.width - strokeWidth) / 2;
-    final steps = (sweepAngle.abs() * 180 / math.pi).round().clamp(4, 720);
-    final path = Path();
-
-    for (var i = 0; i <= steps; i++) {
-      final t = i / steps;
-      final angle = startAngle + sweepAngle * t;
-      final wave =
-          waveAmplitude * math.sin(waveFrequency * angle + animationValue);
-      final r = baseRadius + wave;
-      final x = cx + r * math.cos(angle);
-      final y = cy + r * math.sin(angle);
-      i == 0 ? path.moveTo(x, y) : path.lineTo(x, y);
-    }
-    return path;
-  }
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final trackPaint = Paint()
-      ..color = backgroundColor
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = strokeWidth
-      ..strokeCap = StrokeCap.round
-      ..strokeJoin = StrokeJoin.round;
-
-    canvas.drawPath(
-      _buildWavyArcPath(size, -math.pi / 2, 2 * math.pi),
-      trackPaint,
-    );
-
-    if (progress > 0) {
-      final progressPaint = Paint()
-        ..color = progressColor
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = strokeWidth
-        ..strokeCap = StrokeCap.round
-        ..strokeJoin = StrokeJoin.round;
-
-      canvas.drawPath(
-        _buildWavyArcPath(size, -math.pi / 2, 2 * math.pi * progress),
-        progressPaint,
-      );
-    }
-  }
-
-  @override
-  bool shouldRepaint(_CircularProgressPainter old) =>
-      old.progress != progress ||
-      old.backgroundColor != backgroundColor ||
-      old.progressColor != progressColor ||
-      old.animationValue != animationValue;
 }
