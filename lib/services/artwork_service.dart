@@ -123,45 +123,63 @@ class ArtworkService {
   /// If the image is already square, returns the original or PNG bytes.
   static Future<Uint8List> cropCenterSquare(Uint8List bytes) async {
     final codec = await ui.instantiateImageCodec(bytes);
-    final frame = await codec.getNextFrame();
-    final image = frame.image;
+    try {
+      final frame = await codec.getNextFrame();
+      final image = frame.image;
+      try {
+        final width = image.width;
+        final height = image.height;
 
-    final width = image.width;
-    final height = image.height;
+        // If already square (or within 1% of square), return as-is
+        if ((width - height).abs() <= 2) {
+          return bytes;
+        }
 
-    // If already square (or within 1% of square), return as-is
-    if ((width - height).abs() <= 2) {
-      return bytes;
+        var side = math.min(width, height).toDouble();
+        var srcX = (width - side) / 2.0;
+        var srcY = (height - side) / 2.0;
+
+        // Detect YouTube 4:3 letterboxed thumbnails (e.g. 480x360 hqdefault or 640x480 sddefault)
+        // where 16:9 video content is centered with black bars on top and bottom.
+        if ((width * 3 == height * 4) ||
+            ((width / height - 4 / 3).abs() < 0.02)) {
+          final contentHeight = width * 9.0 / 16.0;
+          final blackBar = (height - contentHeight) / 2.0;
+          side = contentHeight;
+          srcX = (width - side) / 2.0;
+          srcY = blackBar;
+        }
+
+        final recorder = ui.PictureRecorder();
+        ui.Canvas(recorder).drawImageRect(
+          image,
+          ui.Rect.fromLTWH(srcX, srcY, side, side),
+          ui.Rect.fromLTWH(0, 0, side, side),
+          ui.Paint()..filterQuality = ui.FilterQuality.high,
+        );
+
+        final picture = recorder.endRecording();
+        try {
+          final cropped = await picture.toImage(side.round(), side.round());
+          try {
+            final byteData = await cropped.toByteData(
+              format: ui.ImageByteFormat.png,
+            );
+
+            if (byteData == null) return bytes;
+            return byteData.buffer.asUint8List();
+          } finally {
+            cropped.dispose();
+          }
+        } finally {
+          picture.dispose();
+        }
+      } finally {
+        image.dispose();
+      }
+    } finally {
+      codec.dispose();
     }
-
-    var side = math.min(width, height).toDouble();
-    var srcX = (width - side) / 2.0;
-    var srcY = (height - side) / 2.0;
-
-    // Detect YouTube 4:3 letterboxed thumbnails (e.g. 480x360 hqdefault or 640x480 sddefault)
-    // where 16:9 video content is centered with black bars on top and bottom.
-    if ((width * 3 == height * 4) || ((width / height - 4 / 3).abs() < 0.02)) {
-      final contentHeight = width * 9.0 / 16.0;
-      final blackBar = (height - contentHeight) / 2.0;
-      side = contentHeight;
-      srcX = (width - side) / 2.0;
-      srcY = blackBar;
-    }
-
-    final recorder = ui.PictureRecorder();
-    ui.Canvas(recorder).drawImageRect(
-      image,
-      ui.Rect.fromLTWH(srcX, srcY, side, side),
-      ui.Rect.fromLTWH(0, 0, side, side),
-      ui.Paint()..filterQuality = ui.FilterQuality.high,
-    );
-
-    final picture = recorder.endRecording();
-    final cropped = await picture.toImage(side.round(), side.round());
-    final byteData = await cropped.toByteData(format: ui.ImageByteFormat.png);
-
-    if (byteData == null) return bytes;
-    return byteData.buffer.asUint8List();
   }
 
   /// Resolves the best square artUri for a song map.

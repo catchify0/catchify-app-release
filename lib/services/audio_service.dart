@@ -2419,6 +2419,7 @@ class CatchifyAudioHandler extends BaseAudioHandler {
     _currentLoadingTransitionId = -1;
     _lastError = null;
     _consecutiveErrors = 0;
+    _userRequestedPause = false;
     try {
       listeningStatsService.finishListeningSession(
         countCurrentTick: true,

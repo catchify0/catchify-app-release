@@ -30,7 +30,13 @@ import 'package:path_provider/path_provider.dart';
 
 bool isNetworkError(dynamic error) {
   if (error == null) return false;
-  if (error is SocketException || error is HttpException) return true;
+  if (error is SocketException ||
+      error is HttpException ||
+      error is TimeoutException ||
+      error is HandshakeException ||
+      error is TlsException) {
+    return true;
+  }
   if (error is PlatformException &&
       (error.code == '-1009' ||
           (error.message?.toLowerCase().contains('offline') ?? false))) {
@@ -47,6 +53,8 @@ bool isNetworkError(dynamic error) {
       str.contains('connection closed') ||
       str.contains('connection abort') ||
       str.contains('timed out') ||
+      str.contains('handshakeexception') ||
+      str.contains('tlsexception') ||
       str.contains('nodename nor servname provided') ||
       str.contains('no route to host') ||
       str.contains('clientexception with socketexception');
