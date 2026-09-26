@@ -387,6 +387,35 @@ class RadioService {
         }
       }
 
+      // 3. If getRadioTracks still produced no tracks, fallback to getRadioSongs
+      if (songsToAdd.isEmpty && session.seedId.isNotEmpty) {
+        try {
+          final fallbackVideos = await ytMusicClient.music
+              .getRadioSongs(session.seedId, limit: limit)
+              .timeout(const Duration(seconds: 8));
+          if (fallbackVideos.isNotEmpty) {
+            for (var i = 0; i < fallbackVideos.length; i++) {
+              final sMap = returnSongLayout(i + 1, fallbackVideos[i]);
+              final sid = canonicalSongId(sMap);
+              if (sid == null || sid.isEmpty) continue;
+              if (queueIds.contains(sid) ||
+                  session.seenTrackIds.contains(sid)) {
+                duplicateSkipped++;
+                continue;
+              }
+              songsToAdd.add(sMap);
+              session.seenTrackIds.add(sid);
+              if (songsToAdd.length >= limit) break;
+            }
+          }
+        } catch (e) {
+          logger.log(
+            '[RADIO_ERROR] getRadioSongs fallback failed for ${session.seedId}',
+            error: e,
+          );
+        }
+      }
+
       logger.log(
         '[AUTOPLAY] added=${songsToAdd.length} duplicateSkipped=$duplicateSkipped hasContinuation=${session.continuationToken != null}',
       );

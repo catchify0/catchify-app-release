@@ -108,6 +108,8 @@ class CatchifyAudioHandler extends BaseAudioHandler {
   bool _interruptedPlayingState = false;
   bool _hasPreloadedCurrentTrackEnd = false;
   bool _isFetchingAutoplay = false;
+  bool _autoplayForcePlayPending = false;
+  Completer<void>? _activeAutoplayCompleter;
   static const int _autoplayPrefetchThreshold = 3;
 
   String? _lastError;
@@ -266,6 +268,9 @@ class CatchifyAudioHandler extends BaseAudioHandler {
           if (progress >= 0.85 && !_hasPreloadedCurrentTrackEnd) {
             _hasPreloadedCurrentTrackEnd = true;
             _preloadUpcomingSongs();
+            if (playNextSongAutomatically.value) {
+              unawaited(_backgroundAddSongsToQueue());
+            }
           }
         }
       }
@@ -322,6 +327,12 @@ class CatchifyAudioHandler extends BaseAudioHandler {
             _logStreamError('Current index stream error', error, stackTrace);
           },
         );
+
+    playNextSongAutomatically.addListener(() {
+      if (playNextSongAutomatically.value) {
+        unawaited(_backgroundAddSongsToQueue());
+      }
+    });
   }
 
   void _debouncedStateUpdate() {
@@ -1321,112 +1332,153 @@ class CatchifyAudioHandler extends BaseAudioHandler {
       return;
     }
 
-    // In-flight guard: prevent concurrent duplicate radio fetches
+    // In-flight guard: wait on active fetch if forcePlay is required
     if (_isFetchingAutoplay) {
+      if (forcePlayIfEnd) {
+        _autoplayForcePlayPending = true;
+        _emitOptimisticLoadingState(queueIndex: _currentQueueIndex);
+        if (_activeAutoplayCompleter != null) {
+          try {
+            await _activeAutoplayCompleter!.future.timeout(
+              const Duration(seconds: 10),
+            );
+          } catch (_) {}
+        }
+      }
       return;
     }
 
     _isFetchingAutoplay = true;
+    _activeAutoplayCompleter = Completer<void>();
+    final shouldForcePlay = forcePlayIfEnd || _autoplayForcePlayPending;
+    _autoplayForcePlayPending = false;
+
+    if (shouldForcePlay) {
+      _emitOptimisticLoadingState(queueIndex: _currentQueueIndex);
+    }
+
     logger.log(
-      '[AUTOPLAY] queueRemaining=$remaining fetching=true threshold=$_autoplayPrefetchThreshold',
+      '[AUTOPLAY] queueRemaining=$remaining fetching=true threshold=$_autoplayPrefetchThreshold forcePlay=$shouldForcePlay',
     );
 
-    unawaited(
-      Future.microtask(() async {
+    try {
+      // If not forcing play at end of song, only add songs if we're still playing or loading
+      if (!shouldForcePlay &&
+          !audioPlayer.playing &&
+          audioPlayer.processingState != ProcessingState.loading &&
+          audioPlayer.processingState != ProcessingState.buffering) {
+        return;
+      }
+
+      final baseSong = _getCurrentSongForRecommendations();
+      final currentYtid = baseSong != null
+          ? (canonicalSongId(baseSong) ?? '')
+          : '';
+
+      final currentSession = radioService.currentSession;
+      final isCurrentSongAutoPicked =
+          currentSong != null && (currentSong!['isAutoPicked'] == true);
+
+      // Re-seed radio if no session or if the user changed the track manually to a different seed
+      if (currentYtid.isNotEmpty &&
+          (currentSession == null ||
+              (!isCurrentSongAutoPicked &&
+                  currentSession.seedId != currentYtid))) {
+        radioService.setSession(
+          RadioSession(
+            seedId: currentYtid,
+            seedTitle: baseSong?['title']?.toString() ?? '',
+            type: RadioType.song,
+            playlistId: 'RDAMVM$currentYtid',
+            seenTrackIds: _queueList
+                .map(canonicalSongId)
+                .whereType<String>()
+                .where((id) => id.isNotEmpty)
+                .toSet(),
+          ),
+        );
+      }
+
+      final existingIds = _queueList
+          .map(canonicalSongId)
+          .whereType<String>()
+          .where((id) => id.isNotEmpty)
+          .toSet();
+
+      final songsToAdd = await radioService.getMoreRadioSongs(
+        existingQueueIds: existingIds,
+      );
+
+      // Secondary fallback if RadioService returned empty
+      if (songsToAdd.isEmpty && currentYtid.isNotEmpty) {
         try {
-          // If not forcing play at end of song, only add songs if we're still playing or loading
-          if (!forcePlayIfEnd &&
-              !audioPlayer.playing &&
-              audioPlayer.processingState != ProcessingState.loading &&
-              audioPlayer.processingState != ProcessingState.buffering) {
-            return;
-          }
-
-          // Ensure an active radio session exists; if none, seed one from the active song
-          if (radioService.currentSession == null) {
-            final baseSong = _getCurrentSongForRecommendations();
-            if (baseSong != null) {
-              final ytid = canonicalSongId(baseSong) ?? '';
-              if (ytid.isNotEmpty) {
-                radioService.setSession(
-                  RadioSession(
-                    seedId: ytid,
-                    seedTitle: baseSong['title']?.toString() ?? '',
-                    type: RadioType.song,
-                    playlistId: 'RDAMVM$ytid',
-                    seenTrackIds: _queueList
-                        .map(canonicalSongId)
-                        .whereType<String>()
-                        .where((id) => id.isNotEmpty)
-                        .toSet(),
-                  ),
-                );
-              }
+          await getSimilarSong(
+            currentYtid,
+          ).timeout(const Duration(seconds: 8), onTimeout: () {});
+          final songToAdd = nextRecommendedSong;
+          if (songToAdd != null) {
+            nextRecommendedSong = null;
+            final sid = canonicalSongId(songToAdd) ?? '';
+            if (sid.isNotEmpty && !existingIds.contains(sid)) {
+              songsToAdd.add(songToAdd);
             }
           }
+        } catch (_) {}
+      }
 
-          final existingIds = _queueList
-              .map(canonicalSongId)
-              .whereType<String>()
-              .toSet();
+      final playNextNow = shouldForcePlay || _autoplayForcePlayPending;
+      _autoplayForcePlayPending = false;
 
-          final songsToAdd = await radioService.getMoreRadioSongs(
-            existingQueueIds: existingIds,
-          );
-
-          // Secondary fallback if RadioService returned empty
-          if (songsToAdd.isEmpty) {
-            final baseSong = _getCurrentSongForRecommendations();
-            final ytid = baseSong == null
-                ? ''
-                : canonicalSongId(baseSong) ?? '';
-            if (ytid.isNotEmpty) {
-              try {
-                await getSimilarSong(
-                  ytid,
-                ).timeout(const Duration(seconds: 8), onTimeout: () {});
-                final songToAdd = nextRecommendedSong;
-                if (songToAdd != null) {
-                  nextRecommendedSong = null;
-                  final sid = canonicalSongId(songToAdd) ?? '';
-                  if (sid.isNotEmpty && !existingIds.contains(sid)) {
-                    songsToAdd.add(songToAdd);
-                  }
-                }
-              } catch (_) {}
-            }
-          }
-
-          if (songsToAdd.isNotEmpty) {
-            // Append songs to queue without interrupting playback
-            for (var i = 0; i < songsToAdd.length; i++) {
-              await _insertRecommendedSong(
-                songsToAdd[i],
-                forcePlay: i == 0 && forcePlayIfEnd,
-              );
-            }
-            logger.log(
-              '[AUTOPLAY] added=${songsToAdd.length} queueSize=${_queueList.length}',
-            );
-          } else {
-            logger.log(
-              '[AUTOPLAY] No additional radio songs could be resolved',
-            );
-          }
-        } catch (e, stackTrace) {
-          logger.log(
-            '[RADIO_ERROR] Error in autoplay background prefetch',
-            error: e,
-            stackTrace: stackTrace,
-          );
-        } finally {
-          _isFetchingAutoplay = false;
+      if (songsToAdd.isNotEmpty) {
+        final startIndex = _queueList.length;
+        for (var i = 0; i < songsToAdd.length; i++) {
+          final queueSong = _queueEntryIds.createSong(songsToAdd[i]);
+          queueSong['isAutoPicked'] = true;
+          _queueList.add(queueSong);
         }
-      }),
-    );
+
+        if (_currentQueueIndex < 0) {
+          _currentQueueIndex = 0;
+        }
+
+        _updateQueueMediaItems();
+        _cleanupOldPreloadedSongs();
+        saveCurrentPlaybackState();
+
+        logger.log(
+          '[AUTOPLAY] added=${songsToAdd.length} queueSize=${_queueList.length}',
+        );
+
+        if (playNextNow && !_userRequestedPause) {
+          await _playFromQueue(startIndex);
+        }
+      } else {
+        logger.log('[AUTOPLAY] No additional radio songs could be resolved');
+        if (playNextNow) {
+          await stop();
+        }
+      }
+    } catch (e, stackTrace) {
+      logger.log(
+        '[RADIO_ERROR] Error in autoplay background prefetch',
+        error: e,
+        stackTrace: stackTrace,
+      );
+    } finally {
+      _isFetchingAutoplay = false;
+      if (_activeAutoplayCompleter != null &&
+          !_activeAutoplayCompleter!.isCompleted) {
+        _activeAutoplayCompleter!.complete();
+      }
+      _activeAutoplayCompleter = null;
+    }
   }
 
   Map? _getCurrentSongForRecommendations() {
+    if (currentSong != null) {
+      return currentSong;
+    }
+
     final currentMediaItem = mediaItem.valueOrNull;
 
     if (currentMediaItem == null || currentMediaItem.id.isEmpty) {
@@ -1496,53 +1548,6 @@ class CatchifyAudioHandler extends BaseAudioHandler {
     }
   }
 
-  Future<void> _insertRecommendedSong(
-    Map song, {
-    bool forcePlay = false,
-  }) async {
-    try {
-      if (song['ytid'] == null || song['ytid'].toString().isEmpty) {
-        logger.log('Invalid recommended song data for queue');
-        return;
-      }
-
-      final insertIndex = _queueList.length;
-      final isAtEnd =
-          _queueList.isNotEmpty && _currentQueueIndex == _queueList.length - 1;
-      final shouldPlayInsertedSong =
-          forcePlay ||
-          (playNextSongAutomatically.value &&
-              !sleepTimerExpired &&
-              _currentLoadingIndex == -1 &&
-              isAtEnd &&
-              (!audioPlayer.playing ||
-                  audioPlayer.processingState == ProcessingState.completed));
-      final queueSong = _queueEntryIds.createSong(song);
-      queueSong['isAutoPicked'] = true;
-      _queueList.insert(insertIndex, queueSong);
-
-      if (_currentQueueIndex < 0) {
-        _currentQueueIndex = 0;
-      }
-
-      _updateQueueMediaItems();
-      _cleanupOldPreloadedSongs();
-      saveCurrentPlaybackState();
-
-      if (shouldPlayInsertedSong) {
-        await _playFromQueue(insertIndex);
-      } else if (!audioPlayer.playing && _queueList.length == 1) {
-        await _playFromQueue(0);
-      }
-    } catch (e, stackTrace) {
-      logger.log(
-        'Error inserting recommended song',
-        error: e,
-        stackTrace: stackTrace,
-      );
-    }
-  }
-
   void _cleanupOldPreloadedSongs() {
     Future.microtask(() async {
       try {
@@ -1597,6 +1602,7 @@ class CatchifyAudioHandler extends BaseAudioHandler {
         _currentLoadingIndex = -1;
         _currentLoadingTransitionId = -1;
         _resetPreloadingState();
+        radioService.resetSession();
         shuffleNotifier.value = shuffle;
         unawaited(Hive.box('settings').put('shuffleEnabled', shuffle));
         await audioPlayer.setShuffleModeEnabled(shuffle);
