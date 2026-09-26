@@ -98,6 +98,7 @@ class CatchifyAudioHandler extends BaseAudioHandler {
   int _currentLoadingTransitionId = -1;
   bool _isUpdatingState = false;
   bool _pendingPlaybackStateUpdate = false;
+  bool _userRequestedPause = false;
   int _songTransitionCounter = 0;
 
   bool _completionEventPending = false;
@@ -1963,6 +1964,7 @@ class CatchifyAudioHandler extends BaseAudioHandler {
     final currentTransitionId = _songTransitionCounter;
     _currentLoadingIndex = index;
     _currentLoadingTransitionId = currentTransitionId;
+    _userRequestedPause = false;
 
     try {
       final previousQueueIndex = _currentQueueIndex;
@@ -2341,8 +2343,13 @@ class CatchifyAudioHandler extends BaseAudioHandler {
   @override
   Future<void> play() async {
     _cancelNetworkRecovery();
+    _userRequestedPause = false;
     try {
       logger.log('[PLAYER] play');
+      if (audioPlayer.processingState == ProcessingState.completed) {
+        await playAgain();
+        return;
+      }
       if (audioPlayer.audioSource == null) {
         if (_queueList.isNotEmpty &&
             _currentQueueIndex >= 0 &&
@@ -2372,6 +2379,7 @@ class CatchifyAudioHandler extends BaseAudioHandler {
         }),
       );
       listeningStatsService.resumeListeningSession(currentSong: currentSong);
+      _updatePlaybackState();
     } catch (e, stackTrace) {
       logger.log('Error in play()', error: e, stackTrace: stackTrace);
       _lastError = e.toString();
@@ -2382,12 +2390,14 @@ class CatchifyAudioHandler extends BaseAudioHandler {
   Future<void> pause() async {
     try {
       logger.log('[PLAYER] pause');
+      _userRequestedPause = true;
       listeningStatsService.recordListeningSessionProgress(
         wasPlaying: audioPlayer.playing,
       );
       unawaited(listeningStatsService.flush());
       await audioPlayer.pause();
       saveCurrentPlaybackState();
+      _updatePlaybackState();
     } catch (e, stackTrace) {
       logger.log('Error in pause()', error: e, stackTrace: stackTrace);
     }
@@ -2560,6 +2570,7 @@ class CatchifyAudioHandler extends BaseAudioHandler {
       }
       _lastCompletedSongId = null;
       _hasPreloadedCurrentTrackEnd = false;
+      _userRequestedPause = false;
       songData['id'] = canonicalId;
       songData['ytid'] = canonicalId;
 
@@ -2819,6 +2830,17 @@ class CatchifyAudioHandler extends BaseAudioHandler {
           song,
           duration: mediaItem.valueOrNull?.duration ?? audioPlayer.duration,
         );
+
+      if (_userRequestedPause) {
+        logger.log(
+          '[PLAYER] User requested pause during song load; staying paused',
+        );
+        await audioPlayer.pause();
+        _updatePlaybackState();
+        unawaited(updateRecentlyPlayed(song['ytid'], songFallback: song));
+        return true;
+      }
+
       unawaited(
         audioPlayer.play().catchError((Object e, StackTrace stackTrace) {
           logger.log(

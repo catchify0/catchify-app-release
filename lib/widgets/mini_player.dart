@@ -77,16 +77,36 @@ class MiniPlayer extends StatelessWidget {
       duration: transitionDuration,
       curve: Curves.easeOutCubic,
       child: StreamBuilder<MediaItem?>(
+        initialData: audioHandler.mediaItem.valueOrNull,
         stream: audioHandler.mediaItem,
         builder: (context, mediaSnapshot) {
-          final metadata = mediaSnapshot.data;
+          final metadata =
+              mediaSnapshot.data ?? audioHandler.mediaItem.valueOrNull;
           if (metadata == null) return const SizedBox.shrink();
 
           return StreamBuilder<FullPlayerState>(
+            initialData: FullPlayerState(
+              playbackState: audioHandler.playbackState.value,
+              queue: audioHandler.queue.value,
+              position: PositionData(
+                Duration.zero,
+                Duration.zero,
+                Duration.zero,
+              ),
+            ),
             stream: _fullPlayerStateStream,
             builder: (context, stateSnapshot) {
-              final state = stateSnapshot.data;
-              if (state == null) return const SizedBox.shrink();
+              final state =
+                  stateSnapshot.data ??
+                  FullPlayerState(
+                    playbackState: audioHandler.playbackState.value,
+                    queue: audioHandler.queue.value,
+                    position: PositionData(
+                      Duration.zero,
+                      Duration.zero,
+                      Duration.zero,
+                    ),
+                  );
 
               final hasNext =
                   state.queue.length > 1 &&
@@ -523,38 +543,39 @@ class _CircularPlayButton extends StatelessWidget {
           ),
           if (isLoading)
             SizedBox(
-              width: 24,
-              height: 24,
+              width: 32,
+              height: 32,
               child: CircularProgressIndicator(
-                strokeWidth: 2.5,
-                valueColor: AlwaysStoppedAnimation<Color>(colorScheme.primary),
+                strokeWidth: 2,
+                valueColor: AlwaysStoppedAnimation<Color>(
+                  colorScheme.primary.withValues(alpha: 0.6),
+                ),
               ),
-            )
-          else
-            IconButton(
-              onPressed: () {
-                HapticFeedback.lightImpact();
-                if (isCompleted) {
-                  audioHandler.playAgain();
-                } else if (isPlaying) {
-                  audioHandler.pause();
-                } else {
-                  audioHandler.play();
-                }
-              },
-              splashColor: Colors.transparent,
-              highlightColor: Colors.transparent,
-              icon: Icon(
-                isCompleted
-                    ? FluentIcons.arrow_counterclockwise_24_filled
-                    : (isPlaying
-                          ? FluentIcons.pause_16_filled
-                          : FluentIcons.play_16_filled),
-                color: colorScheme.primary,
-                size: 22,
-              ),
-              visualDensity: VisualDensity.compact,
             ),
+          IconButton(
+            onPressed: () {
+              HapticFeedback.lightImpact();
+              if (isCompleted) {
+                audioHandler.playAgain();
+              } else if (isPlaying) {
+                audioHandler.pause();
+              } else {
+                audioHandler.play();
+              }
+            },
+            splashColor: Colors.transparent,
+            highlightColor: Colors.transparent,
+            icon: Icon(
+              isCompleted
+                  ? FluentIcons.arrow_counterclockwise_24_filled
+                  : (isPlaying
+                        ? FluentIcons.pause_16_filled
+                        : FluentIcons.play_16_filled),
+              color: colorScheme.primary,
+              size: isLoading ? 16 : 22,
+            ),
+            visualDensity: VisualDensity.compact,
+          ),
         ],
       ),
     );

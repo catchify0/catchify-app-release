@@ -35,15 +35,18 @@ Widget buildPlaybackIconButton(
   bool useRoundedMaterialGlyphs = false,
 }) {
   return StreamBuilder<PlaybackState>(
+    initialData:
+        audioHandler.playbackState.valueOrNull ??
+        audioHandler.playbackState.value,
     stream: audioHandler.playbackState.distinct((previous, current) {
       // Only rebuild if relevant state changes
       return previous.playing == current.playing &&
           previous.processingState == current.processingState;
     }),
     builder: (context, snapshot) {
-      final playbackState = snapshot.data;
-      final processingState = playbackState?.processingState;
-      final isPlaying = playbackState?.playing ?? false;
+      final playbackState = snapshot.data ?? audioHandler.playbackState.value;
+      final processingState = playbackState.processingState;
+      final isPlaying = playbackState.playing;
 
       Widget iconWidget;
       VoidCallback? onPressed;
@@ -51,16 +54,39 @@ Widget buildPlaybackIconButton(
 
       if (processingState == AudioProcessingState.loading ||
           processingState == AudioProcessingState.buffering) {
-        iconWidget = SizedBox(
-          width: iconSize,
-          height: iconSize,
-          child: CircularProgressIndicator(
-            strokeWidth: 2.5,
-            valueColor: AlwaysStoppedAnimation<Color>(iconColor),
-          ),
+        iconWidget = Stack(
+          alignment: Alignment.center,
+          children: [
+            SizedBox(
+              width: iconSize * 1.15,
+              height: iconSize * 1.15,
+              child: CircularProgressIndicator(
+                strokeWidth: 2.5,
+                valueColor: AlwaysStoppedAnimation<Color>(
+                  iconColor.withValues(alpha: 0.6),
+                ),
+              ),
+            ),
+            Icon(
+              useRoundedMaterialGlyphs
+                  ? (isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded)
+                  : (isPlaying
+                        ? FluentIcons.pause_24_regular
+                        : FluentIcons.play_24_regular),
+              color: iconColor,
+              size: iconSize * 0.75,
+            ),
+          ],
         );
-        onPressed = null;
-        semanticLabel = context.l10n!.loading;
+        onPressed = () {
+          HapticFeedback.lightImpact();
+          if (isPlaying) {
+            audioHandler.pause();
+          } else {
+            audioHandler.play();
+          }
+        };
+        semanticLabel = isPlaying ? context.l10n!.pause : context.l10n!.play;
       } else if (processingState == AudioProcessingState.completed) {
         iconWidget = Icon(
           useRoundedMaterialGlyphs
