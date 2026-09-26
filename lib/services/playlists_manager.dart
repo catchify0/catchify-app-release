@@ -2853,12 +2853,9 @@ Future<List<Map<String, dynamic>>> getMadeForYouRecommendations({
       // Fetch fresh tracks by top listened artist for "Because you listened to <artist> / MORE FROM THIS ARTIST"
       try {
         final signals = PersonalizationService.instance.getUserSignals();
-        final topArtists = PersonalizationService.instance.rankArtists(
-          signals,
-          limit: 2,
-        );
-        final artistFutures = topArtists.map((artist) {
-          final artistName = artist['title']?.toString().trim() ?? '';
+        final candidateArtists = PersonalizationService.instance
+            .getCandidateArtists(signals, limit: 2);
+        final artistFutures = candidateArtists.map((artistName) {
           if (artistName.isEmpty) return Future.value(<Video>[]);
           return ytMusicClient.music
               .searchSongs(artistName)
@@ -2892,6 +2889,71 @@ Future<List<Map<String, dynamic>>> getMadeForYouRecommendations({
   }
 
   return liveRecs;
+}
+
+/// Fetches fresh songs for a specific artist recommendation.
+/// Caches results per artist in Hive 'cache' box.
+Future<List<Map<String, dynamic>>> getSongsForArtistRecommendation(
+  String artistName, {
+  bool forceRefresh = false,
+  bool allowNetwork = true,
+  int limit = 12,
+}) async {
+  final cleanName = artistName.trim();
+  if (cleanName.isEmpty) return const [];
+
+  final sanitizedKey = cleanName
+      .toLowerCase()
+      .replaceAll(RegExp('[^a-z0-9]'), '_')
+      .replaceAll(RegExp('_+'), '_');
+  final cacheKey = 'ytm_artist_rec_v2_$sanitizedKey';
+  var liveSongs = <Map<String, dynamic>>[];
+
+  if (!forceRefresh && Hive.isBoxOpen('cache')) {
+    try {
+      final cached = await getData('cache', cacheKey);
+      if (cached is List && cached.isNotEmpty) {
+        liveSongs = cached
+            .whereType<Map>()
+            .map(Map<String, dynamic>.from)
+            .toList();
+      }
+    } catch (_) {}
+  }
+
+  if (liveSongs.isEmpty && !allowNetwork) {
+    return const [];
+  }
+
+  if (liveSongs.isEmpty && !offlineMode.value) {
+    try {
+      final results = await ytMusicClient.music
+          .searchSongs(cleanName)
+          .timeout(const Duration(seconds: 4))
+          .catchError((_) => <Video>[]);
+
+      for (var i = 0; i < results.length; i++) {
+        final video = results[i];
+        final layout = returnSongLayout(i, video);
+        if (!liveSongs.any((s) => s['ytid'] == layout['ytid'])) {
+          liveSongs.add(layout);
+        }
+        if (liveSongs.length >= limit) break;
+      }
+
+      if (liveSongs.isNotEmpty && Hive.isBoxOpen('cache')) {
+        unawaited(addOrUpdateData('cache', cacheKey, liveSongs));
+      }
+    } catch (e, st) {
+      logger.log(
+        'Error fetching artist recommendation for $cleanName:',
+        error: e,
+        stackTrace: st,
+      );
+    }
+  }
+
+  return liveSongs;
 }
 
 Future<List<dynamic>> getUserPlaylistsNotInFolders() async {
@@ -3776,15 +3838,31 @@ Future<List<HomeSection>> _loadUnifiedHomeFeed({
           }
 
           var madeForYouRecs = const <Map<String, dynamic>>[];
+          var artistRecs = const <Map<String, dynamic>>[];
           try {
+            final signals = PersonalizationService.instance.getUserSignals();
+            final topCandidateArtists = PersonalizationService.instance
+                .getCandidateArtists(signals, limit: 2);
             madeForYouRecs = await getMadeForYouRecommendations(
               forceRefresh: forceRefresh,
               allowNetwork: false,
             );
+            if (topCandidateArtists.isNotEmpty) {
+              final cachedArtistResults = await Future.wait(
+                topCandidateArtists.map(
+                  (a) => getSongsForArtistRecommendation(
+                    a,
+                    allowNetwork: false,
+                  ).catchError((_) => <Map<String, dynamic>>[]),
+                ),
+              );
+              artistRecs = cachedArtistResults.expand((x) => x).toList();
+            }
           } catch (_) {}
 
           final combinedCandidates = <Map<String, dynamic>>[
             ...madeForYouRecs,
+            ...artistRecs,
             for (final sec in cachedSections)
               if (sec.type == HomeContentType.songs)
                 ...sec.contents.whereType<Map<String, dynamic>>(),
@@ -3851,9 +3929,24 @@ Future<List<HomeSection>> _loadUnifiedHomeFeed({
 
   final sections = <HomeSection>[];
   final languageSections = <HomeSection>[];
+  final signals = PersonalizationService.instance.getUserSignals();
+  final topCandidateArtists = PersonalizationService.instance
+      .getCandidateArtists(signals, limit: 2);
+
   final madeForYouFuture = getMadeForYouRecommendations(
     forceRefresh: forceRefresh,
   ).catchError((_) => <Map<String, dynamic>>[]);
+
+  final artistRecFuture = topCandidateArtists.isNotEmpty
+      ? Future.wait(
+          topCandidateArtists.map(
+            (a) => getSongsForArtistRecommendation(
+              a,
+              forceRefresh: forceRefresh,
+            ).catchError((_) => <Map<String, dynamic>>[]),
+          ),
+        ).then((results) => results.expand((x) => x).toList())
+      : Future.value(<Map<String, dynamic>>[]);
 
   // 2. Fetch the native home shelves only for English. For regional content
   // languages, showing the generic FEmusic_home response would mix unrelated
@@ -4085,9 +4178,11 @@ Future<List<HomeSection>> _loadUnifiedHomeFeed({
 
   // 4. Generate fresh local personalization with relevant recommendations
   final madeForYouRecs = await madeForYouFuture;
+  final artistRecs = await artistRecFuture;
 
   final combinedCandidates = <Map<String, dynamic>>[
     ...madeForYouRecs,
+    ...artistRecs,
     for (final sec in languageSections)
       if (sec.type == HomeContentType.songs)
         ...sec.contents.whereType<Map<String, dynamic>>(),

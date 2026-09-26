@@ -21,10 +21,8 @@
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:catchify/models/home_section.dart';
-import 'package:catchify/services/common_services.dart';
 import 'package:catchify/services/home_feed_composer.dart';
 import 'package:catchify/services/personalization_service.dart';
-import 'package:catchify/services/playlists_manager.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -366,6 +364,89 @@ void main() {
         expect(
           continueListening.contents.map((song) => song['ytid']),
           containsAll(['recent_1', 'recent_2']),
+        );
+      },
+    );
+
+    test(
+      'getCandidateArtists extracts artists from various metadata formats and splits credits',
+      () {
+        const signals = UserSignals(
+          likedSongs: [
+            {
+              'ytid': 'l1',
+              'title': 'Track 1',
+              'artists': [
+                {'name': 'Sid Sriram'},
+              ],
+            },
+          ],
+          recentSongs: [
+            {
+              'ytid': 'r1',
+              'title': 'Track 2',
+              'artist': 'Anirudh Ravichander, Jonita Gandhi',
+            },
+            {
+              'ytid': 'r2',
+              'title': 'Track 3',
+              'author': 'Various Artists', // Generic: should be ignored
+            },
+          ],
+          likedPlaylists: [],
+          customPlaylists: [],
+          searchQueries: [],
+          playCounts: {},
+        );
+
+        final candidates = PersonalizationService.instance.getCandidateArtists(
+          signals,
+        );
+        expect(candidates.contains('Anirudh Ravichander'), true);
+        expect(candidates.contains('Jonita Gandhi'), true);
+        expect(candidates.contains('Sid Sriram'), true);
+        expect(
+          candidates.any((c) => c.toLowerCase().contains('various artists')),
+          false,
+        );
+      },
+    );
+
+    test(
+      'Because you listened creates section with 1 played song if fresh recommendations exist',
+      () {
+        const signals = UserSignals(
+          likedSongs: [],
+          recentSongs: [
+            {'ytid': 'single_play', 'title': 'Fear Song', 'artist': 'Anirudh'},
+          ],
+          likedPlaylists: [],
+          customPlaylists: [],
+          searchQueries: [],
+          playCounts: {},
+        );
+
+        final sections = PersonalizationService.instance
+            .buildPersonalizedSections(
+              signalsOverride: signals,
+              relevantCandidates: const [
+                {
+                  'ytid': 'rec_1',
+                  'title': 'Badass',
+                  'artist': 'Anirudh Ravichander',
+                },
+                {'ytid': 'rec_2', 'title': 'Hukum', 'artist': 'Anirudh'},
+              ],
+            );
+
+        final because = sections.firstWhere(
+          (s) => s.title.startsWith('Because you listened to'),
+        );
+        expect(because.subtitle, 'MORE FROM THIS ARTIST');
+        expect(because.contents.any((song) => song['ytid'] == 'rec_1'), true);
+        expect(
+          because.contents.any((song) => song['ytid'] == 'single_play'),
+          true,
         );
       },
     );

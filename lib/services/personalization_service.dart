@@ -26,6 +26,7 @@ import 'package:catchify/services/common_services.dart';
 import 'package:catchify/services/listening_stats_service.dart';
 import 'package:catchify/services/playlists_manager.dart';
 import 'package:catchify/services/radio_service.dart';
+import 'package:catchify/utilities/app_utils.dart' show getDisplayArtist;
 import 'package:catchify/utilities/playlist_utils.dart';
 
 /// Centralized weights and time-decay functions for the Catchify Personalization Engine.
@@ -78,12 +79,12 @@ class UserSignals {
   int get distinctArtistsCount {
     final seen = <String>{};
     for (final s in likedSongs) {
-      final a = s['artist']?.toString().trim();
-      if (a != null && a.isNotEmpty) seen.add(a.toLowerCase());
+      final a = getDisplayArtist(s).trim();
+      if (a.isNotEmpty) seen.add(a.toLowerCase());
     }
     for (final s in recentSongs) {
-      final a = s['artist']?.toString().trim();
-      if (a != null && a.isNotEmpty) seen.add(a.toLowerCase());
+      final a = getDisplayArtist(s).trim();
+      if (a.isNotEmpty) seen.add(a.toLowerCase());
     }
     return seen.length;
   }
@@ -294,11 +295,16 @@ class PersonalizationService {
 
     // 2. Liked songs by artist
     for (final s in signals.likedSongs) {
-      final artistStr = s['artist']?.toString().trim() ?? '';
+      final artistStr = getDisplayArtist(s).trim();
       if (artistStr.isEmpty) continue;
 
       final parts = artistStr
-          .split(RegExp('[,&]'))
+          .split(
+            RegExp(
+              r'[,&/]|(?:\s+(?:feat\.?|ft\.?|vs\.?|with)\s+)',
+              caseSensitive: false,
+            ),
+          )
           .map((p) => p.trim())
           .where((p) => p.isNotEmpty);
 
@@ -316,12 +322,17 @@ class PersonalizationService {
     // 3. Recent plays by artist with time decay
     for (var i = 0; i < signals.recentSongs.length; i++) {
       final s = signals.recentSongs[i];
-      final artistStr = s['artist']?.toString().trim() ?? '';
+      final artistStr = getDisplayArtist(s).trim();
       if (artistStr.isEmpty) continue;
 
       final decay = PersonalizationWeights.calculateTimeDecay(i);
       final parts = artistStr
-          .split(RegExp('[,&]'))
+          .split(
+            RegExp(
+              r'[,&/]|(?:\s+(?:feat\.?|ft\.?|vs\.?|with)\s+)',
+              caseSensitive: false,
+            ),
+          )
           .map((p) => p.trim())
           .where((p) => p.isNotEmpty);
 
@@ -390,6 +401,89 @@ class PersonalizationService {
       ..sort((a, b) => b.score.compareTo(a.score));
 
     return sorted.take(limit).map((e) => e.item).toList();
+  }
+
+  /// Extracts high-priority candidate artists based on recently played and liked music.
+  List<String> getCandidateArtists(UserSignals signals, {int limit = 5}) {
+    final candidateArtists = <String>[];
+    const invalidArtists = {
+      'various artists',
+      'various artist',
+      'various',
+      'unknown',
+      'unknown artist',
+      'topic',
+    };
+
+    void addCandidate(String raw) {
+      final cleaned = raw
+          .trim()
+          .replaceAll(RegExp(r'^[\s\-_"\[\]]+|[\s\-_"\[\]]+$'), '')
+          .replaceAll(RegExp(r"^'+|'+$"), '')
+          .trim();
+      if (cleaned.length < 2) return;
+      if (invalidArtists.contains(cleaned.toLowerCase())) return;
+      if (!candidateArtists.any(
+        (c) => c.toLowerCase() == cleaned.toLowerCase(),
+      )) {
+        candidateArtists.add(cleaned);
+      }
+    }
+
+    // 1. Most recent songs first (immediate listener intent)
+    for (final s in signals.recentSongs) {
+      final a = getDisplayArtist(s).trim();
+      if (a.isNotEmpty) {
+        final parts = a
+            .split(
+              RegExp(
+                r'[,&/]|(?:\s+(?:feat\.?|ft\.?|vs\.?|with)\s+)',
+                caseSensitive: false,
+              ),
+            )
+            .map((p) => p.trim())
+            .where((p) => p.isNotEmpty);
+        for (final p in parts) {
+          addCandidate(p);
+        }
+      }
+      if (candidateArtists.length >= limit) break;
+    }
+
+    // 2. Liked songs if recents didn't yield enough
+    if (candidateArtists.length < limit) {
+      for (final s in signals.likedSongs) {
+        final a = getDisplayArtist(s).trim();
+        if (a.isNotEmpty) {
+          final parts = a
+              .split(
+                RegExp(
+                  r'[,&/]|(?:\s+(?:feat\.?|ft\.?|vs\.?|with)\s+)',
+                  caseSensitive: false,
+                ),
+              )
+              .map((p) => p.trim())
+              .where((p) => p.isNotEmpty);
+          for (final p in parts) {
+            addCandidate(p);
+          }
+        }
+        if (candidateArtists.length >= limit) break;
+      }
+    }
+
+    // 3. Fallback to ranked top artists
+    if (candidateArtists.length < limit) {
+      for (final artistEntry in rankArtists(signals, limit: limit)) {
+        final a = artistEntry['title']?.toString().trim() ?? '';
+        if (a.isNotEmpty) {
+          addCandidate(a);
+        }
+        if (candidateArtists.length >= limit) break;
+      }
+    }
+
+    return candidateArtists.take(limit).toList();
   }
 
   /// Builds local personalized [HomeSection]s based on active user signals.
@@ -478,31 +572,7 @@ class PersonalizationService {
     }
 
     // 3. "Because you listened to [Top Artist]"
-    final candidateArtists = <String>[];
-    for (final s in signals.recentSongs) {
-      final a = s['artist']?.toString().trim() ?? '';
-      if (a.isNotEmpty) {
-        final parts = a
-            .split(RegExp('[,&]'))
-            .map((p) => p.trim())
-            .where((p) => p.isNotEmpty);
-        for (final p in parts) {
-          if (!candidateArtists.any(
-            (c) => c.toLowerCase() == p.toLowerCase(),
-          )) {
-            candidateArtists.add(p);
-          }
-        }
-      }
-      if (candidateArtists.length >= 3) break;
-    }
-    for (final artistEntry in rankArtists(signals, limit: 5)) {
-      final a = artistEntry['title']?.toString().trim() ?? '';
-      if (a.isNotEmpty &&
-          !candidateArtists.any((c) => c.toLowerCase() == a.toLowerCase())) {
-        candidateArtists.add(a);
-      }
-    }
+    final candidateArtists = getCandidateArtists(signals);
 
     final artistPlayedIds = {
       ...signals.likedSongs.map(_extractSongId),
@@ -530,7 +600,8 @@ class PersonalizationService {
         ),
       ].take(8).toList();
 
-      if (artistSongs.length >= 2) {
+      if (artistSongs.isNotEmpty &&
+          (freshArtistRecommendations.isNotEmpty || artistSongs.length >= 2)) {
         sections.add(
           HomeSection(
             title: 'Because you listened to $topArtistName',
@@ -608,41 +679,71 @@ class PersonalizationService {
     final seen = <String>{};
     final matched = <Map<String, dynamic>>[];
 
+    bool matchesArtist(String candidate) {
+      final lower = candidate.toLowerCase().trim();
+      if (lower.isEmpty) return false;
+      if (lower == lowerTarget) return true;
+      if (lower.contains(lowerTarget) || lowerTarget.contains(lower))
+        return true;
+
+      final clean = lower.replaceAll(RegExp(r'[\.\s\-]+'), '');
+      if (clean.isNotEmpty && cleanTarget.isNotEmpty) {
+        if (clean == cleanTarget) return true;
+        if (clean.length >= 3 && cleanTarget.length >= 3) {
+          if (clean.contains(cleanTarget) || cleanTarget.contains(clean)) {
+            return true;
+          }
+        }
+      }
+      return false;
+    }
+
     for (final song in pool) {
       final id = _extractSongId(song);
       if (id.isEmpty || !seen.add(id)) continue;
 
-      final artist = song['artist']?.toString().toLowerCase().trim() ?? '';
-      final author = song['author']?.toString().toLowerCase().trim() ?? '';
-
       var isMatch = false;
-      if (artist.isNotEmpty) {
-        if (artist.contains(lowerTarget) ||
-            (cleanTarget.isNotEmpty &&
-                artist
-                    .replaceAll(RegExp(r'[\.\s\-]+'), '')
-                    .contains(cleanTarget))) {
+
+      // 1. Check display artist
+      final displayArtist = getDisplayArtist(song);
+      if (displayArtist.isNotEmpty) {
+        if (matchesArtist(displayArtist)) {
+          isMatch = true;
+        } else {
+          final parts = displayArtist
+              .split(
+                RegExp(
+                  r'[,&/]|(?:\s+(?:feat\.?|ft\.?|vs\.?|with)\s+)',
+                  caseSensitive: false,
+                ),
+              )
+              .map((p) => p.trim());
+          for (final p in parts) {
+            if (matchesArtist(p)) {
+              isMatch = true;
+              break;
+            }
+          }
+        }
+      }
+
+      // 2. Direct artist/author/videoAuthor fields
+      if (!isMatch) {
+        final artist = song['artist']?.toString() ?? '';
+        final author = song['author']?.toString() ?? '';
+        final videoAuthor = song['videoAuthor']?.toString() ?? '';
+        if (matchesArtist(artist) ||
+            matchesArtist(author) ||
+            matchesArtist(videoAuthor)) {
           isMatch = true;
         }
       }
-      if (!isMatch && author.isNotEmpty) {
-        if (author.contains(lowerTarget) ||
-            (cleanTarget.isNotEmpty &&
-                author
-                    .replaceAll(RegExp(r'[\.\s\-]+'), '')
-                    .contains(cleanTarget))) {
-          isMatch = true;
-        }
-      }
+
+      // 3. artists array (if any)
       if (!isMatch && song['artists'] is List) {
         for (final a in song['artists'] as List) {
-          final aName =
-              (a is Map ? a['name'] : a)?.toString().toLowerCase().trim() ?? '';
-          if (aName.contains(lowerTarget) ||
-              (cleanTarget.isNotEmpty &&
-                  aName
-                      .replaceAll(RegExp(r'[\.\s\-]+'), '')
-                      .contains(cleanTarget))) {
+          final aName = (a is Map ? a['name'] : a)?.toString() ?? '';
+          if (matchesArtist(aName)) {
             isMatch = true;
             break;
           }
