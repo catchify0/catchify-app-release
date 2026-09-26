@@ -269,42 +269,56 @@ class _MiniPlayerBodyState extends State<_MiniPlayerBody>
                     borderColor: colorScheme.outlineVariant.withValues(
                       alpha: 0.46,
                     ),
-                    child: Row(
+                    child: Stack(
                       children: [
-                        _ArtworkWidget(metadata: metadata),
-                        Expanded(
-                          child: AnimatedSwitcher(
-                            duration: transitionDuration,
-                            switchInCurve: Curves.easeIn,
-                            switchOutCurve: Curves.easeOut,
-                            layoutBuilder: (currentChild, previousChildren) =>
-                                Stack(
-                                  alignment: Alignment.centerLeft,
-                                  children: [
-                                    ...previousChildren,
-                                    if (currentChild != null) currentChild,
-                                  ],
+                        Row(
+                          children: [
+                            _ArtworkWidget(metadata: metadata),
+                            Expanded(
+                              child: AnimatedSwitcher(
+                                duration: transitionDuration,
+                                switchInCurve: Curves.easeIn,
+                                switchOutCurve: Curves.easeOut,
+                                layoutBuilder:
+                                    (currentChild, previousChildren) => Stack(
+                                      alignment: Alignment.centerLeft,
+                                      children: [
+                                        ...previousChildren,
+                                        if (currentChild != null) currentChild,
+                                      ],
+                                    ),
+                                transitionBuilder: (child, animation) =>
+                                    FadeTransition(
+                                      opacity: animation,
+                                      child: child,
+                                    ),
+                                child: KeyedSubtree(
+                                  key: ValueKey(metadata.id),
+                                  child: _MetadataWidget(
+                                    title: metadata.title,
+                                    artist: metadata.artist,
+                                    colorScheme: colorScheme,
+                                  ),
                                 ),
-                            transitionBuilder: (child, animation) =>
-                                FadeTransition(
-                                  opacity: animation,
-                                  child: child,
-                                ),
-                            child: KeyedSubtree(
-                              key: ValueKey(metadata.id),
-                              child: _MetadataWidget(
-                                title: metadata.title,
-                                artist: metadata.artist,
-                                colorScheme: colorScheme,
                               ),
                             ),
-                          ),
+                            _ControlsWidget(
+                              colorScheme: colorScheme,
+                              playbackState: state.playbackState,
+                              metadata: metadata,
+                              hasNext: widget.hasNext,
+                            ),
+                          ],
                         ),
-                        _ControlsWidget(
-                          colorScheme: colorScheme,
-                          playbackState: state.playbackState,
-                          metadata: metadata,
-                          hasNext: widget.hasNext,
+                        Positioned(
+                          left: 4,
+                          right: 4,
+                          bottom: 2,
+                          child: _MiniPlayerProgressBar(
+                            metadata: metadata,
+                            colorScheme: colorScheme,
+                            playbackState: state.playbackState,
+                          ),
                         ),
                       ],
                     ),
@@ -315,6 +329,81 @@ class _MiniPlayerBodyState extends State<_MiniPlayerBody>
           );
         },
       ),
+    );
+  }
+}
+
+class _MiniPlayerProgressBar extends StatelessWidget {
+  const _MiniPlayerProgressBar({
+    required this.metadata,
+    required this.colorScheme,
+    required this.playbackState,
+  });
+
+  final MediaItem metadata;
+  final ColorScheme colorScheme;
+  final PlaybackState playbackState;
+
+  @override
+  Widget build(BuildContext context) {
+    final initialPos = PositionData(
+      playbackState.position,
+      playbackState.bufferedPosition,
+      metadata.duration ?? Duration.zero,
+    );
+
+    return StreamBuilder<PlaybackState>(
+      initialData: playbackState,
+      stream: audioHandler.playbackState,
+      builder: (context, playbackSnapshot) {
+        final currentPlayState = playbackSnapshot.data ?? playbackState;
+        final processingState = currentPlayState.processingState;
+        final isLoading =
+            processingState == AudioProcessingState.loading ||
+            processingState == AudioProcessingState.buffering;
+
+        return StreamBuilder<PositionData>(
+          initialData: initialPos,
+          stream: audioHandler.positionDataStream,
+          builder: (context, posSnapshot) {
+            final posData = posSnapshot.data ?? initialPos;
+            final totalDuration = (posData.duration > Duration.zero)
+                ? posData.duration
+                : (metadata.duration ?? Duration.zero);
+
+            final progress = (totalDuration.inMilliseconds == 0)
+                ? 0.0
+                : (posData.position.inMilliseconds /
+                          totalDuration.inMilliseconds)
+                      .clamp(0.0, 1.0);
+
+            return ClipRRect(
+              borderRadius: BorderRadius.circular(AppTokens.radiusPill),
+              child: SizedBox(
+                height: 2.5,
+                child: isLoading
+                    ? LinearProgressIndicator(
+                        backgroundColor: colorScheme.primary.withValues(
+                          alpha: 0.15,
+                        ),
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          colorScheme.primary,
+                        ),
+                      )
+                    : LinearProgressIndicator(
+                        value: progress,
+                        backgroundColor: colorScheme.onSurface.withValues(
+                          alpha: 0.12,
+                        ),
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          colorScheme.primary,
+                        ),
+                      ),
+              ),
+            );
+          },
+        );
+      },
     );
   }
 }
@@ -537,7 +626,9 @@ class _CircularPlayButton extends StatelessWidget {
                   size: const Size(48, 48),
                   painter: _CircularProgressPainter(
                     progress: progress,
-                    backgroundColor: colorScheme.surfaceContainerHighest,
+                    backgroundColor: colorScheme.onSurface.withValues(
+                      alpha: 0.12,
+                    ),
                     progressColor: colorScheme.primary,
                     strokeWidth: 3,
                   ),
