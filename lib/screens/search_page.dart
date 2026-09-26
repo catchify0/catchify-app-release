@@ -230,10 +230,10 @@ class _SearchPageState extends State<SearchPage> {
 
   @override
   void dispose() {
+    _debounce?.cancel();
     _searchBar.dispose();
     _inputNode.dispose();
     _fetchingResults.dispose();
-    _debounce?.cancel();
     super.dispose();
   }
 

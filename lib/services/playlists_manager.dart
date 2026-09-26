@@ -301,7 +301,9 @@ String addSongInCustomPlaylist(
   final isFromFolder = found?.isFromFolder ?? false;
 
   if (customPlaylist != null) {
-    final List<dynamic> playlistSongs = customPlaylist['list'];
+    final playlistSongs = (customPlaylist['list'] is List)
+        ? (customPlaylist['list'] as List)
+        : (customPlaylist['list'] = <dynamic>[]);
     if (playlistSongs.any(
       (playlistElement) => playlistElement['ytid'] == song['ytid'],
     )) {
@@ -370,7 +372,9 @@ String addSongsInCustomPlaylist(
   final isFromFolder = found?.isFromFolder ?? false;
 
   if (customPlaylist != null) {
-    final List<dynamic> playlistSongs = customPlaylist['list'];
+    final playlistSongs = (customPlaylist['list'] is List)
+        ? (customPlaylist['list'] as List)
+        : (customPlaylist['list'] = <dynamic>[]);
 
     final existingYtids = <dynamic>{
       for (final item in playlistSongs)

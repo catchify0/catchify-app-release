@@ -128,6 +128,7 @@ class _PlaylistPageState extends State<PlaylistPage> {
   }
 
   void _syncPlaylistLikeStatus() {
+    if (!mounted) return;
     final newStatus = isPlaylistAlreadyLiked(_resolvedPlaylistId);
     if (playlistLikeStatus.value != newStatus) {
       playlistLikeStatus.value = newStatus;

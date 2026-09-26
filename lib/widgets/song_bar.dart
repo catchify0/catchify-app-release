@@ -567,9 +567,11 @@ class _SongBarState extends State<SongBar> {
         : widget.borderRadius;
 
     return StreamBuilder<MediaItem?>(
+      initialData: audioHandler.mediaItem.valueOrNull,
       stream: audioHandler.mediaItem,
       builder: (context, mediaSnapshot) {
-        final currentId = mediaSnapshot.data?.id;
+        final currentId =
+            (mediaSnapshot.data ?? audioHandler.mediaItem.valueOrNull)?.id;
         final isCurrentSong =
             currentId != null && currentId.isNotEmpty && currentId == _ytid;
 

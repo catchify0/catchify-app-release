@@ -57,6 +57,11 @@ class _QueueWidgetState extends State<QueueWidget> {
   @override
   void initState() {
     super.initState();
+    _queue = List<Map>.from(audioHandler.queueList);
+    if (_queue.isNotEmpty) {
+      _hasScrolledToInitial = true;
+      _scrollToCurrentSong();
+    }
     _subscription = audioHandler.queueAsMapStream.listen((queue) {
       if (mounted && !_isDismissing) {
         setState(() {

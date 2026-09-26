@@ -128,14 +128,15 @@ class _NowPlayingPageState extends State<NowPlayingPage>
     final miniIconSize = screenWidth < 360 ? 18.0 : 22.0;
 
     return StreamBuilder<MediaItem?>(
+      initialData: audioHandler.mediaItem.valueOrNull,
       stream: audioHandler.mediaItem,
       builder: (context, snapshot) {
-        if (snapshot.data == null || !snapshot.hasData) {
+        final metadata = snapshot.data ?? audioHandler.mediaItem.valueOrNull;
+        if (metadata == null) {
           return const Scaffold(
             body: Center(child: CircularProgressIndicator()),
           );
         }
-        final metadata = snapshot.data!;
 
         return ValueListenableBuilder<String>(
           valueListenable: playerGradientStyle,

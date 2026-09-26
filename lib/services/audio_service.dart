@@ -2136,7 +2136,11 @@ class CatchifyAudioHandler extends BaseAudioHandler {
 
   bool get hasNext => _currentQueueIndex < _queueList.length - 1;
 
-  bool get hasPrevious => _currentQueueIndex > 0 || _historyList.isNotEmpty;
+  bool get hasPrevious =>
+      _currentQueueIndex > 0 ||
+      _historyList.isNotEmpty ||
+      (repeatNotifier.value == AudioServiceRepeatMode.all &&
+          _queueList.length > 1);
 
   String _recentMediaId(String ytid) => '$_recentMediaIdPrefix$ytid';
 
@@ -3362,6 +3366,9 @@ class CatchifyAudioHandler extends BaseAudioHandler {
         _currentQueueIndex = 0;
         _updateQueueMediaItems();
         await _playFromQueue(0);
+      } else if (repeatNotifier.value == AudioServiceRepeatMode.all &&
+          _queueList.length > 1) {
+        await _playFromQueue(_queueList.length - 1);
       }
 
       _cleanupOldPreloadedSongs();

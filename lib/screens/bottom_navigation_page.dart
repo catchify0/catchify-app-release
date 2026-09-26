@@ -122,7 +122,8 @@ class _BottomNavigationPageState extends State<BottomNavigationPage> {
                               builder: (context, snapshot) {
                                 final mediaQuery = MediaQuery.of(context);
                                 final isMiniPlayerVisible =
-                                    snapshot.data ?? false;
+                                    snapshot.data ??
+                                    (audioHandler.mediaItem.value != null);
                                 final bottomPadding = !isMiniPlayerVisible
                                     ? mediaQuery.padding.bottom
                                     : mediaQuery.padding.bottom +

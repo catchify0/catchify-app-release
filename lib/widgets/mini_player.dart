@@ -84,15 +84,18 @@ class MiniPlayer extends StatelessWidget {
               mediaSnapshot.data ?? audioHandler.mediaItem.valueOrNull;
           if (metadata == null) return const SizedBox.shrink();
 
+          final currentPlaybackState = audioHandler.playbackState.value;
+          final currentPositionData = PositionData(
+            currentPlaybackState.position,
+            currentPlaybackState.bufferedPosition,
+            metadata.duration ?? Duration.zero,
+          );
+
           return StreamBuilder<FullPlayerState>(
             initialData: FullPlayerState(
-              playbackState: audioHandler.playbackState.value,
+              playbackState: currentPlaybackState,
               queue: audioHandler.queue.value,
-              position: PositionData(
-                Duration.zero,
-                Duration.zero,
-                Duration.zero,
-              ),
+              position: currentPositionData,
             ),
             stream: _fullPlayerStateStream,
             builder: (context, stateSnapshot) {
@@ -101,11 +104,7 @@ class MiniPlayer extends StatelessWidget {
                   FullPlayerState(
                     playbackState: audioHandler.playbackState.value,
                     queue: audioHandler.queue.value,
-                    position: PositionData(
-                      Duration.zero,
-                      Duration.zero,
-                      Duration.zero,
-                    ),
+                    position: currentPositionData,
                   );
 
               final hasNext =

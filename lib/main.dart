@@ -54,7 +54,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:receive_sharing_intent/receive_sharing_intent.dart';
 
 late CatchifyAudioHandler audioHandler;
-late StreamSubscription<String?> sharingIntentSubscription;
+StreamSubscription<String?>? sharingIntentSubscription;
 StreamSubscription<Uri?>? deepLinkSubscription;
 
 final logger = Logger();
@@ -230,7 +230,8 @@ class _CatchifyState extends State<Catchify> with WidgetsBindingObserver {
     WidgetsBinding.instance.removeObserver(this);
     offlineMode.removeListener(_onOfflineModeChanged);
 
-    unawaited(sharingIntentSubscription.cancel());
+    unawaited(sharingIntentSubscription?.cancel());
+    sharingIntentSubscription = null;
     unawaited(deepLinkSubscription?.cancel());
     deepLinkSubscription = null;
     unawaited(Hive.close());

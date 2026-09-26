@@ -177,13 +177,16 @@ class LibraryService {
   }
 
   int _lastArtistsLikedLength = -1;
+  int _lastArtistsPlaylistsLength = -1;
   bool _lastArtistsOffline = false;
   List<Map<String, dynamic>> _cachedArtists = const [];
 
   /// Derives distinct artists locally from liked artists and liked/recent songs.
   List<Map<String, dynamic>> loadArtists({bool offlineOnly = false}) {
     final likedLen = userLikedSongsList.value.length;
+    final playlistsLen = userLikedPlaylists.value.length;
     if (_lastArtistsLikedLength == likedLen &&
+        _lastArtistsPlaylistsLength == playlistsLen &&
         _lastArtistsOffline == offlineOnly &&
         _cachedArtists.isNotEmpty) {
       return _cachedArtists;
@@ -250,6 +253,7 @@ class LibraryService {
     }
 
     _lastArtistsLikedLength = likedLen;
+    _lastArtistsPlaylistsLength = playlistsLen;
     _lastArtistsOffline = offlineOnly;
     _cachedArtists = artists;
     return artists;
