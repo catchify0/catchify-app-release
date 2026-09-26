@@ -112,6 +112,7 @@ class _BottomActionsRowState extends State<BottomActionsRow> {
         : widget.iconSize;
 
     return StreamBuilder<List<Map>>(
+      initialData: audioHandler.queueList,
       stream: audioHandler.queueAsMapStream,
       builder: (context, snapshot) {
         final queue = snapshot.data ?? [];

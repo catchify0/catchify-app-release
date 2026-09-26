@@ -2127,6 +2127,7 @@ class CatchifyAudioHandler extends BaseAudioHandler {
   }
 
   Stream<List<Map>> get queueAsMapStream => _queueMapStream.stream;
+  List<Map> get queueList => List.unmodifiable(_queueList);
   int get currentQueueIndex => _currentQueueIndex;
   Map? get currentSong =>
       _currentQueueIndex >= 0 && _currentQueueIndex < _queueList.length

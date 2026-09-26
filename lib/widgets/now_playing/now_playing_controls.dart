@@ -303,6 +303,9 @@ class PlayerControlButtons extends StatelessWidget {
               Expanded(
                 child: Center(
                   child: StreamBuilder<List<MediaItem>>(
+                    initialData:
+                        audioHandler.queue.valueOrNull ??
+                        audioHandler.queue.value,
                     stream: audioHandler.queue,
                     builder: (context, snapshot) {
                       return ValueListenableBuilder<AudioServiceRepeatMode>(
@@ -465,6 +468,7 @@ class PlayerControlButtons extends StatelessWidget {
     EdgeInsets buttonPadding,
   ) {
     return StreamBuilder<List<MediaItem>>(
+      initialData: audioHandler.queue.valueOrNull ?? audioHandler.queue.value,
       stream: audioHandler.queue,
       builder: (context, snapshot) {
         final queue = snapshot.data ?? [];
