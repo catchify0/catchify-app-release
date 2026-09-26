@@ -163,88 +163,95 @@ class _ImportSpotifyPlaylistPageState extends State<ImportSpotifyPlaylistPage> {
       _totalCount = records.length - 1;
     });
     _importRunning = true;
-
-    // Collect all rows with their original position in the CSV.
-    final rows = <_ImportRow>[];
-    for (var i = 1; i < records.length; i++) {
-      final row = records[i];
-      if (row.length <= songIndex || row.length <= artistIndex) continue;
-      final song = row[songIndex].trim();
-      final artist = row[artistIndex].trim();
-      if (song.isEmpty) continue;
-      final durationSeconds =
-          (durationIndex != -1 && row.length > durationIndex)
-          ? _parseDurationSeconds(row[durationIndex])
-          : null;
-      rows.add((
-        index: i - 1,
-        title: song,
-        artist: artist,
-        durationSeconds: durationSeconds,
-      ));
-    }
-
-    // First pass: resolve the rows in batches.
-    final firstPass = await _searchBatch(
-      rows,
-      onProgress: (done) {
-        if (mounted) setState(() => _processedCount += done);
-      },
-    );
-
-    final found = firstPass.found;
-    var missing = firstPass.missing;
-
-    // Second pass: single retry for anything missed, unless rate-limited.
-    if (missing.isNotEmpty && !firstPass.rateLimited) {
-      if (mounted) {
-        setState(() => _totalCount = rows.length + missing.length);
+    try {
+      // Collect all rows with their original position in the CSV.
+      final rows = <_ImportRow>[];
+      for (var i = 1; i < records.length; i++) {
+        final row = records[i];
+        if (row.length <= songIndex || row.length <= artistIndex) continue;
+        final song = row[songIndex].trim();
+        final artist = row[artistIndex].trim();
+        if (song.isEmpty) continue;
+        final durationSeconds =
+            (durationIndex != -1 && row.length > durationIndex)
+            ? _parseDurationSeconds(row[durationIndex])
+            : null;
+        rows.add((
+          index: i - 1,
+          title: song,
+          artist: artist,
+          durationSeconds: durationSeconds,
+        ));
       }
-      final retryPass = await _searchBatch(
-        missing,
+
+      // First pass: resolve the rows in batches.
+      final firstPass = await _searchBatch(
+        rows,
         onProgress: (done) {
           if (mounted) setState(() => _processedCount += done);
         },
       );
-      found.addAll(retryPass.found);
-      missing = retryPass.missing;
-    }
 
-    _importRunning = false;
-    if (!mounted) return;
-    setState(() => _isImporting = false);
+      final found = firstPass.found;
+      var missing = firstPass.missing;
 
-    // Reconstruct the playlist in original CSV order.
-    final songs = (found.keys.toList()..sort())
-        .map((index) => found[index]!)
-        .toList();
+      // Second pass: single retry for anything missed, unless rate-limited.
+      if (missing.isNotEmpty && !firstPass.rateLimited) {
+        if (mounted) {
+          setState(() => _totalCount = rows.length + missing.length);
+        }
+        final retryPass = await _searchBatch(
+          missing,
+          onProgress: (done) {
+            if (mounted) setState(() => _processedCount += done);
+          },
+        );
+        found.addAll(retryPass.found);
+        missing = retryPass.missing;
+      }
 
-    if (songs.isNotEmpty) {
-      createCustomPlaylistWithSongs(
-        playlistName,
-        songs,
-        image: songs.first['image'] as String?,
-      );
-    }
+      // Reconstruct the playlist in original CSV order.
+      final songs = (found.keys.toList()..sort())
+          .map((index) => found[index]!)
+          .toList();
 
-    final resultText = context.l10n!.spotifyPlaylistImportResult(
-      songs.length,
-      rows.length,
-    );
-    if (missing.isNotEmpty) {
-      final missingText = missing
-          .map((r) => r.artist.isEmpty ? r.title : '${r.title} - ${r.artist}')
-          .join('\n');
-      if (mounted) {
-        showToast(
-          context,
-          '$resultText\n\n${context.l10n!.spotifyPlaylistMissingSongs}:\n$missingText',
-          duration: const Duration(seconds: 8),
-          icon: FluentIcons.warning_24_regular,
+      if (songs.isNotEmpty) {
+        createCustomPlaylistWithSongs(
+          playlistName,
+          songs,
+          image: songs.first['image'] as String?,
         );
       }
-    } else {
-      showToast(context, resultText);
+
+      final resultText = context.l10n!.spotifyPlaylistImportResult(
+        songs.length,
+        rows.length,
+      );
+      if (missing.isNotEmpty) {
+        final missingText = missing
+            .map((r) => r.artist.isEmpty ? r.title : '${r.title} - ${r.artist}')
+            .join('\n');
+        if (mounted) {
+          showToast(
+            context,
+            '$resultText\n\n${context.l10n!.spotifyPlaylistMissingSongs}:\n$missingText',
+            duration: const Duration(seconds: 8),
+            icon: FluentIcons.warning_24_regular,
+          );
+        }
+      } else if (mounted) {
+        showToast(context, resultText);
+      }
+    } catch (e, st) {
+      logger.log('Error importing Spotify playlist', error: e, stackTrace: st);
+      if (mounted) {
+        showToast(context, context.l10n!.error);
+      }
+    } finally {
+      _importRunning = false;
+      if (mounted) {
+        setState(() => _isImporting = false);
+      }
     }
   }
 

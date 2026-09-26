@@ -54,6 +54,7 @@ class _StorageCachePageState extends State<StorageCachePage> {
   }
 
   Future<void> _calculateCacheSize() async {
+    if (!mounted) return;
     setState(() => _isCalculating = true);
     try {
       var totalBytes = 0;

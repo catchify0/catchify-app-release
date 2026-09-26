@@ -105,6 +105,12 @@ class _BackupRestorePageState extends State<BackupRestorePage> {
         if (mounted) {
           showToast(context, result.message);
         }
+      } else if (mounted) {
+        showToast(
+          context,
+          result.message,
+          icon: FluentIcons.error_circle_24_regular,
+        );
       }
     } catch (e, str) {
       logger.log('Error restoring data', error: e, stackTrace: str);
