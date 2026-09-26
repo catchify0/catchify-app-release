@@ -52,42 +52,7 @@ Widget buildPlaybackIconButton(
       VoidCallback? onPressed;
       String? semanticLabel;
 
-      if (processingState == AudioProcessingState.loading ||
-          processingState == AudioProcessingState.buffering) {
-        iconWidget = Stack(
-          alignment: Alignment.center,
-          children: [
-            SizedBox(
-              width: iconSize * 1.15,
-              height: iconSize * 1.15,
-              child: CircularProgressIndicator(
-                strokeWidth: 2.5,
-                valueColor: AlwaysStoppedAnimation<Color>(
-                  iconColor.withValues(alpha: 0.6),
-                ),
-              ),
-            ),
-            Icon(
-              useRoundedMaterialGlyphs
-                  ? (isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded)
-                  : (isPlaying
-                        ? FluentIcons.pause_24_regular
-                        : FluentIcons.play_24_regular),
-              color: iconColor,
-              size: iconSize * 0.75,
-            ),
-          ],
-        );
-        onPressed = () {
-          HapticFeedback.lightImpact();
-          if (isPlaying) {
-            audioHandler.pause();
-          } else {
-            audioHandler.play();
-          }
-        };
-        semanticLabel = isPlaying ? context.l10n!.pause : context.l10n!.play;
-      } else if (processingState == AudioProcessingState.completed) {
+      if (processingState == AudioProcessingState.completed) {
         iconWidget = Icon(
           useRoundedMaterialGlyphs
               ? Icons.replay_rounded
