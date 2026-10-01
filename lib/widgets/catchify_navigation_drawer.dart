@@ -25,6 +25,7 @@ import 'dart:math' as math;
 import 'package:fluentui_system_icons/fluentui_system_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:catchify/theme/app_colors.dart';
 import 'package:catchify/utilities/url_launcher.dart';
 import 'package:catchify/widgets/pill_navigation_bar.dart';
 
@@ -90,7 +91,9 @@ class CatchifyNavigationDrawer extends StatelessWidget {
 
     final drawerBackground = isOled
         ? Colors.black
-        : (isDark ? const Color(0xFF121216) : colorScheme.surface);
+        : (isDark
+            ? colorScheme.surfaceContainerLow
+            : colorScheme.surface);
 
     final screenWidth = MediaQuery.sizeOf(context).width;
     final drawerWidth = math.min<double>(300, screenWidth * 0.78);
@@ -107,9 +110,9 @@ class CatchifyNavigationDrawer extends StatelessWidget {
           right: Radius.circular(20),
         ),
         side: BorderSide(
-          color: isDark
-              ? Colors.white.withValues(alpha: 0.08)
-              : colorScheme.outlineVariant.withValues(alpha: 0.28),
+          color: colorScheme.outlineVariant.withValues(
+            alpha: isDark ? 0.35 : 0.45,
+          ),
           width: 0.8,
         ),
       ),
@@ -254,9 +257,9 @@ class CatchifyNavigationDrawer extends StatelessWidget {
                         vertical: 14,
                       ),
                       child: Divider(
-                        color: isDark
-                            ? Colors.white.withValues(alpha: 0.08)
-                            : colorScheme.outlineVariant.withValues(alpha: 0.3),
+                        color: colorScheme.outlineVariant.withValues(
+                          alpha: isDark ? 0.35 : 0.45,
+                        ),
                         height: 1,
                         thickness: 0.8,
                       ),
@@ -349,8 +352,10 @@ class CatchifyNavigationDrawer extends StatelessWidget {
     final isOled = isDark && colorScheme.surface == Colors.black;
 
     final sheetBackground = isOled
-        ? const Color(0xFF0F0F12)
-        : (isDark ? const Color(0xFF16161C) : colorScheme.surface);
+        ? AppColors.pureBlackContainer
+        : (isDark
+            ? colorScheme.surfaceContainer
+            : colorScheme.surface);
 
     showModalBottomSheet(
       context: context,
@@ -508,10 +513,9 @@ class _DrawerItem extends StatelessWidget {
 
     final activeColor = colorScheme.primary;
     final inactiveIconColor = isDark
-        ? Colors.white.withValues(alpha: 0.85)
+        ? colorScheme.onSurface.withValues(alpha: 0.85)
         : colorScheme.onSurfaceVariant;
-    final inactiveTextColor =
-        isDark ? Colors.white : colorScheme.onSurface;
+    final inactiveTextColor = colorScheme.onSurface;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 14),
