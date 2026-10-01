@@ -276,79 +276,21 @@ class _HomePageState extends State<HomePage> {
 
     return Scaffold(
       appBar: AppBar(
-        toolbarHeight: 116,
-        leadingWidth: 56,
         leading: (ModalRoute.of(context)?.canPop ?? false)
             ? null
-            : const Align(
-                alignment: Alignment.bottomCenter,
-                child: Padding(
-                  padding: EdgeInsets.only(left: 12, bottom: 14),
-                  child: CatchifyMenuButton(margin: EdgeInsets.zero),
-                ),
+            : const CatchifyMenuButton(
+                margin: EdgeInsets.only(left: 8),
               ),
-        title: Align(
-          alignment: Alignment.bottomLeft,
-          child: Padding(
-            padding: const EdgeInsets.only(bottom: 10),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  'Catchify',
-                  style: TextStyle(
-                    fontFamily: 'paytoneOne',
-                    fontSize: 18,
-                    fontWeight: FontWeight.w400,
-                    letterSpacing: 0.1,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
-                ),
-                const SizedBox(height: 3),
-                Text(
-                  DateFormat(
-                    'EEEE, d MMMM',
-                  ).format(DateTime.now()).toUpperCase(),
-                  style: AppTextStyles.categoryHeader.copyWith(
-                    fontSize: 11,
-                    color: colorScheme.onSurfaceVariant.withValues(alpha: 0.85),
-                    letterSpacing: 1,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  _getGreeting(),
-                  style: AppTextStyles.pageTitle.copyWith(
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: -0.6,
-                  ),
-                ),
-              ],
-            ),
+        title: Text(
+          'Catchify',
+          style: TextStyle(
+            fontFamily: 'paytoneOne',
+            fontSize: 22,
+            fontWeight: FontWeight.w400,
+            letterSpacing: 0.2,
+            color: colorScheme.primary,
           ),
         ),
-        actions: [
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: Padding(
-              padding: const EdgeInsets.only(right: 14, bottom: 14),
-              child: Semantics(
-                label: _getGreeting(),
-                image: true,
-                child: SvgPicture.asset(
-                  _getGreetingAsset(),
-                  width: 44,
-                  height: 44,
-                  colorFilter: ColorFilter.mode(
-                    colorScheme.primary,
-                    BlendMode.srcIn,
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ],
         centerTitle: false,
       ),
 
@@ -366,6 +308,68 @@ class _HomePageState extends State<HomePage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              DateFormat(
+                                'EEEE, d MMMM',
+                              ).format(DateTime.now()).toUpperCase(),
+                              style: AppTextStyles.categoryHeader.copyWith(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700,
+                                color: colorScheme.onSurfaceVariant.withValues(
+                                  alpha: 0.85,
+                                ),
+                                letterSpacing: 1.2,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              _getGreeting(),
+                              style: AppTextStyles.pageTitle.copyWith(
+                                fontSize: 26,
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: -0.6,
+                                height: 1.2,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Semantics(
+                        label: _getGreeting(),
+                        image: true,
+                        child: Container(
+                          width: 48,
+                          height: 48,
+                          decoration: BoxDecoration(
+                            color: colorScheme.primary.withValues(alpha: 0.1),
+                            shape: BoxShape.circle,
+                          ),
+                          alignment: Alignment.center,
+                          child: SvgPicture.asset(
+                            _getGreetingAsset(),
+                            width: 28,
+                            height: 28,
+                            colorFilter: ColorFilter.mode(
+                              colorScheme.primary,
+                              BlendMode.srcIn,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
                 ValueListenableBuilder<String?>(
                   valueListenable: announcementURL,
                   builder: (_, _url, __) {
