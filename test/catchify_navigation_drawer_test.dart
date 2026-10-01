@@ -45,12 +45,13 @@ void main() {
 
     // Now drawer is open
     expect(find.text('Catchify'), findsOneWidget);
+    expect(find.byType(Image), findsOneWidget);
     expect(find.text('Home'), findsOneWidget);
     expect(find.text('My Music'), findsOneWidget);
     expect(find.text('Playlists'), findsOneWidget);
     expect(find.text('Settings'), findsOneWidget);
     expect(find.text('Help us by rating'), findsOneWidget);
-    expect(find.text('InkStudio'), findsOneWidget);
+    expect(find.text('InkStudio'), findsNothing);
     expect(find.text('Go Premium'), findsOneWidget);
   });
 
