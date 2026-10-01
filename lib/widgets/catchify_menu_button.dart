@@ -27,9 +27,8 @@ import 'package:catchify/widgets/catchify_navigation_drawer.dart';
 ///
 /// Features:
 /// - Staggered 3-bar pill hamburger icon with rounded caps
-/// - Glassy, elevated rounded squircle container
-/// - Subtle primary-accent glow shadow and border
 /// - Micro-haptic feedback on tap
+/// - Circular ink ripple on press
 class CatchifyMenuButton extends StatelessWidget {
   const CatchifyMenuButton({
     super.key,
@@ -37,7 +36,7 @@ class CatchifyMenuButton extends StatelessWidget {
     this.margin = const EdgeInsets.only(left: 12),
   });
 
-  /// Size of the squircle button. Defaults to 38.0.
+  /// Touch-target size of the button. Defaults to 38.0.
   final double size;
 
   /// External margin around the button. Defaults to `EdgeInsets.only(left: 12)`.
@@ -45,33 +44,7 @@ class CatchifyMenuButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    final isDark = theme.brightness == Brightness.dark;
-
-    final bgTop = isDark
-        ? Color.alphaBlend(
-            colorScheme.primary.withValues(alpha: 0.18),
-            colorScheme.surfaceContainerHigh,
-          )
-        : Color.alphaBlend(
-            colorScheme.primary.withValues(alpha: 0.10),
-            colorScheme.surfaceContainerHighest,
-          );
-
-    final bgBottom = isDark
-        ? Color.alphaBlend(
-            colorScheme.primary.withValues(alpha: 0.08),
-            colorScheme.surfaceContainer,
-          )
-        : Color.alphaBlend(
-            colorScheme.primary.withValues(alpha: 0.04),
-            colorScheme.surface,
-          );
-
-    final borderColor = colorScheme.primary.withValues(
-      alpha: isDark ? 0.35 : 0.25,
-    );
+    final colorScheme = Theme.of(context).colorScheme;
 
     return Semantics(
       button: true,
@@ -81,42 +54,24 @@ class CatchifyMenuButton extends StatelessWidget {
         child: Center(
           child: Padding(
             padding: margin,
-            child: Container(
-              width: size,
-              height: size,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [bgTop, bgBottom],
-                ),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: borderColor, width: 1.2),
-                boxShadow: [
-                  BoxShadow(
-                    color: colorScheme.primary.withValues(
-                      alpha: isDark ? 0.24 : 0.14,
-                    ),
-                    blurRadius: 10,
-                    offset: const Offset(0, 3),
-                  ),
-                ],
-              ),
-              child: Material(
-                color: Colors.transparent,
-                borderRadius: BorderRadius.circular(12),
-                child: InkWell(
-                  borderRadius: BorderRadius.circular(12),
-                  splashColor: colorScheme.primary.withValues(alpha: 0.25),
-                  highlightColor: colorScheme.primary.withValues(alpha: 0.12),
-                  onTap: () {
-                    HapticFeedback.lightImpact();
-                    CatchifyNavigationDrawer.open(context);
-                  },
+            child: Material(
+              color: Colors.transparent,
+              borderRadius: BorderRadius.circular(10),
+              child: InkWell(
+                borderRadius: BorderRadius.circular(10),
+                splashColor: colorScheme.primary.withValues(alpha: 0.20),
+                highlightColor: colorScheme.primary.withValues(alpha: 0.10),
+                onTap: () {
+                  HapticFeedback.lightImpact();
+                  CatchifyNavigationDrawer.open(context);
+                },
+                child: SizedBox(
+                  width: size,
+                  height: size,
                   child: Center(
                     child: CatchifyHamburgerIcon(
                       color: colorScheme.primary,
-                      size: size * 0.48,
+                      size: size * 0.50,
                     ),
                   ),
                 ),
