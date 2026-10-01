@@ -276,58 +276,73 @@ class _HomePageState extends State<HomePage> {
 
     return Scaffold(
       appBar: AppBar(
-        toolbarHeight: 92,
+        toolbarHeight: 116,
         leadingWidth: 56,
         leading: (ModalRoute.of(context)?.canPop ?? false)
             ? null
-            : const CatchifyMenuButton(),
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              'Catchify',
-              style: TextStyle(
-                fontFamily: 'paytoneOne',
-                fontSize: 18,
-                fontWeight: FontWeight.w400,
-                letterSpacing: 0.1,
-                color: Theme.of(context).colorScheme.primary,
+            : const Align(
+                alignment: Alignment.bottomCenter,
+                child: Padding(
+                  padding: EdgeInsets.only(left: 12, bottom: 14),
+                  child: CatchifyMenuButton(margin: EdgeInsets.zero),
+                ),
               ),
+        title: Align(
+          alignment: Alignment.bottomLeft,
+          child: Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'Catchify',
+                  style: TextStyle(
+                    fontFamily: 'paytoneOne',
+                    fontSize: 18,
+                    fontWeight: FontWeight.w400,
+                    letterSpacing: 0.1,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  DateFormat('EEEE, d MMMM').format(DateTime.now()).toUpperCase(),
+                  style: TextStyle(
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0.8,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  _getGreeting(),
+                  style: AppTextStyles.pageTitle.copyWith(
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: -0.6,
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 3),
-            Text(
-              DateFormat('EEEE, d MMMM').format(DateTime.now()).toUpperCase(),
-              style: TextStyle(
-                fontSize: 11.5,
-                fontWeight: FontWeight.w600,
-                letterSpacing: 0.8,
-                color: Theme.of(context).colorScheme.primary,
-              ),
-            ),
-            const SizedBox(height: 2),
-            Text(
-              _getGreeting(),
-              style: AppTextStyles.pageTitle.copyWith(
-                fontWeight: FontWeight.w800,
-                letterSpacing: -0.6,
-              ),
-            ),
-          ],
+          ),
         ),
         actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 12),
-            child: Semantics(
-              label: _getGreeting(),
-              image: true,
-              child: SvgPicture.asset(
-                _getGreetingAsset(),
-                width: 42,
-                height: 42,
-                colorFilter: ColorFilter.mode(
-                  colorScheme.primary,
-                  BlendMode.srcIn,
+          Align(
+            alignment: Alignment.bottomCenter,
+            child: Padding(
+              padding: const EdgeInsets.only(right: 14, bottom: 14),
+              child: Semantics(
+                label: _getGreeting(),
+                image: true,
+                child: SvgPicture.asset(
+                  _getGreetingAsset(),
+                  width: 44,
+                  height: 44,
+                  colorFilter: ColorFilter.mode(
+                    colorScheme.primary,
+                    BlendMode.srcIn,
+                  ),
                 ),
               ),
             ),
