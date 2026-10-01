@@ -80,11 +80,13 @@ class _TimeMachinePageState extends State<TimeMachinePage> {
         return ValueListenableBuilder<bool>(
           valueListenable: wrappedEnabled,
           builder: (context, isEnabled, _) {
-            if (!isEnabled || !listeningStatsService.hasStats) {
-              return _buildEmptyState(context);
-            }
-
-            return _buildTimeMachine(context);
+            final showEmpty = !isEnabled || !listeningStatsService.hasStats;
+            return Scaffold(
+              appBar: AppBar(title: Text(context.l10n!.timeMachine)),
+              body: showEmpty
+                  ? _buildEmptyState(context)
+                  : _buildTimeMachine(context),
+            );
           },
         );
       },
@@ -94,24 +96,21 @@ class _TimeMachinePageState extends State<TimeMachinePage> {
   Widget _buildEmptyState(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
 
-    return Scaffold(
-      appBar: AppBar(title: Text(context.l10n!.timeMachine)),
-      body: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              FluentIcons.clock_24_regular,
-              size: 42,
-              color: colorScheme.primary,
-            ),
-            const SizedBox(height: 12),
-            Text(
-              context.l10n!.noListeningStats,
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
-          ],
-        ),
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            FluentIcons.clock_24_regular,
+            size: 42,
+            color: colorScheme.primary,
+          ),
+          const SizedBox(height: 12),
+          Text(
+            context.l10n!.noListeningStats,
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
+        ],
       ),
     );
   }
@@ -126,28 +125,25 @@ class _TimeMachinePageState extends State<TimeMachinePage> {
       showAnnualRecap: showAnnualRecap,
     );
 
-    return Scaffold(
-      appBar: AppBar(title: Text(context.l10n!.timeMachine)),
-      body: ListView.builder(
-        padding: const EdgeInsets.fromLTRB(10, 0, 10, 24),
-        scrollCacheExtent: const ScrollCacheExtent.pixels(500),
-        itemCount: sections.length,
-        itemBuilder: (context, index) {
-          final section = sections[index];
-          return switch (section.kind) {
-            _TimeMachineSectionKind.annual => KeyedSubtree(
-              key: const ValueKey('annual-recap'),
-              child: _buildAnnualSection(context),
-            ),
-            _TimeMachineSectionKind.month => KeyedSubtree(
-              key: ValueKey('month-${section.monthKey}'),
-              child: _buildMonthSection(context, section.monthKey!),
-            ),
-            _TimeMachineSectionKind.bottomSpace =>
-              const MiniPlayerBottomSpace(),
-          };
-        },
-      ),
+    return ListView.builder(
+      padding: const EdgeInsets.fromLTRB(10, 0, 10, 24),
+      scrollCacheExtent: const ScrollCacheExtent.pixels(500),
+      itemCount: sections.length,
+      itemBuilder: (context, index) {
+        final section = sections[index];
+        return switch (section.kind) {
+          _TimeMachineSectionKind.annual => KeyedSubtree(
+            key: const ValueKey('annual-recap'),
+            child: _buildAnnualSection(context),
+          ),
+          _TimeMachineSectionKind.month => KeyedSubtree(
+            key: ValueKey('month-${section.monthKey}'),
+            child: _buildMonthSection(context, section.monthKey!),
+          ),
+          _TimeMachineSectionKind.bottomSpace =>
+            const MiniPlayerBottomSpace(),
+        };
+      },
     );
   }
 
