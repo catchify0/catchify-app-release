@@ -57,17 +57,20 @@ List<PopupMenuEntry<String>> _buildSongMenuItems({
   bool canRemove = false,
   bool showGoToArtist = false,
 }) {
-  final l10n = context.l10n!;
-  final playNextText = l10n.playNext;
-  final addToQueueText = l10n.addToQueue;
-  final removeFromLikedSongsText = l10n.removeFromLikedSongs;
-  final addToLikedSongsText = l10n.addToLikedSongs;
-  final removeFromPlaylistText = l10n.removeFromPlaylist;
-  final addToPlaylistText = l10n.addToPlaylist;
-  final removeFromRecentlyPlayedText = l10n.removeFromRecentlyPlayed;
-  final removeOfflineText = l10n.removeOffline;
-  final makeOfflineText = l10n.makeOffline;
-  final renameSongText = l10n.renameSong;
+  final l10n = context.l10n;
+  final playNextText = l10n?.playNext ?? 'Play next';
+  final addToQueueText = l10n?.addToQueue ?? 'Add to queue';
+  final removeFromLikedSongsText =
+      l10n?.removeFromLikedSongs ?? 'Remove from liked songs';
+  final addToLikedSongsText = l10n?.addToLikedSongs ?? 'Add to liked songs';
+  final removeFromPlaylistText =
+      l10n?.removeFromPlaylist ?? 'Remove from playlist';
+  final addToPlaylistText = l10n?.addToPlaylist ?? 'Add to playlist';
+  final removeFromRecentlyPlayedText =
+      l10n?.removeFromRecentlyPlayed ?? 'Remove from recently played';
+  final removeOfflineText = l10n?.removeOffline ?? 'Remove from offline';
+  final makeOfflineText = l10n?.makeOffline ?? 'Make offline';
+  final renameSongText = l10n?.renameSong ?? 'Rename song';
 
   return [
     if (showQueueActions)
@@ -110,7 +113,7 @@ List<PopupMenuEntry<String>> _buildSongMenuItems({
             ),
             const SizedBox(width: 8),
             Text(
-              l10n.goToArtist,
+              l10n?.goToArtist ?? 'Go to artist',
               style: TextStyle(color: colorScheme.onSurface),
             ),
           ],
@@ -668,8 +671,8 @@ class _SongBarState extends State<SongBar> {
         ]) ??
         '';
     final isHorizontal = ArtworkService.isYouTubeThumbnailUrl(rawUrl);
-    final artWidth = isHorizontal ? 76.0 : 52.0;
-    final artHeight = isHorizontal ? 44.0 : 52.0;
+    final artWidth = isHorizontal ? 76.0 : AppTokens.songRowArtworkSize;
+    final artHeight = isHorizontal ? 44.0 : AppTokens.songRowArtworkSize;
 
     final songDuration = widget.song['duration'];
     final isDurationAvailable =

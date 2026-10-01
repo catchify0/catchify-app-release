@@ -95,7 +95,8 @@ class _UserSongsPageState extends State<UserSongsPage> {
   Widget build(BuildContext context) {
     final title = getTitle(widget.page, context);
     final icon = getIcon(widget.page);
-    final isOfflineSongs = title == context.l10n!.offlineSongs;
+    final isOfflineSongs =
+        title == (context.l10n?.offlineSongs ?? 'Offline songs');
     final isLocalSongs = widget.page == 'local';
 
     return Scaffold(
@@ -169,11 +170,11 @@ class _UserSongsPageState extends State<UserSongsPage> {
 
   String getTitle(String page, BuildContext context) {
     return switch (page) {
-      'liked' => context.l10n!.likedSongs,
+      'liked' => context.l10n?.likedSongs ?? 'Liked songs',
       'local' => 'Local songs',
-      'offline' => context.l10n!.offlineSongs,
-      'recents' => context.l10n!.recentlyPlayed,
-      _ => context.l10n!.playlist,
+      'offline' => context.l10n?.offlineSongs ?? 'Offline songs',
+      'recents' => context.l10n?.recentlyPlayed ?? 'Recently played',
+      _ => context.l10n?.playlist ?? 'Playlist',
     };
   }
 
@@ -207,7 +208,7 @@ class _UserSongsPageState extends State<UserSongsPage> {
                 Expanded(
                   child: FilledButton.icon(
                     icon: const Icon(FluentIcons.play_24_filled),
-                    label: Text(context.l10n!.play),
+                    label: Text(context.l10n?.play ?? 'Play'),
                     onPressed: () {
                       final songsList = _currentSongsList;
                       var sortedList = songsList;
@@ -238,7 +239,7 @@ class _UserSongsPageState extends State<UserSongsPage> {
                       foregroundColor: colorScheme.onSecondaryContainer,
                     ),
                     icon: const Icon(FluentIcons.arrow_shuffle_24_filled),
-                    label: Text(context.l10n!.shuffle),
+                    label: Text(context.l10n?.shuffle ?? 'Shuffle'),
                     onPressed: () async {
                       final songsList = _currentSongsList;
                       if (songsList.isEmpty) return;

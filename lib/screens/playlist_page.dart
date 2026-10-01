@@ -256,15 +256,17 @@ class _PlaylistPageState extends State<PlaylistPage> {
                       ),
                     )
                   else if (_isArtistCatalogFailed)
-                    EmptyPlaylistState(message: context.l10n!.error)
+                    EmptyPlaylistState(message: context.l10n?.error ?? 'Error')
                   else
                     EmptyPlaylistState(
-                      message: context.l10n!.noSongsInPlaylist,
+                      message:
+                          context.l10n?.noSongsInPlaylist ??
+                          'No songs in playlist',
                     ),
                   const SliverMiniPlayerBottomSpace(),
                 ],
               )
-            : EmptyPlaylistState(message: context.l10n!.error),
+            : EmptyPlaylistState(message: context.l10n?.error ?? 'Error'),
       ),
     );
   }
@@ -335,7 +337,7 @@ class _PlaylistPageState extends State<PlaylistPage> {
                       ),
                       icon: const Icon(FluentIcons.play_24_filled, size: 22),
                       label: Text(
-                        context.l10n!.play,
+                        context.l10n?.play ?? 'Play',
                         style: const TextStyle(fontWeight: FontWeight.w700),
                       ),
                       onPressed: () => audioHandler.playPlaylistSong(
@@ -365,7 +367,7 @@ class _PlaylistPageState extends State<PlaylistPage> {
                       size: 22,
                     ),
                     label: Text(
-                      context.l10n!.shuffle,
+                      context.l10n?.shuffle ?? 'Shuffle',
                       style: const TextStyle(fontWeight: FontWeight.w700),
                     ),
                     onPressed: () async {
@@ -431,7 +433,7 @@ class _PlaylistPageState extends State<PlaylistPage> {
             controller: _searchController,
             focusNode: _searchFocusNode,
             onSearchChanged: (value) => _searchQueryNotifier.value = value,
-            labelText: context.l10n!.search,
+            labelText: context.l10n?.search ?? 'Search',
           ),
         ],
         const SizedBox(height: 16),
