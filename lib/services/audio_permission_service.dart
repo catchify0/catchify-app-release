@@ -35,7 +35,7 @@ class AudioPermissionService {
     try {
       final result = await _channel.invokeMethod<bool>('hasAudioPermission');
       return result ?? false;
-    } on PlatformException {
+    } on Exception {
       return false;
     }
   }
@@ -50,7 +50,7 @@ class AudioPermissionService {
         'requestAudioPermission',
       );
       return result ?? false;
-    } on PlatformException {
+    } on Exception {
       return false;
     }
   }

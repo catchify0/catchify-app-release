@@ -82,6 +82,8 @@ class CatchifyAudioHandler extends BaseAudioHandler {
   DateTime _equalizerRetryNotBefore = DateTime.fromMillisecondsSinceEpoch(0);
 
   Timer? _sleepTimer;
+  Timer? _sleepTimerTicker;
+  DateTime? _sleepTimerEndTime;
   Timer? _debounceTimer;
   bool sleepTimerExpired = false;
   bool sleepTimerEndOfSong = false;
@@ -398,6 +400,16 @@ class CatchifyAudioHandler extends BaseAudioHandler {
         currentItem.extras?['ytid']?.toString() == currentSongYtid;
   }
 
+  int? _parseDurationSeconds(dynamic raw) {
+    if (raw == null) return null;
+    if (raw is int) return raw > 0 ? raw : null;
+    if (raw is num) return raw > 0 ? raw.toInt() : null;
+    if (raw is Duration) return raw.inSeconds > 0 ? raw.inSeconds : null;
+    final parsed = int.tryParse(raw.toString().trim());
+    if (parsed != null && parsed > 0) return parsed;
+    return null;
+  }
+
   void _updateCurrentMediaItemWithDuration(Duration duration) {
     try {
       final queueIndex = _currentQueueIndex;
@@ -414,12 +426,12 @@ class CatchifyAudioHandler extends BaseAudioHandler {
       );
 
       final activeItem = isMatchingCurrentItem ? currentItem : currentMediaItem;
-      final durationWasMissing =
-          currentSong['duration'] == null || currentSong['duration'] <= 0;
+      final songDurationSec = _parseDurationSeconds(currentSong['duration']);
+      final durationWasMissing = songDurationSec == null;
       final knownDuration =
           activeItem?.duration ??
-          (currentSong['duration'] != null && currentSong['duration'] > 0
-              ? Duration(seconds: currentSong['duration'])
+          (songDurationSec != null
+              ? Duration(seconds: songDurationSec)
               : null);
       final shouldUpdate = _shouldUpdateDuration(knownDuration, duration);
       final effectiveDuration = shouldUpdate
@@ -580,12 +592,15 @@ class CatchifyAudioHandler extends BaseAudioHandler {
     if ((positionMs - _lastSavedPositionMs).abs() < 3000) return;
     _lastSavedPositionMs = positionMs;
     try {
-      unawaited(Hive.box('userNoBackup').put('lastPositionMs', positionMs));
+      if (Hive.isBoxOpen('userNoBackup')) {
+        unawaited(Hive.box('userNoBackup').put('lastPositionMs', positionMs));
+      }
     } catch (_) {}
   }
 
   void saveCurrentPlaybackState() {
     try {
+      if (!Hive.isBoxOpen('userNoBackup')) return;
       final box = Hive.box('userNoBackup');
       final current = currentSong;
       if (current != null && _songYtid(current) != null) {
@@ -988,7 +1003,10 @@ class CatchifyAudioHandler extends BaseAudioHandler {
           sleepTimerExpired = true;
           sleepTimerEndOfSong = false;
           _sleepTimerRemainingSongs = null;
-          stop();
+          _sleepTimerTicker?.cancel();
+          _sleepTimerTicker = null;
+          _sleepTimerEndTime = null;
+          unawaited(stop());
           sleepTimerNotifier.value = null;
           return;
         }
@@ -999,7 +1017,10 @@ class CatchifyAudioHandler extends BaseAudioHandler {
           if (_sleepTimerRemainingSongs! <= 0) {
             sleepTimerExpired = true;
             _sleepTimerRemainingSongs = null;
-            stop();
+            _sleepTimerTicker?.cancel();
+            _sleepTimerTicker = null;
+            _sleepTimerEndTime = null;
+            unawaited(stop());
             sleepTimerNotifier.value = null;
             return;
           } else {
@@ -1103,14 +1124,14 @@ class CatchifyAudioHandler extends BaseAudioHandler {
         logger.log(
           '[PLAYER] Network offline, but next track is available offline. Skipping to next.',
         );
-        Future.delayed(_errorRetryDelay, skipToNext);
+        unawaited(Future.delayed(_errorRetryDelay, skipToNext));
       } else {
         logger.log(
           '[PLAYER] Network offline and next track requires internet. Pausing playback and waiting for reconnect.',
         );
         _consecutiveErrors = 0;
         _pausedDueToNetwork = true;
-        pause();
+        unawaited(pause());
         _startNetworkRecoveryCheck();
       }
       return;
@@ -1120,7 +1141,7 @@ class CatchifyAudioHandler extends BaseAudioHandler {
       logger.log(
         '[PLAYER] Max consecutive errors ($_maxConsecutiveErrors) reached. Stopping playback.',
       );
-      stop();
+      unawaited(stop());
       return;
     }
 
@@ -1128,7 +1149,7 @@ class CatchifyAudioHandler extends BaseAudioHandler {
       logger.log(
         '[PLAYER] Skipping failed track to next available queue item in ${_errorRetryDelay.inSeconds}s',
       );
-      Future.delayed(_errorRetryDelay, skipToNext);
+      unawaited(Future.delayed(_errorRetryDelay, skipToNext));
     } else {
       _lastError = null;
     }
@@ -2619,7 +2640,8 @@ class CatchifyAudioHandler extends BaseAudioHandler {
 
       // If duration is missing (e.g. from an older import or external source),
       // resolve accurate metadata duration to protect iOS AVPlayer from doubling duration.
-      if (songData['duration'] == null || songData['duration'] <= 0) {
+      final resolvedDurationSec = _parseDurationSeconds(songData['duration']);
+      if (resolvedDurationSec == null) {
         try {
           final video = await ProxyManager()
               .getClientSync()
@@ -3543,25 +3565,47 @@ class CatchifyAudioHandler extends BaseAudioHandler {
   Future<void> setSleepTimer(Duration duration) async {
     try {
       _sleepTimer?.cancel();
+      _sleepTimerTicker?.cancel();
       sleepTimerExpired = false;
       sleepTimerEndOfSong = false;
       _sleepTimerRemainingSongs = null;
+
+      final endTime = DateTime.now().add(duration);
+      _sleepTimerEndTime = endTime;
       sleepTimerNotifier.value = duration;
 
-      _sleepTimer = Timer(duration, () async {
-        sleepTimerExpired = true;
-        await stop();
-        sleepTimerNotifier.value = null;
+      _sleepTimerTicker = Timer.periodic(const Duration(seconds: 1), (timer) {
+        final targetEnd = _sleepTimerEndTime;
+        if (targetEnd == null) {
+          timer.cancel();
+          return;
+        }
+        final remaining = targetEnd.difference(DateTime.now());
+        if (remaining <= Duration.zero) {
+          timer.cancel();
+          _sleepTimerTicker = null;
+          _sleepTimerEndTime = null;
+          sleepTimerExpired = true;
+          unawaited(stop());
+          sleepTimerNotifier.value = null;
+        } else {
+          sleepTimerNotifier.value = remaining;
+        }
       });
     } catch (e, stackTrace) {
       logger.log('Error setting sleep timer', error: e, stackTrace: stackTrace);
     }
   }
 
+  DateTime? get sleepTimerEndTime => _sleepTimerEndTime;
+
   void cancelSleepTimer() {
     try {
       _sleepTimer?.cancel();
       _sleepTimer = null;
+      _sleepTimerTicker?.cancel();
+      _sleepTimerTicker = null;
+      _sleepTimerEndTime = null;
       sleepTimerExpired = false;
       sleepTimerEndOfSong = false;
       _sleepTimerRemainingSongs = null;
@@ -3582,6 +3626,9 @@ class CatchifyAudioHandler extends BaseAudioHandler {
   Future<void> setSleepTimerSongCount(int songCount) async {
     try {
       _sleepTimer?.cancel();
+      _sleepTimerTicker?.cancel();
+      _sleepTimerTicker = null;
+      _sleepTimerEndTime = null;
       sleepTimerExpired = false;
       sleepTimerEndOfSong = songCount <= 1;
       _sleepTimerRemainingSongs = songCount;
