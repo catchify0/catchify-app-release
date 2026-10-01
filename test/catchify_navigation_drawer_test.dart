@@ -1,38 +1,8 @@
-import 'package:fluentui_system_icons/fluentui_system_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:catchify/widgets/catchify_navigation_drawer.dart';
-import 'package:catchify/widgets/pill_navigation_bar.dart';
 
 void main() {
-  final testItems = [
-    const PillNavigationItem(
-      icon: FluentIcons.home_24_regular,
-      selectedIcon: FluentIcons.home_24_filled,
-      label: 'Home',
-    ),
-    const PillNavigationItem(
-      icon: FluentIcons.arrow_trending_24_regular,
-      selectedIcon: FluentIcons.arrow_trending_24_filled,
-      label: 'Charts',
-    ),
-    const PillNavigationItem(
-      icon: FluentIcons.search_24_regular,
-      selectedIcon: FluentIcons.search_24_filled,
-      label: 'Search',
-    ),
-    const PillNavigationItem(
-      icon: FluentIcons.library_24_regular,
-      selectedIcon: FluentIcons.library_24_filled,
-      label: 'Library',
-    ),
-    const PillNavigationItem(
-      icon: FluentIcons.settings_24_regular,
-      selectedIcon: FluentIcons.settings_24_filled,
-      label: 'Settings',
-    ),
-  ];
-
   Widget buildTestScaffold({
     int selectedIndex = 0,
     bool isOfflineMode = false,
@@ -44,7 +14,6 @@ void main() {
         drawer: CatchifyNavigationDrawer(
           selectedIndex: selectedIndex,
           onDestinationSelected: onDestinationSelected ?? (_) {},
-          items: testItems,
           isOfflineMode: isOfflineMode,
           offlineNotifier: ValueNotifier<bool>(isOfflineMode),
         ),
@@ -76,31 +45,45 @@ void main() {
 
     // Now drawer is open
     expect(find.text('Catchify'), findsOneWidget);
-    expect(find.text('Free Music Streaming'), findsOneWidget);
-    expect(find.text('MAIN MENU'), findsOneWidget);
     expect(find.text('Home'), findsOneWidget);
-    expect(find.text('Charts'), findsOneWidget);
-    expect(find.text('Search'), findsOneWidget);
-    expect(find.text('Library'), findsOneWidget);
+    expect(find.text('My Music'), findsOneWidget);
+    expect(find.text('Playlists'), findsOneWidget);
     expect(find.text('Settings'), findsOneWidget);
-    expect(find.text('DISCOVER & TOOLS'), findsOneWidget);
-
-    await tester.scrollUntilVisible(
-      find.text('Theme & Appearance'),
-      50,
-      scrollable: find.byType(Scrollable).first,
-    );
-    expect(find.text('Theme & Appearance'), findsOneWidget);
-
-    await tester.scrollUntilVisible(
-      find.text('About Catchify'),
-      50,
-      scrollable: find.byType(Scrollable).first,
-    );
-    expect(find.text('About Catchify'), findsOneWidget);
+    expect(find.text('Help us by rating'), findsOneWidget);
+    expect(find.text('InkStudio'), findsOneWidget);
+    expect(find.text('Go Premium'), findsOneWidget);
   });
 
-  testWidgets('Selecting a navigation item calls callback and closes drawer', (
+  testWidgets('Selecting Home calls callback and closes drawer', (
+    WidgetTester tester,
+  ) async {
+    int? selectedTab;
+
+    await tester.pumpWidget(
+      buildTestScaffold(
+        selectedIndex: 4,
+        onDestinationSelected: (index) {
+          selectedTab = index;
+        },
+      ),
+    );
+
+    // Open drawer
+    await tester.tap(find.text('Open Menu'));
+    await tester.pumpAndSettle();
+
+    // Tap 'Home' tab (shell branch 0)
+    await tester.tap(find.text('Home'));
+    await tester.pumpAndSettle();
+
+    // Callback was invoked with index 0
+    expect(selectedTab, 0);
+
+    // Drawer should now be closed
+    expect(find.text('Catchify'), findsNothing);
+  });
+
+  testWidgets('Selecting My Music calls callback and closes drawer', (
     WidgetTester tester,
   ) async {
     int? selectedTab;
@@ -118,49 +101,44 @@ void main() {
     await tester.tap(find.text('Open Menu'));
     await tester.pumpAndSettle();
 
-    // Tap 'Library' tab (index 3)
-    await tester.tap(find.text('Library'));
+    // Tap 'My Music' tab (shell branch 3)
+    await tester.tap(find.text('My Music'));
     await tester.pumpAndSettle();
 
     // Callback was invoked with index 3
     expect(selectedTab, 3);
 
     // Drawer should now be closed
-    expect(find.text('MAIN MENU'), findsNothing);
-  });
-
-  testWidgets('Dismiss button closes the drawer', (
-    WidgetTester tester,
-  ) async {
-    await tester.pumpWidget(buildTestScaffold());
-
-    // Open drawer
-    await tester.tap(find.text('Open Menu'));
-    await tester.pumpAndSettle();
-    expect(find.text('Catchify'), findsOneWidget);
-
-    // Tap dismiss button
-    await tester.tap(find.byTooltip('Close sidebar'));
-    await tester.pumpAndSettle();
-
-    // Drawer is closed
     expect(find.text('Catchify'), findsNothing);
   });
 
-  testWidgets('Offline mode renders offline banner', (
+  testWidgets('Selecting Playlists calls callback and closes drawer', (
     WidgetTester tester,
   ) async {
-    await tester.pumpWidget(buildTestScaffold(isOfflineMode: true));
+    int? selectedTab;
+
+    await tester.pumpWidget(
+      buildTestScaffold(
+        selectedIndex: 0,
+        onDestinationSelected: (index) {
+          selectedTab = index;
+        },
+      ),
+    );
 
     // Open drawer
     await tester.tap(find.text('Open Menu'));
     await tester.pumpAndSettle();
 
-    // Check offline banner is shown
-    expect(
-      find.text('Offline mode active — local & downloaded content only.'),
-      findsOneWidget,
-    );
+    // Tap 'Playlists' tab (shell branch 3)
+    await tester.tap(find.text('Playlists'));
+    await tester.pumpAndSettle();
+
+    // Callback was invoked with index 3
+    expect(selectedTab, 3);
+
+    // Drawer should now be closed
+    expect(find.text('Catchify'), findsNothing);
   });
 
   testWidgets('Selecting Settings from the drawer calls callback and closes drawer', (
@@ -181,7 +159,7 @@ void main() {
     await tester.tap(find.text('Open Menu'));
     await tester.pumpAndSettle();
 
-    // Tap 'Settings' tab (index 4)
+    // Tap 'Settings' tab (shell branch 4)
     await tester.tap(find.text('Settings'));
     await tester.pumpAndSettle();
 
@@ -189,6 +167,61 @@ void main() {
     expect(selectedTab, 4);
 
     // Drawer should now be closed
-    expect(find.text('MAIN MENU'), findsNothing);
+    expect(find.text('Catchify'), findsNothing);
+  });
+
+  testWidgets('CatchifyNavigationDrawer.close closes the open drawer', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(buildTestScaffold());
+
+    // Open drawer
+    await tester.tap(find.text('Open Menu'));
+    await tester.pumpAndSettle();
+    expect(find.text('Catchify'), findsOneWidget);
+
+    // Close via static helper
+    CatchifyNavigationDrawer.close();
+    await tester.pumpAndSettle();
+
+    // Drawer is closed
+    expect(find.text('Catchify'), findsNothing);
+  });
+
+  testWidgets('Offline mode renders offline badge', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(buildTestScaffold(isOfflineMode: true));
+
+    // Open drawer
+    await tester.tap(find.text('Open Menu'));
+    await tester.pumpAndSettle();
+
+    // Check offline badge is shown
+    expect(find.text('Offline Mode'), findsOneWidget);
+  });
+
+  testWidgets('Tapping Go Premium opens the premium perks bottom sheet', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(buildTestScaffold());
+
+    // Open drawer
+    await tester.tap(find.text('Open Menu'));
+    await tester.pumpAndSettle();
+
+    // Tap Go Premium
+    await tester.tap(find.text('Go Premium'));
+    await tester.pumpAndSettle();
+
+    // Verify sheet contents
+    expect(find.text("You're on Catchify Premium!"), findsOneWidget);
+    expect(find.text('Awesome, Enjoy!'), findsOneWidget);
+
+    // Dismiss sheet
+    await tester.tap(find.text('Awesome, Enjoy!'));
+    await tester.pumpAndSettle();
+
+    expect(find.text("You're on Catchify Premium!"), findsNothing);
   });
 }

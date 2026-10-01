@@ -19,39 +19,34 @@
  *     please visit: https://github.com/catchify0/catchify0.github.io
  */
 
-import 'dart:io' show Platform;
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:fluentui_system_icons/fluentui_system_icons.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
-import 'package:catchify/constants/app_tokens.dart';
-import 'package:catchify/constants/version.dart';
-import 'package:catchify/extensions/l10n.dart';
-import 'package:catchify/services/data_manager.dart';
-import 'package:catchify/services/router_service.dart';
-import 'package:catchify/services/settings_manager.dart';
-import 'package:catchify/utilities/flutter_toast.dart';
-import 'package:catchify/widgets/catchify_brand_icon.dart';
+import 'package:catchify/utilities/url_launcher.dart';
 import 'package:catchify/widgets/pill_navigation_bar.dart';
 
-/// A sleek, modern left slide-out navigation drawer for Catchify.
+/// A sleek, atmospheric left slide-out navigation drawer for Catchify.
 ///
-/// Provides quick access to primary navigation destinations, audio tools,
-/// Spotify playlist import, theme personalization, offline mode, and about info.
+/// Implements a minimal, dark celestial design with:
+/// - Atmospheric starry nebula background header
+/// - Bold 'Catchify' title
+/// - Home, My Music, Playlists, Settings, Help us by rating, and InkStudio shortcuts
+/// - Vibrant green 'Go Premium' button
 class CatchifyNavigationDrawer extends StatelessWidget {
   const CatchifyNavigationDrawer({
     super.key,
     required this.selectedIndex,
     required this.onDestinationSelected,
-    required this.items,
-    required this.isOfflineMode,
+    this.items = const [],
+    this.isOfflineMode = false,
     this.offlineNotifier,
   });
 
-  /// Global key to control the drawer state from anywhere in the app hierarchy.
+  /// Global key to open or close the drawer from anywhere in the app hierarchy.
   static final GlobalKey<ScaffoldState> scaffoldKey =
       GlobalKey<ScaffoldState>();
 
@@ -89,644 +84,541 @@ class CatchifyNavigationDrawer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-    final primary = theme.colorScheme.primary;
-    final surfaceColor = isDark
-        ? (theme.colorScheme.surface == Colors.black
-              ? Colors.black
-              : const Color(0xFF131318))
-        : theme.colorScheme.surface;
-
     final screenWidth = MediaQuery.sizeOf(context).width;
-    final drawerWidth = math.min<double>(320, screenWidth * 0.82);
-
-    final showEqualizer = !kIsWeb && Platform.isAndroid;
+    final drawerWidth = math.min<double>(300, screenWidth * 0.78);
+    final topPadding = MediaQuery.paddingOf(context).top;
+    final bottomPadding = MediaQuery.paddingOf(context).bottom;
 
     return Drawer(
       width: drawerWidth,
       elevation: 0,
-      backgroundColor: surfaceColor,
+      backgroundColor: const Color(0xFF0B0C0E),
       surfaceTintColor: Colors.transparent,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.horizontal(
-          right: Radius.circular(AppTokens.radiusSheet),
-        ),
-      ),
-      child: SafeArea(
-        top: false,
-        child: Column(
-          children: [
-            // ── Drawer Header ──
-            _buildHeader(context, isDark, primary, surfaceColor),
+      shape: const RoundedRectangleBorder(),
+      child: Stack(
+        children: [
+          // ── Atmospheric Cosmic Nebula Header ──
+          const Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            height: 220,
+            child: CustomPaint(
+              painter: _CosmicNebulaPainter(),
+            ),
+          ),
 
-            // ── Offline Banner (when offline) ──
-            if (isOfflineMode) _buildOfflineBanner(context, isDark, primary),
-
-            // ── Scrollable Body ──
-            Expanded(
-              child: ListView(
-                physics: const BouncingScrollPhysics(),
-                padding: const EdgeInsets.only(top: 8, bottom: 16),
+          // ── Drawer Content ──
+          SafeArea(
+            top: false,
+            bottom: false,
+            child: Padding(
+              padding: EdgeInsets.only(
+                top: topPadding + 28,
+                bottom: math.max(16, bottomPadding + 14),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Main Navigation Items
-                  _buildSectionTitle(
-                    title: 'MAIN MENU',
-                    isDark: isDark,
-                    theme: theme,
-                  ),
-                  for (int i = 0; i < items.length; i++)
-                    _buildNavItem(
-                      context: context,
-                      index: i,
-                      item: items[i],
-                      isSelected: selectedIndex == i,
-                      isDark: isDark,
-                      primary: primary,
-                      surfaceColor: surfaceColor,
-                      theme: theme,
+                  // 1. App Title
+                  const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 24),
+                    child: Text(
+                      'Catchify',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 32,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -0.6,
+                      ),
                     ),
-
-                  const SizedBox(height: 12),
-                  _buildDivider(isDark, theme),
-
-                  // Discover & Tools
-                  _buildSectionTitle(
-                    title: 'DISCOVER & TOOLS',
-                    isDark: isDark,
-                    theme: theme,
                   ),
 
-                  if (showEqualizer)
-                    _buildActionItem(
-                      context: context,
-                      icon: FluentIcons.data_histogram_24_regular,
-                      title: context.l10n?.equalizer ?? 'Equalizer',
-                      subtitle: 'Audio enhancement & bands',
-                      isDark: isDark,
-                      primary: primary,
-                      theme: theme,
-                      onTap: () {
-                        HapticFeedback.selectionClick();
-                        Navigator.of(context).pop();
-                        context.push('/settings/equalizer');
-                      },
-                    ),
-
-                  if (!isOfflineMode) ...[
-                    _buildActionItem(
-                      context: context,
-                      icon: FluentIcons.history_24_regular,
-                      title: 'Time Machine',
-                      subtitle: 'Your listening recap & journey',
-                      isDark: isDark,
-                      primary: primary,
-                      theme: theme,
-                      onTap: () {
-                        HapticFeedback.selectionClick();
-                        Navigator.of(context).pop();
-                        context.push('/home/timeMachine');
-                      },
-                    ),
-                    _buildActionItem(
-                      context: context,
-                      icon: FluentIcons.arrow_import_24_regular,
-                      title: context.l10n?.importSpotifyPlaylist ??
-                          'Import from Spotify',
-                      subtitle: 'Transfer playlists via CSV',
-                      isDark: isDark,
-                      primary: primary,
-                      theme: theme,
-                      onTap: () {
-                        HapticFeedback.selectionClick();
-                        Navigator.of(context).pop();
-                        context.push('/settings/importSpotifyPlaylist');
-                      },
+                  if (isOfflineMode) ...[
+                    const SizedBox(height: 8),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.amber.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: Colors.amber.withValues(alpha: 0.35),
+                            width: 0.8,
+                          ),
+                        ),
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              FluentIcons.cloud_off_24_filled,
+                              color: Colors.amber,
+                              size: 14,
+                            ),
+                            SizedBox(width: 6),
+                            Text(
+                              'Offline Mode',
+                              style: TextStyle(
+                                color: Colors.amber,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
                   ],
 
-                  _buildActionItem(
-                    context: context,
-                    icon: FluentIcons.paint_brush_24_regular,
-                    title: context.l10n?.themeAndAppUI ?? 'Theme & Appearance',
-                    subtitle: 'Accent colors & OLED black',
-                    isDark: isDark,
-                    primary: primary,
-                    theme: theme,
-                    onTap: () {
-                      HapticFeedback.selectionClick();
-                      Navigator.of(context).pop();
-                      context.push('/settings/theme');
-                    },
+                  SizedBox(height: isOfflineMode ? 24 : 36),
+
+                  // 2. Main Navigation Items
+                  Expanded(
+                    child: ListView(
+                      padding: EdgeInsets.zero,
+                      physics: const BouncingScrollPhysics(),
+                      children: [
+                        _DrawerItem(
+                          icon: FluentIcons.home_24_filled,
+                          label: 'Home',
+                          isSelected: selectedIndex == 0,
+                          onTap: () {
+                            Navigator.of(context).pop();
+                            onDestinationSelected(0);
+                          },
+                        ),
+                        const SizedBox(height: 14),
+                        _DrawerItem(
+                          icon: Icons.library_music_rounded,
+                          label: 'My Music',
+                          isSelected: selectedIndex == 3,
+                          onTap: () {
+                            Navigator.of(context).pop();
+                            onDestinationSelected(3);
+                          },
+                        ),
+                        const SizedBox(height: 14),
+                        _DrawerItem(
+                          icon: Icons.queue_music_rounded,
+                          label: 'Playlists',
+                          onTap: () {
+                            Navigator.of(context).pop();
+                            onDestinationSelected(3);
+                          },
+                        ),
+
+                        // Divider
+                        const Padding(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 24,
+                            vertical: 18,
+                          ),
+                          child: Divider(
+                            color: Color(0x1FFFFFFF),
+                            height: 1,
+                            thickness: 0.8,
+                          ),
+                        ),
+
+                        _DrawerItem(
+                          icon: FluentIcons.settings_24_filled,
+                          label: 'Settings',
+                          isSelected: selectedIndex == 4,
+                          onTap: () {
+                            Navigator.of(context).pop();
+                            onDestinationSelected(4);
+                          },
+                        ),
+                        const SizedBox(height: 14),
+                        _DrawerItem(
+                          icon: FluentIcons.star_24_filled,
+                          label: 'Help us by rating',
+                          onTap: () {
+                            Navigator.of(context).pop();
+                            _openRating(context);
+                          },
+                        ),
+                        const SizedBox(height: 14),
+                        _DrawerItem(
+                          icon: Icons.bubble_chart_outlined,
+                          label: 'InkStudio',
+                          trailing: const Icon(
+                            Icons.north_east_rounded,
+                            size: 16,
+                            color: Colors.white38,
+                          ),
+                          onTap: () {
+                            Navigator.of(context).pop();
+                            _openInkStudio(context);
+                          },
+                        ),
+                      ],
+                    ),
                   ),
 
-                  const SizedBox(height: 12),
-                  _buildDivider(isDark, theme),
-
-                  // Quick Settings & Offline Mode
-                  _buildSectionTitle(
-                    title: 'PREFERENCES',
-                    isDark: isDark,
-                    theme: theme,
-                  ),
-
-                  ValueListenableBuilder<bool>(
-                    valueListenable: offlineNotifier ?? offlineMode,
-                    builder: (context, offline, _) {
-                      return _buildSwitchItem(
-                        context: context,
-                        icon: offline
-                            ? FluentIcons.cloud_off_24_regular
-                            : FluentIcons.cloud_24_regular,
-                        title: context.l10n?.offlineMode ?? 'Offline Mode',
-                        subtitle: offline
-                            ? 'Playing saved downloads only'
-                            : 'Online streaming enabled',
-                        value: offline,
-                        isDark: isDark,
-                        primary: primary,
-                        theme: theme,
-                        onChanged: (val) {
-                          HapticFeedback.selectionClick();
-                          if (offlineNotifier != null) {
-                            offlineNotifier!.value = val;
-                          } else {
-                            addOrUpdateData<bool>(
-                              'settings',
-                              'offlineMode',
-                              val,
-                            );
-                            offlineMode.value = val;
-                            NavigationManager.refreshRouter();
-                          }
-                          showToast(
-                            context,
-                            val
-                                ? 'Offline mode enabled'
-                                : 'Offline mode disabled',
-                          );
-                        },
-                      );
-                    },
-                  ),
-
-                  _buildActionItem(
-                    context: context,
-                    icon: FluentIcons.info_24_regular,
-                    title: context.l10n?.about ?? 'About Catchify',
-                    subtitle: 'Licenses, source code & credits',
-                    isDark: isDark,
-                    primary: primary,
-                    theme: theme,
-                    onTap: () {
-                      HapticFeedback.selectionClick();
-                      Navigator.of(context).pop();
-                      context.push('/settings/about');
-                    },
+                  // 3. Vibrant Green 'Go Premium' Button
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Material(
+                      color: const Color(0xFF00D15B),
+                      borderRadius: BorderRadius.circular(16),
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(16),
+                        onTap: () => _showPremiumSheet(context),
+                        child: Container(
+                          height: 52,
+                          alignment: Alignment.center,
+                          child: const Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.military_tech_rounded,
+                                color: Colors.white,
+                                size: 24,
+                              ),
+                              SizedBox(width: 8),
+                              Text(
+                                'Go Premium',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w700,
+                                  letterSpacing: 0.1,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
                   ),
                 ],
               ),
             ),
-
-            // ── Footer ──
-            _buildFooter(context, isDark, theme, primary),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildHeader(
-    BuildContext context,
-    bool isDark,
-    Color primary,
-    Color surfaceColor,
-  ) {
-    final topPadding = MediaQuery.paddingOf(context).top;
+  Future<void> _openRating(BuildContext context) async {
+    await HapticFeedback.selectionClick();
+    final url = Uri.parse(
+      'https://github.com/catchify0/catchify0.github.io/releases/latest',
+    );
+    try {
+      await launchURL(url);
+    } catch (_) {}
+  }
 
-    return Container(
-      padding: EdgeInsets.fromLTRB(16, topPadding + 16, 12, 16),
-      decoration: BoxDecoration(
-        color: isDark
-            ? Color.alphaBlend(primary.withValues(alpha: 0.08), surfaceColor)
-            : Color.alphaBlend(primary.withValues(alpha: 0.04), surfaceColor),
-        border: Border(
-          bottom: BorderSide(
-            color: isDark
-                ? Colors.white.withValues(alpha: 0.08)
-                : Colors.black.withValues(alpha: 0.06),
-            width: 0.8,
-          ),
-        ),
+  Future<void> _openInkStudio(BuildContext context) async {
+    await HapticFeedback.selectionClick();
+    final url = Uri.parse('https://github.com/catchify0');
+    try {
+      await launchURL(url);
+    } catch (_) {
+      if (context.mounted) {
+        unawaited(context.push('/settings/about'));
+      }
+    }
+  }
+
+  void _showPremiumSheet(BuildContext context) {
+    unawaited(HapticFeedback.mediumImpact());
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: const Color(0xFF14151B),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      child: Row(
-        children: [
-          const CatchifyBrandIcon(size: 42),
-          const SizedBox(width: 14),
-          Expanded(
+      builder: (ctx) => SafeArea(
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
-              children: [
-                Wrap(
-                  crossAxisAlignment: WrapCrossAlignment.center,
-                  spacing: 6,
-                  children: [
-                    Text(
-                      'Catchify',
-                      style: TextStyle(
-                        fontFamily: 'paytoneOne',
-                        fontSize: 20,
-                        fontWeight: FontWeight.w400,
-                        letterSpacing: 0.2,
-                        color: primary,
-                      ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 6,
-                        vertical: 2,
-                      ),
-                      decoration: BoxDecoration(
-                        color: primary.withValues(alpha: 0.16),
-                        borderRadius: AppTokens.borderRadiusSmall,
-                      ),
-                      child: Text(
-                        'v$appVersion',
-                        style: TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w700,
-                          color: primary,
-                          letterSpacing: 0.4,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  'Free Music Streaming',
-                  style: TextStyle(
-                    fontSize: 11.5,
-                    fontWeight: FontWeight.w500,
-                    color: isDark
-                        ? Colors.white.withValues(alpha: 0.6)
-                        : Colors.black.withValues(alpha: 0.6),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          IconButton(
-            icon: const Icon(FluentIcons.dismiss_20_regular),
-            tooltip: 'Close sidebar',
-            onPressed: () => Navigator.of(context).pop(),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildOfflineBanner(BuildContext context, bool isDark, Color primary) {
-    return Container(
-      margin: const EdgeInsets.fromLTRB(14, 12, 14, 4),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: isDark
-            ? const Color(0xFF261D10)
-            : const Color(0xFFFFF7ED),
-        borderRadius: AppTokens.borderRadiusControl,
-        border: Border.all(
-          color: const Color(0xFFF59E0B).withValues(alpha: 0.3),
-          width: 0.8,
-        ),
-      ),
-      child: Row(
-        children: [
-          const Icon(
-            FluentIcons.cloud_off_24_filled,
-            color: Color(0xFFF59E0B),
-            size: 20,
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              'Offline mode active — local & downloaded content only.',
-              style: TextStyle(
-                fontSize: 11.5,
-                fontWeight: FontWeight.w500,
-                color: isDark
-                    ? const Color(0xFFFDE68A)
-                    : const Color(0xFF92400E),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSectionTitle({
-    required String title,
-    required bool isDark,
-    required ThemeData theme,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(18, 14, 18, 6),
-      child: Text(
-        title,
-        style: TextStyle(
-          fontSize: 11,
-          fontWeight: FontWeight.w700,
-          letterSpacing: 1.1,
-          color: isDark
-              ? Colors.white.withValues(alpha: 0.42)
-              : theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDivider(bool isDark, ThemeData theme) {
-    return Divider(
-      height: 1,
-      thickness: 0.8,
-      indent: 16,
-      endIndent: 16,
-      color: isDark
-          ? Colors.white.withValues(alpha: 0.08)
-          : theme.colorScheme.outlineVariant.withValues(alpha: 0.25),
-    );
-  }
-
-  Widget _buildNavItem({
-    required BuildContext context,
-    required int index,
-    required PillNavigationItem item,
-    required bool isSelected,
-    required bool isDark,
-    required Color primary,
-    required Color surfaceColor,
-    required ThemeData theme,
-  }) {
-    final activeBg = isDark
-        ? Color.alphaBlend(primary.withValues(alpha: 0.18), surfaceColor)
-        : Color.alphaBlend(primary.withValues(alpha: 0.12), surfaceColor);
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2.5),
-      child: Material(
-        color: isSelected ? activeBg : Colors.transparent,
-        borderRadius: AppTokens.borderRadiusMedium,
-        clipBehavior: Clip.antiAlias,
-        child: InkWell(
-          onTap: () {
-            HapticFeedback.selectionClick();
-            Navigator.of(context).pop();
-            onDestinationSelected(index);
-          },
-          splashColor: primary.withValues(alpha: 0.15),
-          highlightColor: primary.withValues(alpha: 0.08),
-          borderRadius: AppTokens.borderRadiusMedium,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
-            child: Row(
-              children: [
-                Icon(
-                  isSelected ? item.selectedIcon : item.icon,
-                  size: 22,
-                  color: isSelected
-                      ? primary
-                      : (isDark
-                          ? Colors.white.withValues(alpha: 0.78)
-                          : theme.colorScheme.onSurfaceVariant),
-                ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Text(
-                    item.label,
-                    style: TextStyle(
-                      fontSize: 14.5,
-                      fontWeight:
-                          isSelected ? FontWeight.w700 : FontWeight.w500,
-                      color: isSelected
-                          ? primary
-                          : (isDark
-                              ? Colors.white.withValues(alpha: 0.95)
-                              : theme.colorScheme.onSurface),
-                    ),
-                  ),
-                ),
-                if (isSelected)
-                  Container(
-                    width: 7,
-                    height: 7,
-                    decoration: BoxDecoration(
-                      color: primary,
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildActionItem({
-    required BuildContext context,
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    required bool isDark,
-    required Color primary,
-    required ThemeData theme,
-    required VoidCallback onTap,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
-      child: Material(
-        color: Colors.transparent,
-        borderRadius: AppTokens.borderRadiusMedium,
-        clipBehavior: Clip.antiAlias,
-        child: InkWell(
-          onTap: onTap,
-          splashColor: primary.withValues(alpha: 0.12),
-          highlightColor: primary.withValues(alpha: 0.06),
-          borderRadius: AppTokens.borderRadiusMedium,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
-            child: Row(
-              children: [
-                Icon(
-                  icon,
-                  size: 22,
-                  color: isDark
-                      ? Colors.white.withValues(alpha: 0.72)
-                      : theme.colorScheme.onSurfaceVariant,
-                ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        title,
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                          color: isDark
-                              ? Colors.white.withValues(alpha: 0.92)
-                              : theme.colorScheme.onSurface,
-                        ),
-                      ),
-                      const SizedBox(height: 1),
-                      Text(
-                        subtitle,
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w400,
-                          color: isDark
-                              ? Colors.white.withValues(alpha: 0.45)
-                              : theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Icon(
-                  FluentIcons.chevron_right_20_regular,
-                  size: 16,
-                  color: isDark
-                      ? Colors.white.withValues(alpha: 0.3)
-                      : theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSwitchItem({
-    required BuildContext context,
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    required bool value,
-    required bool isDark,
-    required Color primary,
-    required ThemeData theme,
-    required ValueChanged<bool> onChanged,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
-      child: Material(
-        color: Colors.transparent,
-        borderRadius: AppTokens.borderRadiusMedium,
-        clipBehavior: Clip.antiAlias,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-          child: Row(
             children: [
-              Icon(
-                icon,
-                size: 22,
-                color: value
-                    ? const Color(0xFFF59E0B)
-                    : (isDark
-                        ? Colors.white.withValues(alpha: 0.72)
-                        : theme.colorScheme.onSurfaceVariant),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      title,
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                        color: isDark
-                            ? Colors.white.withValues(alpha: 0.92)
-                            : theme.colorScheme.onSurface,
-                      ),
-                    ),
-                    const SizedBox(height: 1),
-                    Text(
-                      subtitle,
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w400,
-                        color: isDark
-                            ? Colors.white.withValues(alpha: 0.45)
-                            : theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
-                      ),
-                    ),
-                  ],
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.white24,
+                  borderRadius: BorderRadius.circular(2),
                 ),
               ),
-              Transform.scale(
-                scale: 0.85,
-                child: Switch.adaptive(
-                  value: value,
-                  activeColor: primary,
-                  onChanged: onChanged,
+              const SizedBox(height: 20),
+              Container(
+                width: 64,
+                height: 64,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF00D15B).withValues(alpha: 0.16),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.military_tech_rounded,
+                  color: Color(0xFF00D15B),
+                  size: 36,
+                ),
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                "You're on Catchify Premium!",
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 20,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: -0.3,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Catchify is 100% Free & Open-Source. You already enjoy unlimited music, ad-free streaming & full offline listening forever!',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.7),
+                  fontSize: 13.5,
+                  height: 1.4,
+                ),
+              ),
+              const SizedBox(height: 20),
+              _buildPerkRow(Icons.block_rounded, 'Zero Advertisements Forever'),
+              _buildPerkRow(
+                Icons.music_note_rounded,
+                'High Quality Audio Streaming',
+              ),
+              _buildPerkRow(
+                Icons.download_done_rounded,
+                'Unlimited Offline Downloads',
+              ),
+              _buildPerkRow(
+                Icons.all_inclusive_rounded,
+                'Unlimited Skips & Background Play',
+              ),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                height: 48,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF00D15B),
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    elevation: 0,
+                  ),
+                  onPressed: () => Navigator.of(ctx).pop(),
+                  child: const Text(
+                    'Awesome, Enjoy!',
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
                 ),
               ),
             ],
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
-  Widget _buildFooter(
-    BuildContext context,
-    bool isDark,
-    ThemeData theme,
-    Color primary,
-  ) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        border: Border(
-          top: BorderSide(
-            color: isDark
-                ? Colors.white.withValues(alpha: 0.08)
-                : Colors.black.withValues(alpha: 0.06),
-            width: 0.8,
-          ),
-        ),
-      ),
+  Widget _buildPerkRow(IconData icon, String text) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(
-            'Catchify Music',
-            style: TextStyle(
-              fontSize: 11.5,
-              fontWeight: FontWeight.w600,
-              color: isDark
-                  ? Colors.white.withValues(alpha: 0.6)
-                  : theme.colorScheme.onSurfaceVariant,
-            ),
+          Icon(
+            icon,
+            size: 18,
+            color: const Color(0xFF00D15B),
           ),
+          const SizedBox(width: 12),
           Text(
-            'v$appVersion',
-            style: TextStyle(
-              fontSize: 11.5,
-              fontWeight: FontWeight.w600,
-              color: primary,
+            text,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 13.5,
+              fontWeight: FontWeight.w500,
             ),
           ),
         ],
       ),
     );
   }
+}
+
+class _DrawerItem extends StatelessWidget {
+  const _DrawerItem({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+    this.isSelected = false,
+    this.trailing,
+  });
+
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+  final bool isSelected;
+  final Widget? trailing;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Material(
+        color: isSelected ? const Color(0x14FFFFFF) : Colors.transparent,
+        borderRadius: BorderRadius.circular(12),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(12),
+          onTap: () {
+            HapticFeedback.selectionClick();
+            onTap();
+          },
+          splashColor: Colors.white.withValues(alpha: 0.1),
+          highlightColor: Colors.white.withValues(alpha: 0.05),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            child: Row(
+              children: [
+                Icon(
+                  icon,
+                  size: 24,
+                  color: isSelected ? const Color(0xFF00D15B) : Colors.white,
+                ),
+                const SizedBox(width: 20),
+                Expanded(
+                  child: Text(
+                    label,
+                    style: TextStyle(
+                      color: isSelected
+                          ? const Color(0xFF00D15B)
+                          : Colors.white,
+                      fontSize: 16,
+                      fontWeight:
+                          isSelected ? FontWeight.w700 : FontWeight.w500,
+                      letterSpacing: -0.2,
+                    ),
+                  ),
+                ),
+                if (trailing != null) trailing!,
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Custom painter to recreate the exact cosmic constellation nebula effect
+/// seen in the top header of the drawer.
+class _CosmicNebulaPainter extends CustomPainter {
+  const _CosmicNebulaPainter();
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    // 1. Soft radial glow
+    final glowPaint = Paint()
+      ..shader = RadialGradient(
+        center: const Alignment(-0.2, -0.4),
+        radius: 0.95,
+        colors: [
+          const Color(0xFF6E8CA0).withValues(alpha: 0.28),
+          const Color(0xFF384A5C).withValues(alpha: 0.14),
+          const Color(0xFF141922).withValues(alpha: 0.05),
+          Colors.transparent,
+        ],
+        stops: const [0.0, 0.4, 0.7, 1.0],
+      ).createShader(Rect.fromLTWH(0, 0, size.width, size.height));
+
+    canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height), glowPaint);
+
+    // 2. Cosmic starry particles and constellation lines
+    final linePaint = Paint()
+      ..color = Colors.white.withValues(alpha: 0.14)
+      ..strokeWidth = 0.8
+      ..style = PaintingStyle.stroke;
+
+    final starGlowPaint = Paint()..style = PaintingStyle.fill;
+
+    // Fixed constellation points for clean rendering
+    const points = [
+      Offset(36, 26),
+      Offset(72, 44),
+      Offset(108, 22),
+      Offset(148, 52),
+      Offset(188, 32),
+      Offset(228, 56),
+      Offset(58, 86),
+      Offset(98, 106),
+      Offset(138, 82),
+      Offset(178, 110),
+      Offset(218, 90),
+      Offset(248, 126),
+      Offset(28, 116),
+      Offset(82, 136),
+      Offset(128, 146),
+      Offset(168, 136),
+      Offset(208, 156),
+    ];
+
+    // Constellation lines
+    const connections = [
+      [0, 1],
+      [1, 2],
+      [1, 6],
+      [2, 3],
+      [3, 4],
+      [3, 8],
+      [4, 5],
+      [5, 10],
+      [6, 7],
+      [7, 8],
+      [7, 13],
+      [8, 9],
+      [9, 10],
+      [9, 15],
+      [10, 11],
+      [12, 6],
+      [13, 14],
+      [14, 15],
+      [15, 16],
+    ];
+
+    for (final conn in connections) {
+      if (conn[0] < points.length && conn[1] < points.length) {
+        canvas.drawLine(points[conn[0]], points[conn[1]], linePaint);
+      }
+    }
+
+    // Draw stars and glowing halos
+    for (var i = 0; i < points.length; i++) {
+      final p = points[i];
+      final isLarge = i % 3 == 0;
+      final radius = isLarge ? 2.2 : 1.2;
+
+      // Soft glow
+      if (isLarge) {
+        starGlowPaint.color = Colors.white.withValues(alpha: 0.22);
+        canvas.drawCircle(p, 5, starGlowPaint);
+      }
+
+      // Star point
+      starGlowPaint.color =
+          Colors.white.withValues(alpha: isLarge ? 0.9 : 0.65);
+      canvas.drawCircle(p, radius, starGlowPaint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

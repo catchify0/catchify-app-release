@@ -87,8 +87,6 @@ class _BottomNavigationPageState extends State<BottomNavigationPage> {
 
               final currentBottomIndex =
                   _getCurrentIndex(bottomItems, isOfflineMode);
-              final currentDrawerIndex =
-                  _getCurrentIndex(drawerItems, isOfflineMode);
 
               final railIndex = (currentBottomIndex >= 0 &&
                       currentBottomIndex < bottomItems.length)
@@ -98,9 +96,8 @@ class _BottomNavigationPageState extends State<BottomNavigationPage> {
               return Scaffold(
                 key: CatchifyNavigationDrawer.scaffoldKey,
                 drawer: CatchifyNavigationDrawer(
-                  selectedIndex: currentDrawerIndex,
-                  onDestinationSelected: (index) =>
-                      _onTabTapped(index, drawerItems),
+                  selectedIndex: widget.child.currentIndex,
+                  onDestinationSelected: _onShellBranchTapped,
                   items: drawerItems,
                   isOfflineMode: isOfflineMode,
                 ),
@@ -279,24 +276,27 @@ class _BottomNavigationPageState extends State<BottomNavigationPage> {
 
   void _onTabTapped(int index, List<_NavigationItem> items) {
     if (index < items.length) {
-      final item = items[index];
-      final isReselect = _previousShellIndex == item.shellIndex;
-
-      HapticFeedback.selectionClick();
-
-      // Close any open bottom sheet before switching tabs
-      closeCurrentBottomSheet();
-
-      // If user taps the same tab again, reset it to initial state.
-      // Otherwise, preserve the branch state.
-      if (isReselect) {
-        widget.child.goBranch(item.shellIndex, initialLocation: true);
-      } else {
-        widget.child.goBranch(item.shellIndex);
-      }
-
-      _previousShellIndex = item.shellIndex;
+      _onShellBranchTapped(items[index].shellIndex);
     }
+  }
+
+  void _onShellBranchTapped(int shellIndex) {
+    final isReselect = _previousShellIndex == shellIndex;
+
+    HapticFeedback.selectionClick();
+
+    // Close any open bottom sheet before switching tabs
+    closeCurrentBottomSheet();
+
+    // If user taps the same tab again, reset it to initial state.
+    // Otherwise, preserve the branch state.
+    if (isReselect) {
+      widget.child.goBranch(shellIndex, initialLocation: true);
+    } else {
+      widget.child.goBranch(shellIndex);
+    }
+
+    _previousShellIndex = shellIndex;
   }
 
   int _getCurrentIndex(List<_NavigationItem> items, bool isOfflineMode) {
