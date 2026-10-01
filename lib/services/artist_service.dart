@@ -436,10 +436,10 @@ Future<Map<String, dynamic>?> _getArtistCatalogFromProfile(
     }
 
     final catalog = await _catalogSongsOf(Map<String, dynamic>.from(artist));
-    if ((forceRebuild && !catalog.isComplete) || catalog.songs.isEmpty) {
+    if (catalog.songs.isEmpty) {
       logger.log(
-        'Artist catalog incomplete: one or more YouTube Music releases could '
-        'not be read for ${artist['title']} ($artistId)',
+        'Artist catalog empty: no songs found in releases or top songs for '
+        '${artist['title']} ($artistId)',
       );
       return {
         ...artistPlaylistData(artist, songs: const []),
@@ -502,6 +502,7 @@ Future<T> _serializeArtistCatalogOperation<T>(
 /// Artist as playlist (for library storage, downloads, and song lists).
 Map<String, dynamic> artistPlaylistData(Map artist, {List? songs}) {
   return {
+    ...Map<String, dynamic>.from(artist),
     'ytid': artist['ytid']?.toString(),
     'title': artist['title']?.toString() ?? '',
     'image': artist['image'],
@@ -521,6 +522,21 @@ Future<({List<Map<String, dynamic>> songs, bool isComplete})> _catalogSongsOf(
   final releases = asMapList(artist['releases']);
 
   final songs = <Map<String, dynamic>>[];
+
+  // Seed top songs first so an artist's most popular hits are front-and-center,
+  // and artists with no full albums still have a rich, populated song list.
+  final topSongs = asMapList(artist['topSongs']);
+  for (final item in topSongs) {
+    final song = item['song'];
+    if (song is Map) {
+      songs.add({
+        ...Map<String, dynamic>.from(song),
+        if (artistName.isNotEmpty) 'artist': artistName,
+        if (artistId != null && artistId.isNotEmpty) 'artistId': artistId,
+      });
+    }
+  }
+
   var isComplete = true;
   for (var index = 0; index < releases.length; index += musicAlbumBatchSize) {
     final albums = await Future.wait([

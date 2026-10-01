@@ -285,10 +285,24 @@ Future<void> _handleSongMenuAction({
     case 'go_to_artist':
       final artistName = song is Map ? getDisplayArtist(song) : '';
       if (artistName.isEmpty) return;
+      final rawArtistId = song is Map ? song['artistId']?.toString() : null;
+      final artistId = (rawArtistId != null &&
+              rawArtistId.isNotEmpty &&
+              rawArtistId != 'null')
+          ? rawArtistId
+          : artistName;
+      final sourceSongId = song is Map ? song['ytid']?.toString() : null;
       unawaited(
         context.push(
-          '${NavigationManager.searchPath}/artist/${Uri.encodeComponent(artistName)}',
-          extra: {'title': artistName, 'ytid': artistName},
+          '${NavigationManager.searchPath}/artist/${Uri.encodeComponent(artistId)}',
+          extra: {
+            'title': artistName,
+            'ytid': artistId,
+            if (sourceSongId != null &&
+                sourceSongId.isNotEmpty &&
+                sourceSongId != 'null')
+              'sourceSongId': sourceSongId,
+          },
         ),
       );
       break;

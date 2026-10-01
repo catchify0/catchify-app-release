@@ -26,6 +26,7 @@ import 'package:catchify/screens/playlist_page.dart';
 import 'package:catchify/services/artist_service.dart';
 import 'package:catchify/services/playlists_manager.dart';
 import 'package:catchify/services/settings_manager.dart';
+import 'package:catchify/extensions/l10n.dart';
 import 'package:catchify/widgets/mini_player_bottom_space.dart';
 import 'package:catchify/widgets/playlist_page/empty_playlist_state.dart';
 import 'package:catchify/widgets/spinner.dart';
@@ -74,6 +75,7 @@ class _ArtistPageState extends State<ArtistPage> {
         if (offlineArtist != null) {
           return Map<String, dynamic>.from(offlineArtist);
         }
+        return null;
       }
 
       final artist = await resolveArtist(
@@ -154,13 +156,13 @@ class _ArtistPageState extends State<ArtistPage> {
   Widget _buildNotFoundPage() {
     return Scaffold(
       appBar: AppBar(),
-      body: const CustomScrollView(
+      body: CustomScrollView(
         slivers: [
           EmptyPlaylistState(
             icon: FluentIcons.person_24_filled,
-            message: 'Not found',
+            message: context.l10n?.noSongsInPlaylist ?? 'Not found',
           ),
-          SliverMiniPlayerBottomSpace(),
+          const SliverMiniPlayerBottomSpace(),
         ],
       ),
     );

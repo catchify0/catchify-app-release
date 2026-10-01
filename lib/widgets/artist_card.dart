@@ -24,6 +24,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:catchify/constants/app_tokens.dart';
 import 'package:catchify/extensions/l10n.dart';
+import 'package:catchify/services/router_service.dart';
 import 'package:catchify/theme/app_text_styles.dart';
 import 'package:catchify/utilities/artwork_provider.dart';
 
@@ -71,8 +72,9 @@ class ArtistCard extends StatelessWidget {
             }),
             onTap: () {
               if (artistId.isEmpty) return;
+              final basePath = _artistRouteBasePath(context);
               context.push(
-                '/home/artist/${Uri.encodeComponent(artistId)}',
+                '$basePath/artist/${Uri.encodeComponent(artistId)}',
                 extra: artist,
               );
             },
@@ -143,6 +145,22 @@ class ArtistCard extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  String _artistRouteBasePath(BuildContext context) {
+    try {
+      final currentPath = GoRouterState.of(context).uri.path;
+      if (currentPath.startsWith(NavigationManager.searchPath)) {
+        return NavigationManager.searchPath;
+      }
+      if (currentPath.startsWith(NavigationManager.libraryPath)) {
+        return NavigationManager.libraryPath;
+      }
+      if (currentPath.startsWith(NavigationManager.chartsPath)) {
+        return NavigationManager.chartsPath;
+      }
+    } catch (_) {}
+    return NavigationManager.homePath;
   }
 
   Widget _buildFallback(ColorScheme colorScheme) {
