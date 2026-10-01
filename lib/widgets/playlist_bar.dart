@@ -191,7 +191,8 @@ class PlaylistBar extends StatelessWidget {
                                   pinnedPlaylistsLimit) {
                             showToast(
                               context,
-                              context.l10n!.pinnedPlaylistsLimit,
+                              context.l10n?.pinnedPlaylistsLimit ??
+                                  'Pinned playlists limit reached',
                             );
                           }
                         }
@@ -256,8 +257,10 @@ class PlaylistBar extends StatelessWidget {
                               const SizedBox(width: 8),
                               Text(
                                 isPinned
-                                    ? context.l10n!.unpinFromLibrary
-                                    : context.l10n!.pinToLibrary,
+                                    ? (context.l10n?.unpinFromLibrary ??
+                                          'Unpin from library')
+                                    : (context.l10n?.pinToLibrary ??
+                                          'Pin to library'),
                               ),
                             ],
                           ),
@@ -275,8 +278,10 @@ class PlaylistBar extends StatelessWidget {
                               const SizedBox(width: 8),
                               Text(
                                 isLiked
-                                    ? context.l10n!.removeFromLikedPlaylists
-                                    : context.l10n!.addToLikedPlaylists,
+                                    ? (context.l10n?.removeFromLikedPlaylists ??
+                                          'Remove from liked playlists')
+                                    : (context.l10n?.addToLikedPlaylists ??
+                                          'Add to liked playlists'),
                               ),
                             ],
                           ),
@@ -292,7 +297,10 @@ class PlaylistBar extends StatelessWidget {
                                 color: colorScheme.primary,
                               ),
                               const SizedBox(width: 8),
-                              Text(context.l10n!.addToPlaylist),
+                              Text(
+                                context.l10n?.addToPlaylist ??
+                                    'Add to playlist',
+                              ),
                             ],
                           ),
                         ),
@@ -307,7 +315,10 @@ class PlaylistBar extends StatelessWidget {
                                 color: colorScheme.error,
                               ),
                               const SizedBox(width: 8),
-                              Text(context.l10n!.removeOffline),
+                              Text(
+                                context.l10n?.removeOffline ??
+                                    'Remove from offline',
+                              ),
                             ],
                           ),
                         ),
@@ -325,7 +336,10 @@ class PlaylistBar extends StatelessWidget {
                                 color: colorScheme.primary,
                               ),
                               const SizedBox(width: 8),
-                              Text(context.l10n!.moveToFolder),
+                              Text(
+                                context.l10n?.moveToFolder ??
+                                    'Move to folder',
+                              ),
                             ],
                           ),
                         ),
@@ -344,8 +358,10 @@ class PlaylistBar extends StatelessWidget {
                               const SizedBox(width: 8),
                               Text(
                                 isFolder
-                                    ? context.l10n!.editFolder
-                                    : context.l10n!.editPlaylist,
+                                    ? (context.l10n?.editFolder ??
+                                          'Edit folder')
+                                    : (context.l10n?.editPlaylist ??
+                                          'Edit playlist'),
                               ),
                             ],
                           ),
@@ -365,8 +381,10 @@ class PlaylistBar extends StatelessWidget {
                               const SizedBox(width: 8),
                               Text(
                                 isFolder
-                                    ? context.l10n!.deleteFolder
-                                    : context.l10n!.deletePlaylist,
+                                    ? (context.l10n?.deleteFolder ??
+                                          'Delete folder')
+                                    : (context.l10n?.deletePlaylist ??
+                                          'Delete playlist'),
                                 style: isFolder
                                     ? TextStyle(color: colorScheme.error)
                                     : null,
@@ -437,7 +455,7 @@ class PlaylistBar extends StatelessWidget {
             ),
           ),
           title: Text(
-            context.l10n!.moveToFolder,
+            context.l10n?.moveToFolder ?? 'Move to folder',
             style: TextStyle(
               color: colorScheme.onSurface,
               fontWeight: FontWeight.w600,
@@ -476,7 +494,7 @@ class PlaylistBar extends StatelessWidget {
                   return Padding(
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     child: Text(
-                      context.l10n!.noFolders,
+                      context.l10n?.noFolders ?? 'No folders',
                       style: TextStyle(color: colorScheme.onSurfaceVariant),
                       textAlign: TextAlign.center,
                     ),
@@ -492,7 +510,7 @@ class PlaylistBar extends StatelessWidget {
                         icon: FluentIcons.library_24_regular,
                         iconColor: colorScheme.primary,
                         iconBgColor: colorScheme.primaryContainer,
-                        label: context.l10n!.library,
+                        label: context.l10n?.library ?? 'Library',
                         onTap: () {
                           Navigator.pop(context);
                           if (playlistData != null) {
@@ -537,7 +555,7 @@ class PlaylistBar extends StatelessWidget {
                   side: BorderSide(color: colorScheme.outline),
                 ),
                 child: Text(
-                  context.l10n!.cancel,
+                  context.l10n?.cancel ?? 'Cancel',
                   style: TextStyle(
                     color: colorScheme.onSurface,
                     fontWeight: FontWeight.w600,
@@ -572,10 +590,14 @@ class PlaylistBar extends StatelessWidget {
     if (!isFolder || playlistData == null) return null;
 
     final playlistCount = (playlistData!['playlists'] as List?)?.length ?? 0;
+    final playlistLabel =
+        context.l10n?.playlist.toLowerCase() ?? 'playlist';
+    final playlistsLabel =
+        context.l10n?.playlists.toLowerCase() ?? 'playlists';
     return Text(
       playlistCount == 1
-          ? '1 ${context.l10n!.playlist.toLowerCase()}'
-          : '$playlistCount ${context.l10n!.playlists.toLowerCase()}',
+          ? '1 $playlistLabel'
+          : '$playlistCount $playlistsLabel',
       style: TextStyle(
         color: Theme.of(context).colorScheme.onSurfaceVariant,
         fontSize: 12,
@@ -601,7 +623,7 @@ class PlaylistBar extends StatelessWidget {
       if (_resolvedPlaylistId == null ||
           _resolvedPlaylistId!.isEmpty ||
           _resolvedPlaylistId == 'null') {
-        showToast(context, context.l10n!.error);
+        showToast(context, context.l10n?.error ?? 'Error');
         return;
       }
 
@@ -640,7 +662,7 @@ class PlaylistBar extends StatelessWidget {
 
   Future<void> _handleAddPlaylistToPlaylist(BuildContext context) async {
     if (_resolvedPlaylistId == null) {
-      showToast(context, context.l10n!.error);
+      showToast(context, context.l10n?.error ?? 'Error');
       return;
     }
 
@@ -666,13 +688,16 @@ class PlaylistBar extends StatelessWidget {
       Navigator.pop(navContext);
 
       if (fullPlaylist == null || fullPlaylist['list'] == null) {
-        showToast(navContext, navContext.l10n!.error);
+        showToast(navContext, navContext.l10n?.error ?? 'Error');
         return;
       }
 
       final tracks = fullPlaylist['list'] as List<dynamic>;
       if (tracks.isEmpty) {
-        showToast(navContext, navContext.l10n!.noSongsInPlaylist);
+        showToast(
+          navContext,
+          navContext.l10n?.noSongsInPlaylist ?? 'No songs in playlist',
+        );
         return;
       }
 
@@ -680,7 +705,7 @@ class PlaylistBar extends StatelessWidget {
     } catch (e) {
       if (navContext.mounted) {
         Navigator.pop(navContext);
-        showToast(navContext, navContext.l10n!.error);
+        showToast(navContext, navContext.l10n?.error ?? 'Error');
       }
     }
   }
@@ -741,7 +766,10 @@ class PlaylistBar extends StatelessWidget {
       unawaited(syncOfflinePlaylistMetadata(result));
 
       final appCtx = NavigationManager().context;
-      showToast(appCtx, appCtx.l10n!.playlistUpdated);
+      showToast(
+        appCtx,
+        appCtx.l10n?.playlistUpdated ?? 'Playlist updated',
+      );
     }
   }
 
@@ -760,7 +788,7 @@ class PlaylistBar extends StatelessWidget {
           size: 32,
         ),
         title: Text(
-          context.l10n!.editFolder,
+          context.l10n?.editFolder ?? 'Edit folder',
           style: TextStyle(
             color: colorScheme.onSurface,
             fontWeight: FontWeight.w600,
@@ -768,7 +796,7 @@ class PlaylistBar extends StatelessWidget {
         ),
         content: TextFormField(
           decoration: InputDecoration(
-            labelText: context.l10n!.folderName,
+            labelText: context.l10n?.folderName ?? 'Folder name',
             prefixIcon: Icon(
               FluentIcons.text_field_20_regular,
               color: colorScheme.onSurfaceVariant,
@@ -785,7 +813,7 @@ class PlaylistBar extends StatelessWidget {
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: Text(
-              context.l10n!.cancel,
+              context.l10n?.cancel ?? 'Cancel',
               style: TextStyle(color: colorScheme.onSurfaceVariant),
             ),
           ),
@@ -800,7 +828,7 @@ class PlaylistBar extends StatelessWidget {
               showToast(context, result);
             },
             icon: const Icon(FluentIcons.save_20_regular),
-            label: Text(context.l10n!.update),
+            label: Text(context.l10n?.update ?? 'Update'),
           ),
         ],
       ),

@@ -40,14 +40,15 @@ class ArtistBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final artistLabel = context.l10n?.artist ?? 'Artist';
     final title = normalizeArtistDisplayTitle(
-      artist['title']?.toString() ?? context.l10n!.artist,
+      artist['title']?.toString() ?? artistLabel,
     );
     final image = normalizeArtistThumbnailUrl(artist['image']?.toString());
 
     return Semantics(
       button: true,
-      label: '$title, ${context.l10n!.artist}',
+      label: '$title, $artistLabel',
       child: Material(
         color: colorScheme.surfaceContainerLow,
         borderRadius: borderRadius,
@@ -77,7 +78,7 @@ class ArtistBar extends StatelessWidget {
                       ),
                       const SizedBox(height: 3),
                       Text(
-                        context.l10n!.artist,
+                        artistLabel,
                         style: TextStyle(
                           color: colorScheme.onSurfaceVariant,
                           fontSize: 12,

@@ -148,8 +148,10 @@ class _QueueWidgetState extends State<QueueWidget> {
     showDialog<void>(
       context: context,
       builder: (_) => ConfirmationDialog(
-        confirmationMessage: context.l10n!.clearQueueQuestion,
-        submitMessage: context.l10n!.clear,
+        confirmationMessage:
+            context.l10n?.clearQueueQuestion ??
+            'Are you sure you want to clear the queue?',
+        submitMessage: context.l10n?.clear ?? 'Clear',
         isDangerous: true,
         onCancel: () => Navigator.pop(context),
         onSubmit: () {
@@ -191,7 +193,7 @@ class _QueueWidgetState extends State<QueueWidget> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  context.l10n!.queue,
+                  context.l10n?.queue ?? 'Queue',
                   style: compact
                       ? TextStyle(
                           color: colorScheme.onSurface,
@@ -205,7 +207,7 @@ class _QueueWidgetState extends State<QueueWidget> {
                 ),
                 if (_queue.isNotEmpty)
                   Text(
-                    '${_queue.length} ${context.l10n!.songs.toLowerCase()}',
+                    '${_queue.length} ${context.l10n?.songs.toLowerCase() ?? 'songs'}',
                     style: compact
                         ? TextStyle(
                             color: colorScheme.onSurfaceVariant,
@@ -254,7 +256,7 @@ class _QueueWidgetState extends State<QueueWidget> {
             FilledButton.tonalIcon(
               onPressed: () => _confirmClearQueue(context),
               icon: const Icon(FluentIcons.dismiss_24_regular, size: 18),
-              label: Text(context.l10n!.clear),
+              label: Text(context.l10n?.clear ?? 'Clear'),
               style: FilledButton.styleFrom(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 16,
@@ -278,7 +280,7 @@ class _QueueWidgetState extends State<QueueWidget> {
       return Padding(
         padding: const EdgeInsets.symmetric(vertical: 24),
         child: Text(
-          context.l10n!.noSongsInQueue,
+          context.l10n?.noSongsInQueue ?? 'No songs in queue',
           style: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 14),
         ),
       );
@@ -314,7 +316,7 @@ class _QueueWidgetState extends State<QueueWidget> {
             ),
             const SizedBox(height: 16),
             Text(
-              context.l10n!.noSongsInQueue,
+              context.l10n?.noSongsInQueue ?? 'No songs in queue',
               style: textTheme.titleMedium?.copyWith(
                 color: colorScheme.onSurfaceVariant,
               ),

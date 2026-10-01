@@ -32,14 +32,20 @@ void showRemoveOfflinePlaylistDialog(BuildContext context, String playlistId) {
     context: context,
     builder: (BuildContext context) {
       return ConfirmationDialog(
-        confirmationMessage: context.l10n!.removeOfflinePlaylistConfirm,
-        submitMessage: context.l10n!.remove,
+        confirmationMessage:
+            context.l10n?.removeOfflinePlaylistConfirm ??
+            'Are you sure you want to remove this offline playlist?',
+        submitMessage: context.l10n?.remove ?? 'Remove',
         isDangerous: true,
         onCancel: () => Navigator.pop(context),
         onSubmit: () {
           unawaited(offlinePlaylistService.removeOfflinePlaylist(playlistId));
           Navigator.pop(context);
-          showToast(context, context.l10n!.playlistRemovedFromOffline);
+          showToast(
+            context,
+            context.l10n?.playlistRemovedFromOffline ??
+                'Playlist removed from offline',
+          );
         },
       );
     },
