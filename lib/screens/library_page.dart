@@ -38,8 +38,8 @@ import 'package:catchify/utilities/flutter_toast.dart';
 import 'package:catchify/utilities/offline_playlist_dialogs.dart';
 import 'package:catchify/utilities/playlist_dialogs.dart';
 import 'package:catchify/constants/app_tokens.dart';
+import 'package:catchify/widgets/catchify_menu_button.dart';
 import 'package:catchify/widgets/confirmation_dialog.dart';
-import 'package:catchify/widgets/catchify_navigation_drawer.dart';
 import 'package:catchify/widgets/empty_state.dart';
 import 'package:catchify/widgets/mini_player_bottom_space.dart';
 import 'package:catchify/widgets/playlist_bar.dart';
@@ -74,13 +74,11 @@ class _LibraryPageState extends State<LibraryPage> {
 
     return Scaffold(
       appBar: AppBar(
+        toolbarHeight: 68,
+        leadingWidth: 56,
         leading: (ModalRoute.of(context)?.canPop ?? false)
             ? null
-            : IconButton(
-                icon: const Icon(FluentIcons.navigation_24_regular),
-                tooltip: 'Navigation Menu',
-                onPressed: () => CatchifyNavigationDrawer.open(context),
-              ),
+            : const CatchifyMenuButton(),
         title: Text(context.l10n?.library ?? 'Library'),
       ),
       body: AnimatedBuilder(
@@ -899,13 +897,11 @@ class _LibraryPageState extends State<LibraryPage> {
   Widget _buildOfflineEmptyState(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        toolbarHeight: 68,
+        leadingWidth: 56,
         leading: (ModalRoute.of(context)?.canPop ?? false)
             ? null
-            : IconButton(
-                icon: const Icon(FluentIcons.navigation_24_regular),
-                tooltip: 'Navigation Menu',
-                onPressed: () => CatchifyNavigationDrawer.open(context),
-              ),
+            : const CatchifyMenuButton(),
         title: Text(context.l10n?.library ?? 'Library'),
       ),
       body: Center(

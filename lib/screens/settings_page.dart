@@ -31,7 +31,7 @@ import 'package:catchify/utilities/flutter_bottom_sheet.dart';
 import 'package:catchify/utilities/flutter_toast.dart';
 import 'package:catchify/utilities/language_utils.dart';
 import 'package:catchify/widgets/bottom_sheet_bar.dart';
-import 'package:catchify/widgets/catchify_navigation_drawer.dart';
+import 'package:catchify/widgets/catchify_menu_button.dart';
 import 'package:catchify/widgets/custom_bar.dart';
 import 'package:catchify/widgets/mini_player_bottom_space.dart';
 
@@ -190,13 +190,11 @@ class _SettingsPageState extends State<SettingsPage> {
 
     return Scaffold(
       appBar: AppBar(
+        toolbarHeight: 68,
+        leadingWidth: 56,
         leading: (ModalRoute.of(context)?.canPop ?? false)
             ? null
-            : IconButton(
-                icon: const Icon(FluentIcons.navigation_24_regular),
-                tooltip: 'Navigation Menu',
-                onPressed: () => CatchifyNavigationDrawer.open(context),
-              ),
+            : const CatchifyMenuButton(),
         title: Text(context.l10n!.settings),
         surfaceTintColor: Colors.transparent,
       ),

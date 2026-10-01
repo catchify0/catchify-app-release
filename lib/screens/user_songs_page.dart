@@ -32,7 +32,7 @@ import 'package:catchify/utilities/app_utils.dart';
 import 'package:catchify/utilities/flutter_toast.dart';
 import 'package:catchify/utilities/playlist_utils.dart';
 import 'package:catchify/utilities/song_filtering.dart';
-import 'package:catchify/widgets/catchify_navigation_drawer.dart';
+import 'package:catchify/widgets/catchify_menu_button.dart';
 import 'package:catchify/widgets/confirmation_dialog.dart';
 import 'package:catchify/widgets/mini_player_bottom_space.dart';
 import 'package:catchify/widgets/playlist_cube.dart';
@@ -100,13 +100,11 @@ class _UserSongsPageState extends State<UserSongsPage> {
 
     return Scaffold(
       appBar: AppBar(
+        toolbarHeight: 68,
+        leadingWidth: 56,
         leading: (ModalRoute.of(context)?.canPop ?? false)
             ? null
-            : IconButton(
-                icon: const Icon(FluentIcons.navigation_24_regular),
-                tooltip: 'Navigation Menu',
-                onPressed: () => CatchifyNavigationDrawer.open(context),
-              ),
+            : const CatchifyMenuButton(),
         title: offlineMode.value ? Text(title) : null,
         actions: [
           if (isLocalSongs)
