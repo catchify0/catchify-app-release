@@ -240,8 +240,8 @@ class LrcLibService {
 
       if (response.statusCode == 200) {
         final dynamic jsonData = jsonDecode(response.body);
-        if (jsonData is Map<String, dynamic>) {
-          final track = Track.fromJson(jsonData);
+        if (jsonData is Map) {
+          final track = Track.fromJson(Map<String, dynamic>.from(jsonData));
           if (track.syncedLyrics != null || track.plainLyrics != null) {
             return track;
           }
@@ -265,8 +265,8 @@ class LrcLibService {
 
         if (retryResp.statusCode == 200) {
           final dynamic jsonData = jsonDecode(retryResp.body);
-          if (jsonData is Map<String, dynamic>) {
-            final track = Track.fromJson(jsonData);
+          if (jsonData is Map) {
+            final track = Track.fromJson(Map<String, dynamic>.from(jsonData));
             // Verify duration difference is reasonable (<= 18 seconds)
             if (track.duration <= 0 ||
                 (track.duration - duration).abs() <= 18) {
@@ -375,8 +375,8 @@ class LrcLibService {
         }
 
         return jsonList
-            .whereType<Map<String, dynamic>>()
-            .map(Track.fromJson)
+            .whereType<Map>()
+            .map((m) => Track.fromJson(Map<String, dynamic>.from(m)))
             .toList();
       }
 

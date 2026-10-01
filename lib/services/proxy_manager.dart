@@ -87,12 +87,12 @@ class ProxyManager {
     customProxyNotifier.addListener(_onProxyConfigChanged);
     contentCountryPreferenceNotifier.addListener(() {
       if (proxyModeNotifier.value == ProxyMode.countryMatch) {
-        _onProxyConfigChanged();
+        unawaited(_onProxyConfigChanged());
       }
     });
 
     if (proxyModeNotifier.value != ProxyMode.off) {
-      _onProxyConfigChanged();
+      unawaited(_onProxyConfigChanged());
     }
   }
 
