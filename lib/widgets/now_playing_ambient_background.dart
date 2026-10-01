@@ -35,7 +35,7 @@ class NowPlayingAmbientBackground extends StatelessWidget {
     super.key,
     required this.metadata,
     this.isPureBlack = false,
-    this.lyricsProgress = 0.0,
+    this.lyricsProgress = 0,
   });
 
   final MediaItem? metadata;
@@ -135,7 +135,7 @@ class NowPlayingAmbientBackground extends StatelessWidget {
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
               colors: gradientColors,
-              stops: const [0.0, 0.45, 1.0],
+              stops: const [0, 0.45, 1],
             ),
           ),
         ),

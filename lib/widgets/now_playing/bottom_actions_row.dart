@@ -104,7 +104,7 @@ class _BottomActionsRowState extends State<BottomActionsRow> {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final l10n = context.l10n!;
+    final l10n = context.l10n;
 
     final screenWidth = MediaQuery.sizeOf(context).width;
     final responsiveIconSize = screenWidth < 360
@@ -132,7 +132,7 @@ class _BottomActionsRowState extends State<BottomActionsRow> {
                     widget.audioId,
                     widget.metadata,
                   ),
-            tooltip: l10n.makeOffline,
+            tooltip: l10n?.makeOffline ?? 'Make offline',
           ),
           _buildSleepTimerButton(context, colorScheme, responsiveIconSize),
           if (!offlineMode.value)
@@ -145,7 +145,7 @@ class _BottomActionsRowState extends State<BottomActionsRow> {
                 context,
                 song: mediaItemToMap(widget.metadata),
               ),
-              tooltip: l10n.addToPlaylist,
+              tooltip: l10n?.addToPlaylist ?? 'Add to playlist',
             ),
           if (queue.isNotEmpty && !widget.isLargeScreen)
             _buildSimpleActionButton(
@@ -157,7 +157,7 @@ class _BottomActionsRowState extends State<BottomActionsRow> {
                 context,
                 const QueueWidget(isBottomSheet: true),
               ),
-              tooltip: l10n.queue,
+              tooltip: l10n?.queue ?? 'Queue',
             ),
           if (!offlineMode.value) ...[
             _buildSimpleActionButton(
@@ -166,7 +166,7 @@ class _BottomActionsRowState extends State<BottomActionsRow> {
               colorScheme: colorScheme,
               size: responsiveIconSize,
               onPressed: widget.onLyricsTap,
-              tooltip: l10n.lyrics,
+              tooltip: l10n?.lyrics ?? 'Lyrics',
             ),
           ],
           _buildActionButton(
@@ -190,11 +190,12 @@ class _BottomActionsRowState extends State<BottomActionsRow> {
                     showToast(
                       context,
                       newStatus
-                          ? l10n.addedToLikedSongs
-                          : l10n.removedFromLikedSongs,
+                          ? (l10n?.addedToLikedSongs ?? 'Added to liked songs')
+                          : (l10n?.removedFromLikedSongs ??
+                                'Removed from liked songs'),
                     );
                   },
-            tooltip: l10n.likedSongs,
+            tooltip: l10n?.likedSongs ?? 'Liked songs',
           ),
         ];
 

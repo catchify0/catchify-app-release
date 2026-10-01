@@ -64,7 +64,7 @@ Widget buildPlaybackIconButton(
           HapticFeedback.lightImpact();
           audioHandler.playAgain();
         };
-        semanticLabel = context.l10n!.replay;
+        semanticLabel = context.l10n?.replay ?? 'Replay';
       } else {
         iconWidget = Icon(
           useRoundedMaterialGlyphs
@@ -83,7 +83,9 @@ Widget buildPlaybackIconButton(
             audioHandler.play();
           }
         };
-        semanticLabel = isPlaying ? context.l10n!.pause : context.l10n!.play;
+        semanticLabel = isPlaying
+            ? (context.l10n?.pause ?? 'Pause')
+            : (context.l10n?.play ?? 'Play');
       }
 
       return DecoratedBox(

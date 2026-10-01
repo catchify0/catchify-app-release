@@ -177,7 +177,7 @@ class _PositionSliderState extends State<PositionSlider>
                               const PaddleSliderValueIndicatorShape(),
                         ),
                         child: Slider(
-                          value: currentValue.clamp(0.0, maxDuration),
+                          value: currentValue.clamp(0, maxDuration).toDouble(),
                           onChanged: (value) {
                             setState(() {
                               _isDragging = true;

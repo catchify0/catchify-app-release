@@ -24,6 +24,7 @@ import 'package:fluentui_system_icons/fluentui_system_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:catchify/constants/app_tokens.dart';
+import 'package:catchify/extensions/l10n.dart';
 import 'package:catchify/main.dart';
 import 'package:catchify/models/full_player_state.dart';
 import 'package:catchify/models/position_data.dart';
@@ -457,6 +458,7 @@ class _ControlsWidget extends StatelessWidget {
               HapticFeedback.lightImpact();
               audioHandler.skipToNext();
             },
+            tooltip: context.l10n?.skipToNext ?? 'Next',
             splashColor: Colors.transparent,
             highlightColor: Colors.transparent,
             icon: Icon(
@@ -621,6 +623,11 @@ class _CircularPlayButtonState extends State<_CircularPlayButton>
                     audioHandler.play();
                   }
                 },
+                tooltip: isCompleted
+                    ? (context.l10n?.replay ?? 'Replay')
+                    : (isPlaying
+                          ? (context.l10n?.pause ?? 'Pause')
+                          : (context.l10n?.play ?? 'Play')),
                 splashColor: Colors.transparent,
                 highlightColor: Colors.transparent,
                 icon: Icon(
@@ -660,7 +667,7 @@ class _CircularProgressPainter extends CustomPainter {
   final double strokeWidth;
 
   final waveAmplitude = 1.5;
-  final waveFrequency = 12.0;
+  final waveFrequency = 12;
 
   Path _buildWavyArcPath(
     Size size,
