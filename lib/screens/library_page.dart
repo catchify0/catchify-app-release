@@ -895,21 +895,11 @@ class _LibraryPageState extends State<LibraryPage> {
   }
 
   Widget _buildOfflineEmptyState(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        toolbarHeight: 68,
-        leadingWidth: 56,
-        leading: (ModalRoute.of(context)?.canPop ?? false)
-            ? null
-            : const CatchifyMenuButton(),
-        title: Text(context.l10n?.library ?? 'Library'),
-      ),
-      body: Center(
-        child: EmptyState(
-          icon: FluentIcons.cloud_off_24_regular,
-          title: context.l10n!.offlineMode,
-          description: context.l10n!.noOfflineLibraryContent,
-        ),
+    return Center(
+      child: EmptyState(
+        icon: FluentIcons.cloud_off_24_regular,
+        title: context.l10n!.offlineMode,
+        description: context.l10n!.noOfflineLibraryContent,
       ),
     );
   }
