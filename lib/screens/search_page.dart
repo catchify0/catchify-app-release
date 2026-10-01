@@ -251,7 +251,7 @@ class _SearchPageState extends State<SearchPage> {
             ? null
             : const CatchifyMenuButton(),
         title: Text(
-          context.l10n!.search,
+          context.l10n?.search ?? 'Search',
           style: AppTextStyles.pageTitle.copyWith(
             fontWeight: FontWeight.w800,
             letterSpacing: -0.5,
@@ -299,7 +299,7 @@ class _SearchPageState extends State<SearchPage> {
           child: CustomSearchBar(
             controller: _searchBar,
             focusNode: _inputNode,
-            labelText: '${context.l10n!.search}...',
+            labelText: '${context.l10n?.search ?? 'Search'}...',
             onChanged: _onSearchChanged,
             onSubmitted: (String value) {
               _submitSearch();
@@ -477,7 +477,7 @@ class _SearchPageState extends State<SearchPage> {
                       }
                     },
                     child: Text(
-                      context.l10n!.clearSearchHistory,
+                      context.l10n?.clearSearchHistory ?? 'Clear',
                       style: TextStyle(
                         fontSize: 13,
                         color: Theme.of(context).colorScheme.error,
@@ -621,11 +621,14 @@ class _SearchPageState extends State<SearchPage> {
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 itemCount: categories.length,
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 2,
                   mainAxisSpacing: 12,
                   crossAxisSpacing: 12,
-                  childAspectRatio: 1.8,
+                  childAspectRatio:
+                      MediaQuery.textScalerOf(context).scale(1) > 1.15
+                          ? 1.5
+                          : 1.8,
                 ),
                 itemBuilder: (context, index) {
                   final item = categories[index];
@@ -819,6 +822,12 @@ class _SearchPageState extends State<SearchPage> {
       chunkedSongs.add(songs.sublist(i, math.min(i + 4, songs.length)));
     }
 
+    final textScale = MediaQuery.textScalerOf(context).scale(1);
+    final rowHeight = (68.0 * textScale).clamp(68.0, 92.0);
+    final maxRows = chunkedSongs.isEmpty
+        ? 0
+        : chunkedSongs.map((c) => c.length).fold<int>(0, math.max);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -847,8 +856,7 @@ class _SearchPageState extends State<SearchPage> {
           ),
         ),
         SizedBox(
-          height:
-              chunkedSongs.map((c) => c.length).fold<int>(0, math.max) * 68.0,
+          height: maxRows * rowHeight,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             physics: const BouncingScrollPhysics(),
@@ -917,6 +925,12 @@ class _SearchPageState extends State<SearchPage> {
       chunkedAlbums.add(albums.sublist(i, math.min(i + 4, albums.length)));
     }
 
+    final textScale = MediaQuery.textScalerOf(context).scale(1);
+    final rowHeight = (72.0 * textScale).clamp(72.0, 96.0);
+    final maxRows = chunkedAlbums.isEmpty
+        ? 0
+        : chunkedAlbums.map((c) => c.length).fold<int>(0, math.max);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -925,8 +939,7 @@ class _SearchPageState extends State<SearchPage> {
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
         ),
         SizedBox(
-          height:
-              chunkedAlbums.map((c) => c.length).fold<int>(0, math.max) * 72.0,
+          height: maxRows * rowHeight,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             physics: const BouncingScrollPhysics(),
@@ -1042,6 +1055,12 @@ class _SearchPageState extends State<SearchPage> {
       );
     }
 
+    final textScale = MediaQuery.textScalerOf(context).scale(1);
+    final rowHeight = (72.0 * textScale).clamp(72.0, 96.0);
+    final maxRows = chunkedPlaylists.isEmpty
+        ? 0
+        : chunkedPlaylists.map((c) => c.length).fold<int>(0, math.max);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1050,9 +1069,7 @@ class _SearchPageState extends State<SearchPage> {
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
         ),
         SizedBox(
-          height:
-              chunkedPlaylists.map((c) => c.length).fold<int>(0, math.max) *
-              72.0,
+          height: maxRows * rowHeight,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             physics: const BouncingScrollPhysics(),
@@ -1114,6 +1131,12 @@ class _SearchPageState extends State<SearchPage> {
       chunkedVideos.add(videos.sublist(i, math.min(i + 4, videos.length)));
     }
 
+    final textScale = MediaQuery.textScalerOf(context).scale(1);
+    final rowHeight = (68.0 * textScale).clamp(68.0, 92.0);
+    final maxRows = chunkedVideos.isEmpty
+        ? 0
+        : chunkedVideos.map((c) => c.length).fold<int>(0, math.max);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1122,8 +1145,7 @@ class _SearchPageState extends State<SearchPage> {
           padding: EdgeInsets.fromLTRB(16, 12, 16, 8),
         ),
         SizedBox(
-          height:
-              chunkedVideos.map((c) => c.length).fold<int>(0, math.max) * 68.0,
+          height: maxRows * rowHeight,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             physics: const BouncingScrollPhysics(),
@@ -1215,8 +1237,10 @@ class _SearchPageState extends State<SearchPage> {
       context: context,
       builder: (BuildContext context) {
         return ConfirmationDialog(
-          confirmationMessage: context.l10n!.clearSearchHistoryQuestion,
-          submitMessage: context.l10n!.confirm,
+          confirmationMessage:
+              context.l10n?.clearSearchHistoryQuestion ??
+              'Are you sure you want to clear your search history?',
+          submitMessage: context.l10n?.confirm ?? 'Confirm',
           onCancel: () {
             Navigator.of(context).pop(false);
           },
