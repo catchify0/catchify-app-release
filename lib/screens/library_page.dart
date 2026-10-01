@@ -39,6 +39,7 @@ import 'package:catchify/utilities/offline_playlist_dialogs.dart';
 import 'package:catchify/utilities/playlist_dialogs.dart';
 import 'package:catchify/constants/app_tokens.dart';
 import 'package:catchify/widgets/confirmation_dialog.dart';
+import 'package:catchify/widgets/catchify_navigation_drawer.dart';
 import 'package:catchify/widgets/empty_state.dart';
 import 'package:catchify/widgets/mini_player_bottom_space.dart';
 import 'package:catchify/widgets/playlist_bar.dart';
@@ -72,7 +73,16 @@ class _LibraryPageState extends State<LibraryPage> {
     final isOffline = offlineMode.value;
 
     return Scaffold(
-      appBar: AppBar(title: Text(context.l10n?.library ?? 'Library')),
+      appBar: AppBar(
+        leading: (ModalRoute.of(context)?.canPop ?? false)
+            ? null
+            : IconButton(
+                icon: const Icon(FluentIcons.navigation_24_regular),
+                tooltip: 'Navigation Menu',
+                onPressed: () => CatchifyNavigationDrawer.open(context),
+              ),
+        title: Text(context.l10n?.library ?? 'Library'),
+      ),
       body: AnimatedBuilder(
         animation: Listenable.merge([
           userLikedSongsList,
@@ -888,7 +898,16 @@ class _LibraryPageState extends State<LibraryPage> {
 
   Widget _buildOfflineEmptyState(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(context.l10n?.library ?? 'Library')),
+      appBar: AppBar(
+        leading: (ModalRoute.of(context)?.canPop ?? false)
+            ? null
+            : IconButton(
+                icon: const Icon(FluentIcons.navigation_24_regular),
+                tooltip: 'Navigation Menu',
+                onPressed: () => CatchifyNavigationDrawer.open(context),
+              ),
+        title: Text(context.l10n?.library ?? 'Library'),
+      ),
       body: Center(
         child: EmptyState(
           icon: FluentIcons.cloud_off_24_regular,

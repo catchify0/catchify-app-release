@@ -30,6 +30,7 @@ import 'package:catchify/main.dart';
 import 'package:catchify/services/settings_manager.dart';
 import 'package:catchify/utilities/flutter_bottom_sheet.dart'
     show closeCurrentBottomSheet;
+import 'package:catchify/widgets/catchify_navigation_drawer.dart';
 import 'package:catchify/widgets/mini_player.dart';
 import 'package:catchify/widgets/pill_navigation_bar.dart';
 
@@ -49,8 +50,8 @@ class _BottomNavigationPageState extends State<BottomNavigationPage> {
 
   bool? _previousOfflineMode;
 
-  /// Track the previously selected tab index to detect double-taps on the same tab.
-  int? _previousTabIndex;
+  /// Track the previously selected shell branch index to detect double-taps on the same tab.
+  int? _previousShellIndex;
 
   @override
   Widget build(BuildContext context) {
@@ -81,9 +82,29 @@ class _BottomNavigationPageState extends State<BottomNavigationPage> {
             builder: (context, constraints) {
               final isLargeScreen =
                   constraints.maxWidth >= AppTokens.railBreakpoint;
-              final items = _getNavigationItems(isOfflineMode);
+              final bottomItems = _getBottomNavigationItems(isOfflineMode);
+              final drawerItems = _getDrawerNavigationItems(isOfflineMode);
+
+              final currentBottomIndex =
+                  _getCurrentIndex(bottomItems, isOfflineMode);
+              final currentDrawerIndex =
+                  _getCurrentIndex(drawerItems, isOfflineMode);
+
+              final railIndex = (currentBottomIndex >= 0 &&
+                      currentBottomIndex < bottomItems.length)
+                  ? currentBottomIndex
+                  : null;
 
               return Scaffold(
+                key: CatchifyNavigationDrawer.scaffoldKey,
+                drawer: CatchifyNavigationDrawer(
+                  selectedIndex: currentDrawerIndex,
+                  onDestinationSelected: (index) =>
+                      _onTabTapped(index, drawerItems),
+                  items: drawerItems,
+                  isOfflineMode: isOfflineMode,
+                ),
+                drawerEdgeDragWidth: 40,
                 body: SafeArea(
                   top: false,
                   child: Row(
@@ -92,7 +113,7 @@ class _BottomNavigationPageState extends State<BottomNavigationPage> {
                         SafeArea(
                           child: NavigationRail(
                             labelType: NavigationRailLabelType.selected,
-                            destinations: items
+                            destinations: bottomItems
                                 .map(
                                   (item) => NavigationRailDestination(
                                     icon: Icon(item.icon),
@@ -101,12 +122,9 @@ class _BottomNavigationPageState extends State<BottomNavigationPage> {
                                   ),
                                 )
                                 .toList(),
-                            selectedIndex: _getCurrentIndex(
-                              items,
-                              isOfflineMode,
-                            ),
+                            selectedIndex: railIndex,
                             onDestinationSelected: (index) =>
-                                _onTabTapped(index, items),
+                                _onTabTapped(index, bottomItems),
                           ),
                         ),
                       Expanded(
@@ -173,10 +191,10 @@ class _BottomNavigationPageState extends State<BottomNavigationPage> {
                 ),
                 bottomNavigationBar: !isLargeScreen
                     ? PillNavigationBar(
-                        selectedIndex: _getCurrentIndex(items, isOfflineMode),
+                        selectedIndex: currentBottomIndex,
                         onDestinationSelected: (index) =>
-                            _onTabTapped(index, items),
-                        items: items,
+                            _onTabTapped(index, bottomItems),
+                        items: bottomItems,
                       )
                     : null,
               );
@@ -187,7 +205,7 @@ class _BottomNavigationPageState extends State<BottomNavigationPage> {
     );
   }
 
-  List<_NavigationItem> _getNavigationItems(bool isOfflineMode) {
+  List<_NavigationItem> _getBottomNavigationItems(bool isOfflineMode) {
     final items = <_NavigationItem>[
       _NavigationItem(
         icon: FluentIcons.home_24_regular,
@@ -218,7 +236,7 @@ class _BottomNavigationPageState extends State<BottomNavigationPage> {
       ]);
     }
 
-    items.addAll([
+    items.add(
       _NavigationItem(
         icon: FluentIcons.library_24_regular,
         selectedIcon: FluentIcons.library_24_filled,
@@ -226,6 +244,15 @@ class _BottomNavigationPageState extends State<BottomNavigationPage> {
         route: '/library',
         shellIndex: 3,
       ),
+    );
+
+    return items;
+  }
+
+  List<_NavigationItem> _getDrawerNavigationItems(bool isOfflineMode) {
+    final items = _getBottomNavigationItems(isOfflineMode);
+    return [
+      ...items,
       _NavigationItem(
         icon: FluentIcons.settings_24_regular,
         selectedIcon: FluentIcons.settings_24_filled,
@@ -233,9 +260,7 @@ class _BottomNavigationPageState extends State<BottomNavigationPage> {
         route: '/settings',
         shellIndex: 4,
       ),
-    ]);
-
-    return items;
+    ];
   }
 
   void _handleOfflineModeChange(bool isOfflineMode) {
@@ -255,7 +280,7 @@ class _BottomNavigationPageState extends State<BottomNavigationPage> {
   void _onTabTapped(int index, List<_NavigationItem> items) {
     if (index < items.length) {
       final item = items[index];
-      final isReselect = _previousTabIndex == index;
+      final isReselect = _previousShellIndex == item.shellIndex;
 
       HapticFeedback.selectionClick();
 
@@ -270,14 +295,14 @@ class _BottomNavigationPageState extends State<BottomNavigationPage> {
         widget.child.goBranch(item.shellIndex);
       }
 
-      _previousTabIndex = index;
+      _previousShellIndex = item.shellIndex;
     }
   }
 
   int _getCurrentIndex(List<_NavigationItem> items, bool isOfflineMode) {
     final currentShellIndex = widget.child.currentIndex;
 
-    if (items.isEmpty) return 0;
+    if (items.isEmpty) return -1;
 
     // Try to find the current shell index in the available items
     final matchedIndex = items.indexWhere(
@@ -288,11 +313,13 @@ class _BottomNavigationPageState extends State<BottomNavigationPage> {
     // If the Charts (1) or Search (2) branch is active but hidden in offline mode,
     // fall back to the Home tab.
     if (isOfflineMode && (currentShellIndex == 1 || currentShellIndex == 2)) {
-      return 0;
+      final homeIndex = items.indexWhere((item) => item.shellIndex == 0);
+      return homeIndex != -1 ? homeIndex : -1;
     }
 
-    // Final fallback: return the first tab to keep UI in a valid state.
-    return 0;
+    // When the current shell index is not in items (e.g. Settings is active and checking bottom bar),
+    // return -1 so no bottom tab is falsely highlighted.
+    return -1;
   }
 }
 

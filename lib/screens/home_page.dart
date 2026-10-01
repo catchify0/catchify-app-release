@@ -39,6 +39,7 @@ import 'package:catchify/utilities/async_loader.dart';
 import 'package:catchify/utilities/listening_stats_utils.dart';
 import 'package:catchify/theme/app_text_styles.dart';
 import 'package:catchify/widgets/announcement_box.dart';
+import 'package:catchify/widgets/catchify_navigation_drawer.dart';
 import 'package:catchify/widgets/empty_state.dart';
 import 'package:catchify/widgets/error_state.dart';
 import 'package:catchify/widgets/home_section_renderer.dart';
@@ -276,7 +277,14 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       appBar: AppBar(
         toolbarHeight: 84,
-        titleSpacing: AppTokens.pagePadding,
+        titleSpacing: 8,
+        leading: (ModalRoute.of(context)?.canPop ?? false)
+            ? null
+            : IconButton(
+                icon: const Icon(FluentIcons.navigation_24_regular),
+                tooltip: 'Navigation Menu',
+                onPressed: () => CatchifyNavigationDrawer.open(context),
+              ),
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,

@@ -38,6 +38,7 @@ import 'package:catchify/widgets/artist_bar.dart';
 import 'package:catchify/widgets/confirmation_dialog.dart';
 import 'package:catchify/widgets/custom_bar.dart';
 import 'package:catchify/widgets/custom_search_bar.dart';
+import 'package:catchify/widgets/catchify_navigation_drawer.dart';
 import 'package:catchify/widgets/empty_state.dart';
 import 'package:catchify/widgets/mini_player_bottom_space.dart';
 import 'package:catchify/widgets/playlist_bar.dart';
@@ -243,6 +244,13 @@ class _SearchPageState extends State<SearchPage> {
 
     return Scaffold(
       appBar: AppBar(
+        leading: (ModalRoute.of(context)?.canPop ?? false)
+            ? null
+            : IconButton(
+                icon: const Icon(FluentIcons.navigation_24_regular),
+                tooltip: 'Navigation Menu',
+                onPressed: () => CatchifyNavigationDrawer.open(context),
+              ),
         title: Text(
           context.l10n!.search,
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
