@@ -47,6 +47,7 @@ import 'package:youtube_music_explode_dart/youtube_music_explode_dart.dart';
 List<Map> playlists = [];
 
 List<String> _readStoredStringList(String key) {
+  if (!Hive.isBoxOpen('user')) return [];
   final value = Hive.box('user').toMap()[key];
   return value is List ? value.whereType<String>().toList() : [];
 }
@@ -59,6 +60,7 @@ Map<String, dynamic> _normalizeStoredMap(Map item) {
 }
 
 List<Map> _readStoredMapList(String key) {
+  if (!Hive.isBoxOpen('user')) return [];
   final value = Hive.box('user').toMap()[key];
   if (value is! List) return [];
   return value.whereType<Map>().map(_normalizeStoredMap).toList();
@@ -113,6 +115,7 @@ List<Map> getLikedArtistItems({bool offlineOnly = false}) {
 }
 
 void reloadPlaylistLibraryStateFromStorage() {
+  if (!Hive.isBoxOpen('user')) return;
   final userBox = Hive.box('user');
   final values = userBox.toMap();
   final dynamic rawPlaylists = values['playlists'];
@@ -3816,11 +3819,12 @@ Future<List<HomeSection>> _loadUnifiedHomeFeed({
             ..log(
               '[HOME_FEED] cache hit key=$cacheKey sections=${cachedSections.length}',
             );
-          final cacheIsFresh = isCacheValid(
-            Hive.box('cache'),
-            cacheKey,
-            homeFeedCacheDuration,
-          );
+          final cacheIsFresh = Hive.isBoxOpen('cache') &&
+              isCacheValid(
+                Hive.box('cache'),
+                cacheKey,
+                homeFeedCacheDuration,
+              );
           if (!cacheIsFresh && !offlineMode.value) {
             logger.log(
               '[HOME_SWR] stale cache displayed; starting background revalidation '

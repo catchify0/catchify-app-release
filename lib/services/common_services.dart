@@ -43,27 +43,28 @@ import 'package:youtube_explode_dart/youtube_explode_dart.dart';
 
 List globalSongs = [];
 
-List _readStoredList(Box box, String key) {
-  final value = box.toMap()[key];
+List _readStoredList(String boxName, String key) {
+  if (!Hive.isBoxOpen(boxName)) return [];
+  final value = Hive.box(boxName).toMap()[key];
   return value is List ? List.from(value) : [];
 }
 
 ValueNotifier<List> userLikedSongsList = ValueNotifier<List>(
-  _readStoredList(Hive.box('user'), 'likedSongs'),
+  _readStoredList('user', 'likedSongs'),
 );
 
 ValueNotifier<List> userRecentlyPlayed = ValueNotifier<List>(
-  _readStoredList(Hive.box('user'), 'recentlyPlayedSongs'),
+  _readStoredList('user', 'recentlyPlayedSongs'),
 );
 ValueNotifier<List> userOfflineSongs = ValueNotifier<List>(
-  _readStoredList(Hive.box('userNoBackup'), 'offlineSongs'),
+  _readStoredList('userNoBackup', 'offlineSongs'),
 );
 ValueNotifier<List> userLocalSongs = ValueNotifier<List>(
-  _readStoredList(Hive.box('userNoBackup'), 'localSongs'),
+  _readStoredList('userNoBackup', 'localSongs'),
 );
 List<String> localMusicFolders = List<String>.from(
   _readStoredList(
-    Hive.box('userNoBackup'),
+    'userNoBackup',
     'localMusicFolders',
   ).whereType<String>(),
 );
@@ -81,6 +82,7 @@ final Map<String, Future<String?>> _lyricsInFlight = {};
 final Map<String, Future<String?>> _streamUrlInFlight = {};
 
 void reloadSongLibraryStateFromStorage() {
+  if (!Hive.isBoxOpen('user')) return;
   final userBox = Hive.box('user');
   final values = userBox.toMap();
   final dynamic likedSongs = values['likedSongs'];

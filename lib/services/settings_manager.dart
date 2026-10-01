@@ -31,7 +31,12 @@ import 'package:catchify/utilities/language_utils.dart';
 const _defaultAccentColor = 0xFF9948EF;
 
 dynamic _settingValue(String key, dynamic defaultValue) {
-  return Hive.box('settings').get(key, defaultValue: defaultValue);
+  if (!Hive.isBoxOpen('settings')) return defaultValue;
+  try {
+    return Hive.box('settings').get(key, defaultValue: defaultValue);
+  } catch (_) {
+    return defaultValue;
+  }
 }
 
 bool _readBoolSetting(String key, bool defaultValue) {
@@ -177,7 +182,9 @@ final activeSongLyricsOffsetNotifier = ValueNotifier<int>(0);
 /// Get the lyrics sync offset in ms for a specific song [songId] (usually ytid).
 /// If the song has its own custom offset, returns that; otherwise returns the global default.
 int getLyricsOffsetForSong(String? songId) {
-  if (songId == null || songId.isEmpty) return lyricsOffsetNotifier.value;
+  if (songId == null || songId.isEmpty || !Hive.isBoxOpen('settings')) {
+    return lyricsOffsetNotifier.value;
+  }
   final val = Hive.box('settings').get('lyricsOffset_$songId');
   if (val is int) return val;
   return lyricsOffsetNotifier.value;
@@ -185,7 +192,9 @@ int getLyricsOffsetForSong(String? songId) {
 
 /// Check if a specific song has its own customized offset.
 bool hasCustomLyricsOffsetForSong(String? songId) {
-  if (songId == null || songId.isEmpty) return false;
+  if (songId == null || songId.isEmpty || !Hive.isBoxOpen('settings')) {
+    return false;
+  }
   return Hive.box('settings').containsKey('lyricsOffset_$songId');
 }
 

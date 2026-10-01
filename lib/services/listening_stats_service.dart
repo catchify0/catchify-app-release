@@ -384,7 +384,8 @@ class ListeningStatsService {
       return _stats!;
     }
 
-    final raw = Hive.box('user').get(storageKey);
+    final raw =
+        Hive.isBoxOpen('user') ? Hive.box('user').get(storageKey) : null;
     _stats = normalizeListeningStats(raw, currentDate);
     if (_shouldPersistNormalizedStats(raw, _stats!)) {
       _markDirty();
