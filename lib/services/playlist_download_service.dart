@@ -46,7 +46,11 @@ class OfflinePlaylistService {
 
   // List of playlists that are fully available offline
   final offlinePlaylists = ValueNotifier<List<dynamic>>(
-    Hive.box('userNoBackup').get('offlinePlaylists', defaultValue: []),
+    Hive.isBoxOpen('userNoBackup')
+        ? (Hive.box('userNoBackup').get('offlinePlaylists', defaultValue: [])
+                as List<dynamic>?) ??
+            []
+        : [],
   );
 
   ValueNotifier<DownloadProgress> getProgressNotifier(String playlistId) {
@@ -75,8 +79,7 @@ class OfflinePlaylistService {
     if (id == null || pList == null || pList.isEmpty) return;
     if (isPlaylistDownloaded(id)) return;
 
-    final offlineSongIds = userOfflineSongs.value.map((s) => s['ytid']).toSet();
-    if (!pList.every((s) => offlineSongIds.contains(s['ytid']))) return;
+    if (!isPlaylistFullyOffline(pList)) return;
 
     offlinePlaylists.value = [
       ...offlinePlaylists.value,
@@ -264,7 +267,9 @@ class OfflinePlaylistService {
         }
       }
 
-      showToast(context, context.l10n!.downloadCancelled);
+      if (context.mounted) {
+        showToast(context, context.l10n!.downloadCancelled);
+      }
     } catch (e, stackTrace) {
       logger.log('Error cancelling download', error: e, stackTrace: stackTrace);
       // Force remove from active downloads and cleanup on error

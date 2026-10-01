@@ -166,8 +166,16 @@ class DownloadManager {
     final active = activeDownloads.value[ytid];
     if (active != null) return active.status;
 
+    if (_inFlightYtids.contains(ytid) ||
+        _downloadQueue.any((job) => job.ytid == ytid)) {
+      return DownloadStatus.queued;
+    }
+
     final offlineSong = getOfflineSongByYtid(ytid);
     if (offlineSong.isNotEmpty) {
+      if (offlineSong['status'] == DownloadStatus.missing.name) {
+        return DownloadStatus.missing;
+      }
       final audioPath = offlineSong['audioPath'] ?? offlineSong['localPath'];
       if (audioPath != null && audioPath.toString().isNotEmpty) {
         if (File(audioPath.toString()).existsSync()) {
@@ -177,19 +185,29 @@ class DownloadManager {
       return DownloadStatus.missing;
     }
 
-    return DownloadStatus.queued;
+    return DownloadStatus.missing;
   }
 
   /// Returns whether a song is completely downloaded and ready for offline play.
   bool isSongCompleted(String ytid) {
-    return getSongStatus(ytid) == DownloadStatus.completed;
+    if (ytid.isEmpty) return false;
+    final active = activeDownloads.value[ytid];
+    if (active != null && active.status == DownloadStatus.completed) {
+      return true;
+    }
+    return isSongAlreadyOffline(ytid);
   }
 
   /// Returns whether a song is currently queued or downloading.
   bool isSongDownloading(String ytid) {
-    final status = getSongStatus(ytid);
-    return status == DownloadStatus.queued ||
-        status == DownloadStatus.downloading;
+    if (ytid.isEmpty) return false;
+    final active = activeDownloads.value[ytid];
+    if (active != null) {
+      return active.status == DownloadStatus.queued ||
+          active.status == DownloadStatus.downloading;
+    }
+    return _inFlightYtids.contains(ytid) ||
+        _downloadQueue.any((job) => job.ytid == ytid);
   }
 
   /// Returns current progress for a song (0.0 to 1.0).
@@ -278,7 +296,12 @@ class DownloadManager {
     final token = _cancellationTokens[ytid];
     if (token != null && !token.isCompleted) {
       token.complete();
-      await _activeJobCompletions[ytid]?.future;
+      try {
+        await _activeJobCompletions[ytid]?.future.timeout(
+          const Duration(seconds: 5),
+          onTimeout: () => null,
+        );
+      } catch (_) {}
     }
 
     _updateActiveProgress(
@@ -435,6 +458,7 @@ class DownloadManager {
 
     final rawOfflineSongs = userOfflineSongs.value;
     final reconciledSongs = <dynamic>[];
+    final seenYtids = <String>{};
     var missingCount = 0;
     var completedCount = 0;
 
@@ -442,7 +466,8 @@ class DownloadManager {
       if (item is! Map) continue;
       final song = Map<String, dynamic>.from(item);
       final ytid = song['ytid']?.toString() ?? song['id']?.toString() ?? '';
-      if (ytid.isEmpty) continue;
+      if (ytid.isEmpty || seenYtids.contains(ytid)) continue;
+      seenYtids.add(ytid);
 
       final expectedAudioPath = FilePaths.getAudioPath(ytid);
       final audioFile = File(expectedAudioPath);
@@ -753,9 +778,19 @@ class DownloadManager {
       }),
     );
 
-    final streamSuccess = await streamCompleter.future;
-    await sink.flush();
-    await sink.close();
+    var streamSuccess = false;
+    try {
+      streamSuccess = await streamCompleter.future;
+    } catch (_) {
+      streamSuccess = false;
+    } finally {
+      try {
+        await sink.flush();
+      } catch (_) {}
+      try {
+        await sink.close();
+      } catch (_) {}
+    }
 
     if (!streamSuccess || cancelToken.isCompleted) {
       // Only delete partial file if the user explicitly cancelled the download.
@@ -797,13 +832,14 @@ class DownloadManager {
       logger.log('[DOWNLOAD] Artwork download skipped for $ytid: $e');
     }
 
-    // Duration fallback
-    var duration = job.song['duration'];
-    if (duration == null || (duration is num && duration <= 0)) {
+    // Duration fallback & type coercion
+    var duration = _parseDuration(job.song['duration']);
+    if (duration == null) {
       final current = audioHandler.mediaItem.valueOrNull;
       if (current != null &&
           current.extras?['ytid'] == ytid &&
-          current.duration != null) {
+          current.duration != null &&
+          current.duration!.inSeconds > 0) {
         duration = current.duration!.inSeconds;
       }
     }
@@ -815,7 +851,7 @@ class DownloadManager {
       localPath: audioFinalPath,
       artworkPath: artworkPath,
       fileSize: totalSize > 0 ? totalSize : await finalFile.length(),
-      duration: duration is num ? duration.toInt() : null,
+      duration: duration,
       status: DownloadStatus.completed,
     );
 
@@ -872,6 +908,16 @@ class DownloadManager {
     activeDownloads.value = next;
   }
 
+  static int? _parseDuration(dynamic raw) {
+    if (raw == null) return null;
+    if (raw is int) return raw > 0 ? raw : null;
+    if (raw is num) return raw > 0 ? raw.toInt() : null;
+    if (raw is Duration) return raw.inSeconds > 0 ? raw.inSeconds : null;
+    final parsed = int.tryParse(raw.toString().trim());
+    if (parsed != null && parsed > 0) return parsed;
+    return null;
+  }
+
   /// Builds a canonical map representing a downloaded song.
   static Map<String, dynamic> buildCanonicalMetadata({
     required Map song,
@@ -884,6 +930,7 @@ class DownloadManager {
     int? downloadedAt,
   }) {
     final now = downloadedAt ?? DateTime.now().millisecondsSinceEpoch;
+    final resolvedDuration = duration ?? _parseDuration(song['duration']);
     return {
       'ytid': ytid,
       'id': ytid,
@@ -896,7 +943,7 @@ class DownloadManager {
           song['highResImage']?.toString() ?? song['image']?.toString(),
       'lowResImage':
           song['lowResImage']?.toString() ?? song['image']?.toString(),
-      'duration': duration ?? song['duration'],
+      'duration': resolvedDuration,
       'localPath': localPath,
       'audioPath': localPath, // Backward compatibility with existing player
       'artworkPath': artworkPath,

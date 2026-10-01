@@ -276,5 +276,82 @@ void main() {
       // 8 completed + 2 failed = 10 total
       expect(progress.progress, 1.0);
     });
+
+    test('buildCanonicalMetadata coerces String and double durations safely', () {
+      final songWithStringDuration = {
+        'ytid': 'duration_str_test',
+        'title': 'Duration Test',
+        'duration': '195',
+      };
+
+      final canonical = DownloadManager.buildCanonicalMetadata(
+        song: songWithStringDuration,
+        ytid: 'duration_str_test',
+        localPath: '/local/test.m4a',
+        fileSize: 1024,
+        status: DownloadStatus.completed,
+      );
+
+      expect(canonical['duration'], 195);
+      expect(canonical['duration'], isA<int>());
+    });
+
+    test('reconcileStorageIntegrity deduplicates duplicate ytid entries', () async {
+      final audioFile = File(FilePaths.getAudioPath('dedup_song'));
+      await audioFile.writeAsBytes([1, 2, 3, 4]);
+
+      userOfflineSongs.value = [
+        {
+          'ytid': 'dedup_song',
+          'title': 'Dedup Song Copy 1',
+          'audioPath': audioFile.path,
+        },
+        {
+          'ytid': 'dedup_song',
+          'title': 'Dedup Song Copy 2',
+          'audioPath': audioFile.path,
+        },
+      ];
+
+      await DownloadManager.instance.reconcileStorageIntegrity();
+
+      expect(userOfflineSongs.value.length, 1);
+      expect(userOfflineSongs.value.first['ytid'], 'dedup_song');
+
+      if (await audioFile.exists()) await audioFile.delete();
+    });
+
+    test('isPlaylistFullyOffline detects missing disk tracks accurately', () async {
+      final presentAudio = File(FilePaths.getAudioPath('present_song'));
+      await presentAudio.writeAsBytes([1, 2, 3]);
+
+      userOfflineSongs.value = [
+        {
+          'ytid': 'present_song',
+          'audioPath': presentAudio.path,
+          'status': DownloadStatus.completed.name,
+        },
+        {
+          'ytid': 'absent_song',
+          'audioPath': FilePaths.getAudioPath('absent_song'),
+          'status': DownloadStatus.missing.name,
+        },
+      ];
+
+      final playlistWithMissing = [
+        {'ytid': 'present_song'},
+        {'ytid': 'absent_song'},
+      ];
+
+      expect(isPlaylistFullyOffline(playlistWithMissing), isFalse);
+
+      final playlistAllPresent = [
+        {'ytid': 'present_song'},
+      ];
+
+      expect(isPlaylistFullyOffline(playlistAllPresent), isTrue);
+
+      if (await presentAudio.exists()) await presentAudio.delete();
+    });
   });
 }

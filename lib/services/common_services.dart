@@ -785,6 +785,7 @@ bool isSongAlreadyOffline(dynamic songIdToCheck) {
   if (userLocalSongs.value.any((song) => song['ytid'] == id)) return true;
   return userOfflineSongs.value.any((song) {
     if (song is! Map || song['ytid']?.toString() != id) return false;
+    if (song['status'] == DownloadStatus.missing.name) return false;
     final path = song['audioPath'] ?? song['localPath'];
     if (path == null) return false;
     return File(path.toString()).existsSync();
@@ -793,11 +794,23 @@ bool isSongAlreadyOffline(dynamic songIdToCheck) {
 
 bool isPlaylistFullyOffline(List songs) {
   if (songs.isEmpty) return false;
-  final offlineIds = {
-    ...userOfflineSongs.value.map((s) => s['ytid']),
-    ...userLocalSongs.value.map((s) => s['ytid']),
-  };
-  return songs.every((s) => offlineIds.contains(s['ytid']));
+  final offlineIds = <dynamic>{};
+  for (final s in userOfflineSongs.value) {
+    if (s is Map && s['status'] != DownloadStatus.missing.name) {
+      final path = s['audioPath'] ?? s['localPath'];
+      if (path != null && File(path.toString()).existsSync()) {
+        offlineIds.add(s['ytid']?.toString());
+      }
+    }
+  }
+  for (final s in userLocalSongs.value) {
+    if (s is Map) {
+      offlineIds.add(s['ytid']?.toString());
+    }
+  }
+  return songs.every(
+    (s) => s is Map && offlineIds.contains(s['ytid']?.toString()),
+  );
 }
 
 Map<String, dynamic> getOfflineSongByYtid(String ytid) {
