@@ -76,7 +76,7 @@ class ListeningRecapCard extends StatelessWidget {
                       ),
                       const SizedBox(height: 5),
                       Text(
-                        context.l10n!.minutesListened,
+                        context.l10n?.minutesListened ?? 'Minutes Listened',
                         maxLines: 2,
                         style: TextStyle(
                           color: colorScheme.onSurfaceVariant,

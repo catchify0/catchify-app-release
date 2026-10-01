@@ -20,6 +20,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:catchify/constants/app_tokens.dart';
+import 'package:catchify/extensions/l10n.dart';
 import 'package:catchify/theme/app_text_styles.dart';
 import 'package:catchify/utilities/app_utils.dart';
 import 'package:catchify/widgets/playlist_artwork.dart';
@@ -42,10 +43,13 @@ class PlaylistCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final title = playlist['title']?.toString() ?? '';
-    final creator = getDisplayArtist(playlist);
+    final rawCreator = getDisplayArtist(playlist);
+    final creator = rawCreator.isNotEmpty
+        ? rawCreator
+        : (context.l10n?.playlist ?? 'Playlist');
 
-    final semanticLabel = creator.isNotEmpty
-        ? '$title, playlist by $creator'
+    final semanticLabel = rawCreator.isNotEmpty
+        ? '$title, playlist by $rawCreator'
         : '$title, playlist';
 
     return Semantics(
@@ -127,17 +131,15 @@ class PlaylistCard extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  if (creator.isNotEmpty) ...[
-                    const SizedBox(height: 2),
-                    Text(
-                      creator,
-                      style: AppTextStyles.cardSubtitle.copyWith(
-                        color: colorScheme.onSurfaceVariant,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                  const SizedBox(height: 2),
+                  Text(
+                    creator,
+                    style: AppTextStyles.cardSubtitle.copyWith(
+                      color: colorScheme.onSurfaceVariant,
                     ),
-                  ],
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ],
               ),
             ),

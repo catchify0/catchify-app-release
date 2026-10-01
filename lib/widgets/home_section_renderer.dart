@@ -116,7 +116,7 @@ class HomeSectionRenderer extends StatelessWidget {
                       songIndex: 0,
                     );
                   },
-                  tooltip: 'Play all',
+                  tooltip: context.l10n?.play ?? 'Play',
                   icon: Icon(
                     FluentIcons.play_circle_24_filled,
                     color: Theme.of(context).colorScheme.primary,
@@ -152,8 +152,12 @@ class HomeSectionRenderer extends StatelessWidget {
       );
     }
 
+    final textScaler = MediaQuery.textScalerOf(context);
+    final rowHeight = math.max<double>(68, textScaler.scale(68));
+    final maxRows = chunkedSongs.map((c) => c.length).fold<int>(0, math.max);
+
     return SizedBox(
-      height: chunkedSongs.map((c) => c.length).fold<int>(0, math.max) * 68.0,
+      height: maxRows * rowHeight,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         physics: const BouncingScrollPhysics(),

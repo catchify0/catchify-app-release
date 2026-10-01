@@ -24,7 +24,7 @@ import 'package:fluentui_system_icons/fluentui_system_icons.dart';
 import 'package:catchify/constants/app_tokens.dart';
 import 'package:catchify/theme/app_text_styles.dart';
 import 'package:catchify/utilities/app_utils.dart';
-import 'package:catchify/widgets/playlist_cube.dart';
+import 'package:catchify/widgets/playlist_artwork.dart';
 
 class AlbumCard extends StatelessWidget {
   const AlbumCard({
@@ -100,10 +100,47 @@ class AlbumCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  PlaylistCube(
-                    album,
-                    size: size,
-                    cubeIcon: FluentIcons.album_24_filled,
+                  DecoratedBox(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(AppTokens.radiusCard),
+                      boxShadow: [
+                        BoxShadow(
+                          color: colorScheme.shadow.withValues(alpha: 0.14),
+                          blurRadius: 14,
+                          offset: const Offset(0, 5),
+                        ),
+                      ],
+                    ),
+                    child: Stack(
+                      children: [
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(
+                            AppTokens.radiusCard,
+                          ),
+                          child: PlaylistArtwork(
+                            playlistArtwork:
+                                album['highResImage'] ?? album['image'],
+                            playlistTitle: displayTitle,
+                            size: size,
+                            cubeIcon: FluentIcons.album_24_filled,
+                          ),
+                        ),
+                        Positioned.fill(
+                          child: DecoratedBox(
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(
+                                AppTokens.radiusCard,
+                              ),
+                              border: Border.all(
+                                color: colorScheme.primary.withValues(
+                                  alpha: 0.12,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                   const SizedBox(height: 8),
                   Text(
