@@ -236,10 +236,7 @@ class NavigationManager {
           GoRoute(
             path: chartsPath,
             pageBuilder: (context, GoRouterState state) {
-              return getPage(
-                child: const TopChartsPage(),
-                state: state,
-              );
+              return getPage(child: const TopChartsPage(), state: state);
             },
             routes: [
               GoRoute(

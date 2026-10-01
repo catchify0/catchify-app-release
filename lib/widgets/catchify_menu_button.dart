@@ -65,13 +65,19 @@ class CatchifyMenuButton extends StatelessWidget {
                   HapticFeedback.lightImpact();
                   CatchifyNavigationDrawer.open(context);
                 },
-                child: SizedBox(
-                  width: size,
-                  height: size,
-                  child: Center(
-                    child: CatchifyHamburgerIcon(
-                      color: colorScheme.primary,
-                      size: size * 0.50,
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(
+                    minWidth: 48,
+                    minHeight: 48,
+                  ),
+                  child: SizedBox(
+                    width: size,
+                    height: size,
+                    child: Center(
+                      child: CatchifyHamburgerIcon(
+                        color: colorScheme.primary,
+                        size: size * 0.50,
+                      ),
                     ),
                   ),
                 ),

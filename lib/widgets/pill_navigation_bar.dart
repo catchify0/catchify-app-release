@@ -96,8 +96,8 @@ class PillNavigationBar extends StatelessWidget {
         elevation: 18,
         shadowColor: Colors.black.withValues(alpha: isDark ? 0.38 : 0.12),
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
-        child: SizedBox(
-          height: 52,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: 52),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: List.generate(items.length, (index) {

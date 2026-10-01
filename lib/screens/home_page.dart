@@ -310,11 +310,10 @@ class _HomePageState extends State<HomePage> {
                   DateFormat(
                     'EEEE, d MMMM',
                   ).format(DateTime.now()).toUpperCase(),
-                  style: TextStyle(
-                    fontSize: 11.5,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 0.8,
-                    color: Theme.of(context).colorScheme.primary,
+                  style: AppTextStyles.categoryHeader.copyWith(
+                    fontSize: 11,
+                    color: colorScheme.onSurfaceVariant.withValues(alpha: 0.85),
+                    letterSpacing: 1,
                   ),
                 ),
                 const SizedBox(height: 2),

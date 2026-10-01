@@ -38,6 +38,7 @@ import 'package:catchify/utilities/flutter_toast.dart';
 import 'package:catchify/utilities/offline_playlist_dialogs.dart';
 import 'package:catchify/utilities/playlist_dialogs.dart';
 import 'package:catchify/constants/app_tokens.dart';
+import 'package:catchify/theme/app_text_styles.dart';
 import 'package:catchify/widgets/catchify_menu_button.dart';
 import 'package:catchify/widgets/confirmation_dialog.dart';
 import 'package:catchify/widgets/empty_state.dart';
@@ -79,7 +80,13 @@ class _LibraryPageState extends State<LibraryPage> {
         leading: (ModalRoute.of(context)?.canPop ?? false)
             ? null
             : const CatchifyMenuButton(),
-        title: Text(context.l10n?.library ?? 'Library'),
+        title: Text(
+          context.l10n?.library ?? 'Library',
+          style: AppTextStyles.pageTitle.copyWith(
+            fontWeight: FontWeight.w800,
+            letterSpacing: -0.5,
+          ),
+        ),
       ),
       body: AnimatedBuilder(
         animation: Listenable.merge([

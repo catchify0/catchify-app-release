@@ -34,6 +34,7 @@ import 'package:catchify/services/search_service.dart';
 import 'package:catchify/services/settings_manager.dart';
 import 'package:catchify/utilities/app_utils.dart';
 import 'package:catchify/constants/app_tokens.dart';
+import 'package:catchify/theme/app_text_styles.dart';
 import 'package:catchify/widgets/artist_bar.dart';
 import 'package:catchify/widgets/confirmation_dialog.dart';
 import 'package:catchify/widgets/custom_bar.dart';
@@ -251,9 +252,9 @@ class _SearchPageState extends State<SearchPage> {
             : const CatchifyMenuButton(),
         title: Text(
           context.l10n!.search,
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.w700,
-            letterSpacing: -0.4,
+          style: AppTextStyles.pageTitle.copyWith(
+            fontWeight: FontWeight.w800,
+            letterSpacing: -0.5,
           ),
         ),
         scrolledUnderElevation: 0,
