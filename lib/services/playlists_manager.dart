@@ -1938,7 +1938,10 @@ Future<List<Map<String, dynamic>>> getSuggestedNewReleases({
               .catchError((_) => <Video>[]);
           for (final (index, song) in latestSongs.indexed) {
             if (!liveSongs.any((s) => s['ytid'] == song.id.value)) {
-              liveSongs.add(returnSongLayout(liveSongs.length + index, song));
+              final layout = returnSongLayout(liveSongs.length + index, song);
+              if (isOfficialSquareArtwork(layout['image']?.toString())) {
+                liveSongs.add(layout);
+              }
             }
           }
         }
@@ -1951,7 +1954,10 @@ Future<List<Map<String, dynamic>>> getSuggestedNewReleases({
               .catchError((_) => <Video>[]);
           for (final (index, song) in releaseSongs.indexed) {
             if (!liveSongs.any((s) => s['ytid'] == song.id.value)) {
-              liveSongs.add(returnSongLayout(liveSongs.length + index, song));
+              final layout = returnSongLayout(liveSongs.length + index, song);
+              if (isOfficialSquareArtwork(layout['image']?.toString())) {
+                liveSongs.add(layout);
+              }
             }
           }
         }
@@ -1965,7 +1971,10 @@ Future<List<Map<String, dynamic>>> getSuggestedNewReleases({
             .catchError((_) => <Video>[]);
         for (final (index, song) in globalLatest.indexed) {
           if (!liveSongs.any((s) => s['ytid'] == song.id.value)) {
-            liveSongs.add(returnSongLayout(liveSongs.length + index, song));
+            final layout = returnSongLayout(liveSongs.length + index, song);
+            if (isOfficialSquareArtwork(layout['image']?.toString())) {
+              liveSongs.add(layout);
+            }
           }
         }
       }
@@ -2198,6 +2207,7 @@ Future<List<Map<String, dynamic>>> getTrendingSongsForYou({
 
       for (final (index, song) in ytmTrending.indexed) {
         final songMap = returnSongLayout(index, song);
+        if (!isOfficialSquareArtwork(songMap['image']?.toString())) continue;
         songMap['chartRank'] = index + 1;
         liveSongs.add(songMap);
       }
@@ -2212,6 +2222,7 @@ Future<List<Map<String, dynamic>>> getTrendingSongsForYou({
         for (final song in moreTrending) {
           if (!liveSongs.any((s) => s['ytid'] == song.id.value)) {
             final songMap = returnSongLayout(liveSongs.length, song);
+            if (!isOfficialSquareArtwork(songMap['image']?.toString())) continue;
             songMap['chartRank'] = liveSongs.length + 1;
             liveSongs.add(songMap);
             if (liveSongs.length >= limit) break;
@@ -2230,12 +2241,9 @@ Future<List<Map<String, dynamic>>> getTrendingSongsForYou({
           final ytid = s['ytid']?.toString() ?? '';
           if (ytid.isEmpty) continue;
           final rawThumb = s['image']?.toString();
-          final highRes = rawThumb != null
-              ? formatArtworkResolution(rawThumb, 1080)
-              : null;
-          final lowRes = rawThumb != null
-              ? formatArtworkResolution(rawThumb, 544)
-              : null;
+          if (rawThumb == null || !isOfficialSquareArtwork(rawThumb)) continue;
+          final highRes = formatArtworkResolution(rawThumb, 1080);
+          final lowRes = formatArtworkResolution(rawThumb, 544);
           liveSongs.add({
             'id': index,
             'ytid': ytid,
@@ -2243,16 +2251,14 @@ Future<List<Map<String, dynamic>>> getTrendingSongsForYou({
             'artist': s['artist']?.toString() ?? '',
             'artistId': s['artistId']?.toString() ?? '',
             'videoAuthor': s['artist']?.toString() ?? '',
-            'image':
-                highRes ?? 'https://i.ytimg.com/vi/$ytid/maxresdefault.jpg',
-            'lowResImage':
-                lowRes ?? 'https://i.ytimg.com/vi/$ytid/mqdefault.jpg',
-            'highResImage':
-                highRes ?? 'https://i.ytimg.com/vi/$ytid/maxresdefault.jpg',
+            'image': highRes,
+            'lowResImage': lowRes,
+            'highResImage': highRes,
             'duration': s['duration'],
             'chartRank': index + 1,
             'isLive': false,
             'source': 'youtube-music',
+            'isOfficial': true,
           });
         }
       }
@@ -2266,6 +2272,7 @@ Future<List<Map<String, dynamic>>> getTrendingSongsForYou({
 
         for (final (index, song) in globalTrending.indexed) {
           final songMap = returnSongLayout(index, song);
+          if (!isOfficialSquareArtwork(songMap['image']?.toString())) continue;
           songMap['chartRank'] = index + 1;
           liveSongs.add(songMap);
         }
@@ -2875,6 +2882,7 @@ Future<List<Map<String, dynamic>>> getMadeForYouRecommendations({
           for (var i = 0; i < artistTracks.length; i++) {
             final track = artistTracks[i];
             final layout = returnSongLayout(liveRecs.length + i, track);
+            if (!isOfficialSquareArtwork(layout['image']?.toString())) continue;
             if (!liveRecs.any((s) => s['ytid'] == layout['ytid'])) {
               liveRecs.add(layout);
             }
@@ -2942,6 +2950,7 @@ Future<List<Map<String, dynamic>>> getSongsForArtistRecommendation(
       for (var i = 0; i < results.length; i++) {
         final video = results[i];
         final layout = returnSongLayout(i, video);
+        if (!isOfficialSquareArtwork(layout['image']?.toString())) continue;
         if (!liveSongs.any((s) => s['ytid'] == layout['ytid'])) {
           liveSongs.add(layout);
         }

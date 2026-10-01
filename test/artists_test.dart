@@ -21,6 +21,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:catchify/services/artist_service.dart';
 import 'package:catchify/services/playlists_manager.dart';
+import 'package:catchify/utilities/formatter.dart';
 
 void main() {
   group('Artists Dynamic & Functional Tests', () {
@@ -134,6 +135,57 @@ void main() {
       expect(result['monthlyListeners'], '15M');
       expect(result['description'], 'Famous composer and singer');
       expect(result['list'], songs);
+    });
+
+    test('isOfficialSquareArtwork accepts Google/YouTube Music 1:1 artwork and blocks 16:9 thumbnails', () {
+      // 1:1 official square album art
+      expect(
+        isOfficialSquareArtwork('https://lh3.googleusercontent.com/photo=w1080-h1080-l90-rj'),
+        isTrue,
+      );
+      expect(
+        isOfficialSquareArtwork('https://yt3.ggpht.com/avatar=s800-c-k-c0x00ffffff-no-rj'),
+        isTrue,
+      );
+
+      // 16:9 YouTube video thumbnails (must be blocked)
+      expect(
+        isOfficialSquareArtwork('https://i.ytimg.com/vi/video123/maxresdefault.jpg'),
+        isFalse,
+      );
+      expect(
+        isOfficialSquareArtwork('https://i.ytimg.com/vi/video123/mqdefault.jpg'),
+        isFalse,
+      );
+      expect(
+        isOfficialSquareArtwork('https://i.ytimg.com/vi/video123/hqdefault.jpg'),
+        isFalse,
+      );
+      expect(
+        isOfficialSquareArtwork('https://img.youtube.com/vi/video123/0.jpg'),
+        isFalse,
+      );
+
+      // Null or empty
+      expect(isOfficialSquareArtwork(null), isFalse);
+      expect(isOfficialSquareArtwork(''), isFalse);
+      expect(isOfficialSquareArtwork('   '), isFalse);
+    });
+
+    test('isOfficialMusicSong identifies songs with official 1:1 artwork', () {
+      final officialSong = {
+        'ytid': 'song_1',
+        'title': 'Hukum',
+        'image': 'https://lh3.googleusercontent.com/song_art=w1080-h1080-l90-rj',
+      };
+      final videoUpload = {
+        'ytid': 'song_2',
+        'title': 'Hukum (Lyrics Video)',
+        'image': 'https://i.ytimg.com/vi/song_2/maxresdefault.jpg',
+      };
+
+      expect(isOfficialMusicSong(officialSong), isTrue);
+      expect(isOfficialMusicSong(videoUpload), isFalse);
     });
   });
 }

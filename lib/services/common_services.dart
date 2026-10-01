@@ -283,6 +283,13 @@ Future<List> fetchSongsList(String searchQuery) async {
       }
 
       final layout = returnSongLayout(songsList.length, video);
+
+      // Strict 1:1 Official Audio Filter:
+      // Exclude 16:9 widescreen YouTube video uploads without official square album art
+      if (!isOfficialSquareArtwork(layout['image']?.toString())) {
+        continue;
+      }
+
       final rawTitle = layout['title']?.toString() ?? video.title;
       final rawArtist = layout['artist']?.toString() ?? video.author;
 
@@ -296,6 +303,30 @@ Future<List> fetchSongsList(String searchQuery) async {
       }
 
       songsList.add(layout);
+    }
+
+    // If initial results only contained non-square videos, resolve to official audio tracks
+    if (songsList.isEmpty && searchResults.isNotEmpty) {
+      for (final video in searchResults.take(3)) {
+        final cleanTitle = formatSongTitle(video.title);
+        final q = cleanTitle.isNotEmpty
+            ? '$cleanTitle ${video.author}'
+            : video.title;
+        try {
+          final officialSongs = await ytMusicClient.music
+              .searchSongs(q, limit: 5)
+              .timeout(const Duration(seconds: 4));
+          for (final match in officialSongs) {
+            final matchLayout = returnSongLayout(songsList.length, match);
+            if (isOfficialSquareArtwork(matchLayout['image']?.toString())) {
+              if (seenIds.add(match.id.value)) {
+                songsList.add(matchLayout);
+              }
+            }
+          }
+        } catch (_) {}
+        if (songsList.isNotEmpty) break;
+      }
     }
 
     return songsList;

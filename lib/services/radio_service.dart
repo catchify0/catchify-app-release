@@ -23,7 +23,8 @@ import 'dart:async';
 
 import 'package:catchify/main.dart' show logger;
 import 'package:catchify/services/artist_service.dart' show ytMusicClient;
-import 'package:catchify/utilities/formatter.dart' show returnSongLayout;
+import 'package:catchify/utilities/formatter.dart'
+    show returnSongLayout, isOfficialSquareArtwork;
 import 'package:catchify/utilities/queue_entry_utils.dart' show canonicalSongId;
 import 'package:youtube_music_explode_dart/youtube_music_explode_dart.dart';
 
@@ -94,6 +95,7 @@ class RadioService {
       for (var i = 0; i < result.tracks.length; i++) {
         final v = result.tracks[i];
         final songMap = returnSongLayout(i + 1, v);
+        if (!isOfficialSquareArtwork(songMap['image']?.toString())) continue;
         final id = canonicalSongId(songMap);
         if (id != null && id.isNotEmpty && seen.add(id)) {
           convertedSongs.add(songMap);
@@ -215,6 +217,7 @@ class RadioService {
       for (var i = 0; i < result.tracks.length; i++) {
         final v = result.tracks[i];
         final songMap = returnSongLayout(i + 1, v);
+        if (!isOfficialSquareArtwork(songMap['image']?.toString())) continue;
         final id = canonicalSongId(songMap);
         if (id != null && id.isNotEmpty && seen.add(id)) {
           convertedSongs.add(songMap);
@@ -371,6 +374,7 @@ class RadioService {
         for (var i = 0; i < result.tracks.length; i++) {
           final v = result.tracks[i];
           final sMap = returnSongLayout(i + 1, v);
+          if (!isOfficialSquareArtwork(sMap['image']?.toString())) continue;
           final sid = canonicalSongId(sMap);
 
           if (sid == null || sid.isEmpty) continue;

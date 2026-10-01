@@ -122,6 +122,23 @@ String formatArtworkResolution(String url, int size) {
   return result;
 }
 
+/// Checks if an artwork URL is an official 1:1 square artwork from YouTube Music.
+/// Returns false for 16:9 widescreen video thumbnails (ytimg.com / youtube.com).
+bool isOfficialSquareArtwork(String? url) {
+  if (url == null || url.trim().isEmpty) return false;
+  final clean = url.trim().toLowerCase();
+  if (clean.contains('ytimg.com') || clean.contains('youtube.com')) {
+    return false;
+  }
+  return clean.contains('googleusercontent.com') || clean.contains('ggpht.com');
+}
+
+/// Checks if a song map has an official 1:1 square artwork from YouTube Music.
+bool isOfficialMusicSong(Map song) {
+  final image = song['image']?.toString();
+  return isOfficialSquareArtwork(image);
+}
+
 Map<String, dynamic> returnSongLayout(
   int index,
   Video song, {
@@ -162,6 +179,8 @@ Map<String, dynamic> returnSongLayout(
       ? cleanArtworkUrl(effectiveImage)
       : null;
 
+  final isOfficial = cleanImage != null && isOfficialSquareArtwork(cleanImage);
+
   return {
     'id': index,
     'ytid': song.id.toString(),
@@ -180,6 +199,7 @@ Map<String, dynamic> returnSongLayout(
         : defaultMaxRes,
     'duration': song.duration?.inSeconds,
     'isLive': song.isLive,
+    'isOfficial': isOfficial,
   };
 }
 
