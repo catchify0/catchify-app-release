@@ -237,14 +237,7 @@ class NavigationManager {
             path: chartsPath,
             pageBuilder: (context, GoRouterState state) {
               return getPage(
-                child: ValueListenableBuilder<bool>(
-                  valueListenable: offlineMode,
-                  builder: (context, isOffline, _) {
-                    return isOffline
-                        ? const UserSongsPage(page: 'offline')
-                        : const TopChartsPage();
-                  },
-                ),
+                child: const TopChartsPage(),
                 state: state,
               );
             },

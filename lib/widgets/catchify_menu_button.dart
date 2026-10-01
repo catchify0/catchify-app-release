@@ -86,11 +86,7 @@ class CatchifyMenuButton extends StatelessWidget {
 
 /// A bold, modern 3-bar hamburger icon with stylish staggered pill bars and rhythm dot.
 class CatchifyHamburgerIcon extends StatelessWidget {
-  const CatchifyHamburgerIcon({
-    super.key,
-    this.color,
-    this.size = 18,
-  });
+  const CatchifyHamburgerIcon({super.key, this.color, this.size = 18});
 
   final Color? color;
   final double size;
@@ -112,10 +108,7 @@ class CatchifyHamburgerIcon extends StatelessWidget {
           Container(
             height: barHeight,
             width: size,
-            decoration: BoxDecoration(
-              color: barColor,
-              borderRadius: barRadius,
-            ),
+            decoration: BoxDecoration(color: barColor, borderRadius: barRadius),
           ),
           // Middle bar: artistic music-beat bar (pill + rhythm dot)
           Row(
@@ -144,10 +137,7 @@ class CatchifyHamburgerIcon extends StatelessWidget {
           Container(
             height: barHeight,
             width: size * 0.82,
-            decoration: BoxDecoration(
-              color: barColor,
-              borderRadius: barRadius,
-            ),
+            decoration: BoxDecoration(color: barColor, borderRadius: barRadius),
           ),
         ],
       ),

@@ -70,52 +70,51 @@ void main() {
       expect(songs[1]['title'], 'Second Song');
     });
 
-    test('loadAlbums derives album cards from liked playlists and liked songs with deduplication', () {
-      userLikedPlaylists.value = [
-        {
-          'ytid': 'alb_playlist_1',
-          'title': 'Anirudh Hits Album',
-          'artist': 'Anirudh',
-          'isAlbum': true,
-          'image': 'https://example.com/img1.jpg',
-        },
-        {
-          'ytid': 'normal_playlist',
-          'title': 'Workout Mix',
-          'isAlbum': false,
-        },
-      ];
+    test(
+      'loadAlbums derives album cards from liked playlists and liked songs with deduplication',
+      () {
+        userLikedPlaylists.value = [
+          {
+            'ytid': 'alb_playlist_1',
+            'title': 'Anirudh Hits Album',
+            'artist': 'Anirudh',
+            'isAlbum': true,
+            'image': 'https://example.com/img1.jpg',
+          },
+          {'ytid': 'normal_playlist', 'title': 'Workout Mix', 'isAlbum': false},
+        ];
 
-      userLikedSongsList.value = [
-        {
-          'ytid': 's1',
-          'title': 'Hukum',
-          'artist': 'Anirudh',
-          'album': 'Jailer',
-          'albumId': 'jailer_album_id',
-          'image': 'https://example.com/jailer.jpg',
-        },
-        // Duplicate song from same album
-        {
-          'ytid': 's2',
-          'title': 'Kaavaalaa',
-          'artist': 'Anirudh',
-          'album': 'Jailer',
-          'albumId': 'jailer_album_id',
-          'image': 'https://example.com/jailer.jpg',
-        },
-      ];
+        userLikedSongsList.value = [
+          {
+            'ytid': 's1',
+            'title': 'Hukum',
+            'artist': 'Anirudh',
+            'album': 'Jailer',
+            'albumId': 'jailer_album_id',
+            'image': 'https://example.com/jailer.jpg',
+          },
+          // Duplicate song from same album
+          {
+            'ytid': 's2',
+            'title': 'Kaavaalaa',
+            'artist': 'Anirudh',
+            'album': 'Jailer',
+            'albumId': 'jailer_album_id',
+            'image': 'https://example.com/jailer.jpg',
+          },
+        ];
 
-      final albums = LibraryService.instance.loadAlbums();
-      expect(albums.length, 2);
+        final albums = LibraryService.instance.loadAlbums();
+        expect(albums.length, 2);
 
-      expect(albums[0]['title'], 'Anirudh Hits Album');
-      expect(albums[0]['isAlbum'], true);
+        expect(albums[0]['title'], 'Anirudh Hits Album');
+        expect(albums[0]['isAlbum'], true);
 
-      expect(albums[1]['title'], 'Jailer');
-      expect(albums[1]['ytid'], 'jailer_album_id');
-      expect(albums[1]['artist'], 'Anirudh');
-    });
+        expect(albums[1]['title'], 'Jailer');
+        expect(albums[1]['ytid'], 'jailer_album_id');
+        expect(albums[1]['artist'], 'Anirudh');
+      },
+    );
 
     test('loadArtists derives artists from liked artists and liked songs', () {
       userLikedPlaylists.value = [
@@ -148,33 +147,43 @@ void main() {
       expect(artists.any((a) => a['title'] == 'AR Rahman'), true);
     });
 
-    test('loadRecentlyPlayed returns songs latest first with deduplication', () {
-      userRecentlyPlayed.value = [
-        {'ytid': 'songA', 'title': 'Song A'},
-        {'ytid': 'songB', 'title': 'Song B'},
-        {'ytid': 'songA', 'title': 'Song A'}, // repeat listen
-      ];
+    test(
+      'loadRecentlyPlayed returns songs latest first with deduplication',
+      () {
+        userRecentlyPlayed.value = [
+          {'ytid': 'songA', 'title': 'Song A'},
+          {'ytid': 'songB', 'title': 'Song B'},
+          {'ytid': 'songA', 'title': 'Song A'}, // repeat listen
+        ];
 
-      final deduped = LibraryService.instance.loadRecentlyPlayed(deduplicate: true);
-      expect(deduped.length, 2);
-      expect(deduped[0]['ytid'], 'songA');
-      expect(deduped[1]['ytid'], 'songB');
+        final deduped = LibraryService.instance.loadRecentlyPlayed(
+          deduplicate: true,
+        );
+        expect(deduped.length, 2);
+        expect(deduped[0]['ytid'], 'songA');
+        expect(deduped[1]['ytid'], 'songB');
 
-      final raw = LibraryService.instance.loadRecentlyPlayed(deduplicate: false);
-      expect(raw.length, 3);
-    });
+        final raw = LibraryService.instance.loadRecentlyPlayed(
+          deduplicate: false,
+        );
+        expect(raw.length, 3);
+      },
+    );
 
-    test('loadDownloads returns offline songs, local songs, and offline playlists', () {
-      userOfflineSongs.value = [
-        {'ytid': 'off1', 'title': 'Downloaded Song'},
-      ];
-      userLocalSongs.value = [
-        {'title': 'Local Audio File', 'path': '/storage/music.mp3'},
-      ];
+    test(
+      'loadDownloads returns offline songs, local songs, and offline playlists',
+      () {
+        userOfflineSongs.value = [
+          {'ytid': 'off1', 'title': 'Downloaded Song'},
+        ];
+        userLocalSongs.value = [
+          {'title': 'Local Audio File', 'path': '/storage/music.mp3'},
+        ];
 
-      final downloads = LibraryService.instance.loadDownloads();
-      expect((downloads['offlineSongs'] as List).length, 1);
-      expect((downloads['localSongs'] as List).length, 1);
-    });
+        final downloads = LibraryService.instance.loadDownloads();
+        expect((downloads['offlineSongs'] as List).length, 1);
+        expect((downloads['localSongs'] as List).length, 1);
+      },
+    );
   });
 }

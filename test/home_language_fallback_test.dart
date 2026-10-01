@@ -70,90 +70,108 @@ void main() {
       ),
     ];
 
-    test('Case 1: Remote succeeds + language succeeds -> remote + language + personalization', () {
-      final feed = HomeFeedComposer.compose(
-        remoteSections: remoteShelves,
-        languageSections: languageShelves,
-        personalizedSections: personalShelves,
-      );
+    test(
+      'Case 1: Remote succeeds + language succeeds -> remote + language + personalization',
+      () {
+        final feed = HomeFeedComposer.compose(
+          remoteSections: remoteShelves,
+          languageSections: languageShelves,
+          personalizedSections: personalShelves,
+        );
 
-      expect(feed, isNotEmpty);
-      expect(feed.any((s) => s.title == 'Trending songs for you'), isTrue);
-      expect(feed.any((s) => s.title == 'Featured playlists'), isTrue);
-      expect(feed.any((s) => s.title == 'Made for you'), isTrue);
-      expect(feed.any((s) => s.title == 'Mixed for you'), isTrue);
+        expect(feed, isNotEmpty);
+        expect(feed.any((s) => s.title == 'Trending songs for you'), isTrue);
+        expect(feed.any((s) => s.title == 'Featured playlists'), isTrue);
+        expect(feed.any((s) => s.title == 'Made for you'), isTrue);
+        expect(feed.any((s) => s.title == 'Mixed for you'), isTrue);
 
-      // Verify language shelf is in top slot
-      expect(feed.first.title, equals('Trending songs for you'));
-      expect(feed[1].title, equals('Featured playlists'));
-    });
+        // Verify language shelf is in top slot
+        expect(feed.first.title, equals('Trending songs for you'));
+        expect(feed[1].title, equals('Featured playlists'));
+      },
+    );
 
-    test('Case 2: Remote succeeds + language fails (empty) -> remote + personalization without crash', () {
-      final feed = HomeFeedComposer.compose(
-        remoteSections: remoteShelves,
-        languageSections: [], // language failed / empty
-        personalizedSections: personalShelves,
-      );
+    test(
+      'Case 2: Remote succeeds + language fails (empty) -> remote + personalization without crash',
+      () {
+        final feed = HomeFeedComposer.compose(
+          remoteSections: remoteShelves,
+          languageSections: [], // language failed / empty
+          personalizedSections: personalShelves,
+        );
 
-      expect(feed, isNotEmpty);
-      expect(feed.any((s) => s.title == 'Trending songs for you'), isFalse);
-      expect(feed.any((s) => s.title == 'Made for you'), isTrue);
-      expect(feed.any((s) => s.title == 'Mixed for you'), isTrue);
-    });
+        expect(feed, isNotEmpty);
+        expect(feed.any((s) => s.title == 'Trending songs for you'), isFalse);
+        expect(feed.any((s) => s.title == 'Made for you'), isTrue);
+        expect(feed.any((s) => s.title == 'Mixed for you'), isTrue);
+      },
+    );
 
-    test('Case 3: Remote fails (empty) + language succeeds -> language + personalization without crash', () {
-      final feed = HomeFeedComposer.compose(
-        remoteSections: [], // remote failed / empty
-        languageSections: languageShelves,
-        personalizedSections: personalShelves,
-      );
+    test(
+      'Case 3: Remote fails (empty) + language succeeds -> language + personalization without crash',
+      () {
+        final feed = HomeFeedComposer.compose(
+          remoteSections: [], // remote failed / empty
+          languageSections: languageShelves,
+          personalizedSections: personalShelves,
+        );
 
-      expect(feed, isNotEmpty);
-      expect(feed.any((s) => s.title == 'Trending songs for you'), isTrue);
-      expect(feed.any((s) => s.title == 'Featured playlists'), isTrue);
-      expect(feed.any((s) => s.title == 'Made for you'), isTrue);
-      expect(feed.first.title, equals('Trending songs for you'));
-    });
+        expect(feed, isNotEmpty);
+        expect(feed.any((s) => s.title == 'Trending songs for you'), isTrue);
+        expect(feed.any((s) => s.title == 'Featured playlists'), isTrue);
+        expect(feed.any((s) => s.title == 'Made for you'), isTrue);
+        expect(feed.first.title, equals('Trending songs for you'));
+      },
+    );
 
-    test('Case 4: Both fail (empty) -> empty list returned safely without exception', () {
-      final feed = HomeFeedComposer.compose(
-        remoteSections: [],
-        languageSections: [],
-        personalizedSections: [],
-      );
+    test(
+      'Case 4: Both fail (empty) -> empty list returned safely without exception',
+      () {
+        final feed = HomeFeedComposer.compose(
+          remoteSections: [],
+          languageSections: [],
+          personalizedSections: [],
+        );
 
-      expect(feed, isEmpty);
-    });
+        expect(feed, isEmpty);
+      },
+    );
 
-    test('Accidental duplicate titles between remote and language sections are pruned', () {
-      const remoteWithDuplicate = [
-        HomeSection(
-          title: 'Trending songs for you', // duplicate title with language shelf
-          type: HomeContentType.songs,
-          contents: [
-            {'id': 'dup1', 'title': 'Duplicate Song'},
-          ],
-        ),
-        HomeSection(
-          title: 'Recommended albums',
-          type: HomeContentType.albums,
-          contents: [
-            {'id': 'rem4', 'title': 'Remote Album'},
-          ],
-        ),
-      ];
+    test(
+      'Accidental duplicate titles between remote and language sections are pruned',
+      () {
+        const remoteWithDuplicate = [
+          HomeSection(
+            title:
+                'Trending songs for you', // duplicate title with language shelf
+            type: HomeContentType.songs,
+            contents: [
+              {'id': 'dup1', 'title': 'Duplicate Song'},
+            ],
+          ),
+          HomeSection(
+            title: 'Recommended albums',
+            type: HomeContentType.albums,
+            contents: [
+              {'id': 'rem4', 'title': 'Remote Album'},
+            ],
+          ),
+        ];
 
-      final feed = HomeFeedComposer.compose(
-        remoteSections: remoteWithDuplicate,
-        languageSections: languageShelves,
-        personalizedSections: [],
-      );
+        final feed = HomeFeedComposer.compose(
+          remoteSections: remoteWithDuplicate,
+          languageSections: languageShelves,
+          personalizedSections: [],
+        );
 
-      // Only one 'Trending songs for you' shelf should exist
-      final trendingShelves = feed.where((s) => s.title.toLowerCase().contains('trending songs'));
-      expect(trendingShelves.length, equals(1));
-      // And it must be the language shelf (id lang1)
-      expect(trendingShelves.first.contents.first['id'], equals('lang1'));
-    });
+        // Only one 'Trending songs for you' shelf should exist
+        final trendingShelves = feed.where(
+          (s) => s.title.toLowerCase().contains('trending songs'),
+        );
+        expect(trendingShelves.length, equals(1));
+        // And it must be the language shelf (id lang1)
+        expect(trendingShelves.first.contents.first['id'], equals('lang1'));
+      },
+    );
   });
 }

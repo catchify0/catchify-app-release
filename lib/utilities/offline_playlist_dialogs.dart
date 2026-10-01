@@ -19,6 +19,8 @@
  *     please visit: https://github.com/catchify0/catchify0.github.io
  */
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:catchify/extensions/l10n.dart';
 import 'package:catchify/services/playlist_download_service.dart';
@@ -35,7 +37,7 @@ void showRemoveOfflinePlaylistDialog(BuildContext context, String playlistId) {
         isDangerous: true,
         onCancel: () => Navigator.pop(context),
         onSubmit: () {
-          offlinePlaylistService.removeOfflinePlaylist(playlistId);
+          unawaited(offlinePlaylistService.removeOfflinePlaylist(playlistId));
           Navigator.pop(context);
           showToast(context, context.l10n!.playlistRemovedFromOffline);
         },

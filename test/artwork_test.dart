@@ -24,8 +24,10 @@ void main() {
 
     test('upgrades ggpht.com s parameters', () {
       const url = 'https://lh3.ggpht.com/abc=s120';
-      expect(formatArtworkResolution(url, 544),
-          'https://lh3.ggpht.com/abc=w544-h544-l90-rj');
+      expect(
+        formatArtworkResolution(url, 544),
+        'https://lh3.ggpht.com/abc=w544-h544-l90-rj',
+      );
     });
 
     test('leaves non-google URLs untouched', () {
@@ -35,22 +37,30 @@ void main() {
 
     test('upgrades YouTube thumbnails to maxresdefault.jpg for 1080p', () {
       const hq = 'https://i.ytimg.com/vi/12345/hqdefault.jpg';
-      expect(formatArtworkResolution(hq, 1080),
-          'https://i.ytimg.com/vi/12345/maxresdefault.jpg');
+      expect(
+        formatArtworkResolution(hq, 1080),
+        'https://i.ytimg.com/vi/12345/maxresdefault.jpg',
+      );
 
       const sd = 'https://i.ytimg.com/vi/12345/sddefault.jpg';
-      expect(formatArtworkResolution(sd, 1080),
-          'https://i.ytimg.com/vi/12345/maxresdefault.jpg');
+      expect(
+        formatArtworkResolution(sd, 1080),
+        'https://i.ytimg.com/vi/12345/maxresdefault.jpg',
+      );
 
       const def = 'https://i.ytimg.com/vi/12345/default.jpg?sqp=xxx';
-      expect(formatArtworkResolution(def, 1080),
-          'https://i.ytimg.com/vi/12345/maxresdefault.jpg');
+      expect(
+        formatArtworkResolution(def, 1080),
+        'https://i.ytimg.com/vi/12345/maxresdefault.jpg',
+      );
     });
 
     test('appends 1080p parameters to unsized googleusercontent URLs', () {
       const url = 'https://lh3.googleusercontent.com/sample';
-      expect(formatArtworkResolution(url, 1080),
-          'https://lh3.googleusercontent.com/sample=w1080-h1080-l90-rj');
+      expect(
+        formatArtworkResolution(url, 1080),
+        'https://lh3.googleusercontent.com/sample=w1080-h1080-l90-rj',
+      );
     });
   });
 
@@ -113,7 +123,9 @@ void main() {
 
     test('cropCenterSquare converts 16:9 image to 1:1 square', () async {
       final widescreenBytes = await createTestPng(160, 90);
-      final squareBytes = await ArtworkService.cropCenterSquare(widescreenBytes);
+      final squareBytes = await ArtworkService.cropCenterSquare(
+        widescreenBytes,
+      );
 
       final codec = await ui.instantiateImageCodec(squareBytes);
       final frame = await codec.getNextFrame();
@@ -128,15 +140,20 @@ void main() {
       expect(result, squareSourceBytes);
     });
 
-    test('cropCenterSquare crops out black bars from 4:3 YouTube thumbnails', () async {
-      final letterboxedBytes = await createTestPng(480, 360);
-      final squareBytes = await ArtworkService.cropCenterSquare(letterboxedBytes);
+    test(
+      'cropCenterSquare crops out black bars from 4:3 YouTube thumbnails',
+      () async {
+        final letterboxedBytes = await createTestPng(480, 360);
+        final squareBytes = await ArtworkService.cropCenterSquare(
+          letterboxedBytes,
+        );
 
-      final codec = await ui.instantiateImageCodec(squareBytes);
-      final frame = await codec.getNextFrame();
-      expect(frame.image.width, 270);
-      expect(frame.image.height, 270);
-    });
+        final codec = await ui.instantiateImageCodec(squareBytes);
+        final frame = await codec.getNextFrame();
+        expect(frame.image.width, 270);
+        expect(frame.image.height, 270);
+      },
+    );
   });
 
   group('ArtworkService resolveArtUri & mapToMediaItem integration', () {

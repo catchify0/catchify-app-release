@@ -127,7 +127,8 @@ void main() {
             }
           } else if (section.type == HomeContentType.artists) {
             for (final item in section.contents) {
-              final name = item['name']?.toString() ?? item['title']?.toString() ?? '';
+              final name =
+                  item['name']?.toString() ?? item['title']?.toString() ?? '';
               if (name.isNotEmpty) artistNames.add(name);
             }
           } else {
@@ -140,7 +141,11 @@ void main() {
           }
 
           for (final item in section.contents) {
-            final id = item['ytid']?.toString() ?? item['id']?.toString() ?? item['browseId']?.toString() ?? '';
+            final id =
+                item['ytid']?.toString() ??
+                item['id']?.toString() ??
+                item['browseId']?.toString() ??
+                '';
             if (id.isNotEmpty) {
               allItemIds.add(id);
               if (first5ItemIds.length < 5) {
@@ -154,7 +159,9 @@ void main() {
         // Check if regional discovery yielded items or if general fallback was used
         final hasCuratedSongs = songTitles.isNotEmpty;
         final fallbackUsed = !hasCuratedSongs;
-        final fallbackReason = fallbackUsed ? 'Standard remote feed returned without regional curated section' : 'None';
+        final fallbackReason = fallbackUsed
+            ? 'Standard remote feed returned without regional curated section'
+            : 'None';
 
         snapshots[lang] = LanguageFeedSnapshot(
           language: lang,

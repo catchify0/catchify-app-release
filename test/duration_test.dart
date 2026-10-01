@@ -19,7 +19,10 @@ void main() {
 
     test('handles Duration objects', () {
       expect(formatDuration(const Duration(seconds: 125)), '02:05');
-      expect(formatDuration(const Duration(hours: 2, minutes: 3, seconds: 4)), '02:03:04');
+      expect(
+        formatDuration(const Duration(hours: 2, minutes: 3, seconds: 4)),
+        '02:03:04',
+      );
     });
 
     test('handles String representations safely', () {
@@ -48,18 +51,27 @@ void main() {
     });
 
     test('mediaItemToMap handles null duration', () {
-      final item = MediaItem(
-        id: '123',
-        title: 'Test Title',
-      );
+      final item = MediaItem(id: '123', title: 'Test Title');
 
       final map = mediaItemToMap(item);
       expect(map['duration'], isNull);
     });
 
     test('durationEquals tolerates minor differences', () {
-      expect(durationEquals(const Duration(seconds: 100), const Duration(milliseconds: 100500)), isTrue);
-      expect(durationEquals(const Duration(seconds: 100), const Duration(seconds: 105)), isFalse);
+      expect(
+        durationEquals(
+          const Duration(seconds: 100),
+          const Duration(milliseconds: 100500),
+        ),
+        isTrue,
+      );
+      expect(
+        durationEquals(
+          const Duration(seconds: 100),
+          const Duration(seconds: 105),
+        ),
+        isFalse,
+      );
     });
 
     test('Spotify duration parsing handles ms and mm:ss formats', () {

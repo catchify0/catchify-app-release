@@ -25,39 +25,42 @@ import 'package:catchify/utilities/queue_entry_utils.dart';
 
 void main() {
   group('Player + Queue 2.0 Canonical Item & Metadata Tests', () {
-    test('mapToMediaItem and mediaItemToMap round-trip preserves canonical fields', () {
-      final original = {
-        'id': 'test_song_1',
-        'ytid': 'test_song_1',
-        'title': 'Anbil Avan',
-        'artist': 'A.R. Rahman',
-        'artistId': 'artist_arr',
-        'album': 'Vinnaithaandi Varuvaayaa',
-        'image': 'https://example.com/art.jpg',
-        'highResImage': 'https://example.com/art_high.jpg',
-        'lowResImage': 'https://example.com/art_low.jpg',
-        'duration': 240,
-        'isLive': false,
-        'source': 'youtube',
-        'contentType': 'song',
-      };
+    test(
+      'mapToMediaItem and mediaItemToMap round-trip preserves canonical fields',
+      () {
+        final original = {
+          'id': 'test_song_1',
+          'ytid': 'test_song_1',
+          'title': 'Anbil Avan',
+          'artist': 'A.R. Rahman',
+          'artistId': 'artist_arr',
+          'album': 'Vinnaithaandi Varuvaayaa',
+          'image': 'https://example.com/art.jpg',
+          'highResImage': 'https://example.com/art_high.jpg',
+          'lowResImage': 'https://example.com/art_low.jpg',
+          'duration': 240,
+          'isLive': false,
+          'source': 'youtube',
+          'contentType': 'song',
+        };
 
-      final mediaItem = mapToMediaItem(original);
-      expect(mediaItem.id, equals('test_song_1'));
-      expect(mediaItem.title, equals('Anbil Avan'));
-      expect(mediaItem.artist, equals('A.R. Rahman'));
-      expect(mediaItem.duration, equals(const Duration(seconds: 240)));
-      expect(mediaItem.extras?['ytid'], equals('test_song_1'));
-      expect(mediaItem.extras?['source'], equals('youtube'));
-      expect(mediaItem.extras?['contentType'], equals('song'));
+        final mediaItem = mapToMediaItem(original);
+        expect(mediaItem.id, equals('test_song_1'));
+        expect(mediaItem.title, equals('Anbil Avan'));
+        expect(mediaItem.artist, equals('A.R. Rahman'));
+        expect(mediaItem.duration, equals(const Duration(seconds: 240)));
+        expect(mediaItem.extras?['ytid'], equals('test_song_1'));
+        expect(mediaItem.extras?['source'], equals('youtube'));
+        expect(mediaItem.extras?['contentType'], equals('song'));
 
-      final reconstructed = mediaItemToMap(mediaItem);
-      expect(reconstructed['ytid'], equals('test_song_1'));
-      expect(reconstructed['title'], equals('Anbil Avan'));
-      expect(reconstructed['artist'], equals('A.R. Rahman'));
-      expect(reconstructed['source'], equals('youtube'));
-      expect(reconstructed['contentType'], equals('song'));
-    });
+        final reconstructed = mediaItemToMap(mediaItem);
+        expect(reconstructed['ytid'], equals('test_song_1'));
+        expect(reconstructed['title'], equals('Anbil Avan'));
+        expect(reconstructed['artist'], equals('A.R. Rahman'));
+        expect(reconstructed['source'], equals('youtube'));
+        expect(reconstructed['contentType'], equals('song'));
+      },
+    );
 
     test('mapToMediaItem falls back to id when ytid is missing', () {
       final songWithoutYtid = {
@@ -82,15 +85,22 @@ void main() {
       idManager = QueueEntryIdManager();
     });
 
-    test('QueueEntryIdManager assigns unique entry IDs even for duplicate tracks', () {
-      final song = {'id': 'song_A', 'ytid': 'song_A', 'title': 'Duplicate Track'};
+    test(
+      'QueueEntryIdManager assigns unique entry IDs even for duplicate tracks',
+      () {
+        final song = {
+          'id': 'song_A',
+          'ytid': 'song_A',
+          'title': 'Duplicate Track',
+        };
 
-      final entry1 = idManager.createSong(song);
-      final entry2 = idManager.createSong(song);
+        final entry1 = idManager.createSong(song);
+        final entry2 = idManager.createSong(song);
 
-      expect(entry1['ytid'], equals(entry2['ytid']));
-      expect(entry1['queueEntryId'], isNot(equals(entry2['queueEntryId'])));
-    });
+        expect(entry1['ytid'], equals(entry2['ytid']));
+        expect(entry1['queueEntryId'], isNot(equals(entry2['queueEntryId'])));
+      },
+    );
 
     test('Play Now queue semantics: single track replaces queue', () {
       final existingQueue = [
@@ -99,7 +109,11 @@ void main() {
         {'id': 's3', 'ytid': 's3', 'title': 'Song 3'},
       ];
 
-      final newSong = {'id': 's_now', 'ytid': 's_now', 'title': 'Play Now Track'};
+      final newSong = {
+        'id': 's_now',
+        'ytid': 's_now',
+        'title': 'Play Now Track',
+      };
 
       // Semantic Play Now: clears queue, inserts single song at 0
       final queue = <Map>[];
@@ -112,25 +126,32 @@ void main() {
       expect(currentQueueIndex, equals(0));
     });
 
-    test('Play Next queue semantics: inserts immediately after current track', () {
-      final queue = <Map>[
-        idManager.createSong({'id': 's1', 'ytid': 's1'}),
-        idManager.createSong({'id': 's2', 'ytid': 's2'}),
-        idManager.createSong({'id': 's3', 'ytid': 's3'}),
-      ];
-      var currentQueueIndex = 1; // Playing s2
+    test(
+      'Play Next queue semantics: inserts immediately after current track',
+      () {
+        final queue = <Map>[
+          idManager.createSong({'id': 's1', 'ytid': 's1'}),
+          idManager.createSong({'id': 's2', 'ytid': 's2'}),
+          idManager.createSong({'id': 's3', 'ytid': 's3'}),
+        ];
+        var currentQueueIndex = 1; // Playing s2
 
-      final nextSong = {'id': 's_next', 'ytid': 's_next', 'title': 'Play Next'};
-      final insertIndex = currentQueueIndex + 1;
-      queue.insert(insertIndex, idManager.createSong(nextSong));
+        final nextSong = {
+          'id': 's_next',
+          'ytid': 's_next',
+          'title': 'Play Next',
+        };
+        final insertIndex = currentQueueIndex + 1;
+        queue.insert(insertIndex, idManager.createSong(nextSong));
 
-      expect(queue.length, equals(4));
-      expect(queue[0]['ytid'], equals('s1'));
-      expect(queue[1]['ytid'], equals('s2'));
-      expect(queue[2]['ytid'], equals('s_next'));
-      expect(queue[3]['ytid'], equals('s3'));
-      expect(currentQueueIndex, equals(1)); // current track index unchanged
-    });
+        expect(queue.length, equals(4));
+        expect(queue[0]['ytid'], equals('s1'));
+        expect(queue[1]['ytid'], equals('s2'));
+        expect(queue[2]['ytid'], equals('s_next'));
+        expect(queue[3]['ytid'], equals('s3'));
+        expect(currentQueueIndex, equals(1)); // current track index unchanged
+      },
+    );
 
     test('Add to Queue semantics: appends to the end of the queue', () {
       final queue = <Map>[
@@ -139,7 +160,11 @@ void main() {
       ];
       var currentQueueIndex = 0;
 
-      final appendedSong = {'id': 's_end', 'ytid': 's_end', 'title': 'Appended Track'};
+      final appendedSong = {
+        'id': 's_end',
+        'ytid': 's_end',
+        'title': 'Appended Track',
+      };
       queue.add(idManager.createSong(appendedSong));
 
       expect(queue.length, equals(3));
@@ -191,43 +216,48 @@ void main() {
       expect(queue[2]['ytid'], equals('s2'));
     });
 
-    test('Shuffle preserves currently playing track at index 0 and unshuffle restores order', () {
-      final originalList = <Map>[
-        {'id': 's0', 'ytid': 's0'},
-        {'id': 's1', 'ytid': 's1'},
-        {'id': 's2', 'ytid': 's2'},
-        {'id': 's3', 'ytid': 's3'},
-        {'id': 's4', 'ytid': 's4'},
-      ];
+    test(
+      'Shuffle preserves currently playing track at index 0 and unshuffle restores order',
+      () {
+        final originalList = <Map>[
+          {'id': 's0', 'ytid': 's0'},
+          {'id': 's1', 'ytid': 's1'},
+          {'id': 's2', 'ytid': 's2'},
+          {'id': 's3', 'ytid': 's3'},
+          {'id': 's4', 'ytid': 's4'},
+        ];
 
-      final queue = originalList.map((s) => idManager.createSong(s)).toList();
-      var currentQueueIndex = 2; // currently playing s2
-      final currentPlayingId = queue[currentQueueIndex]['queueEntryId'];
+        final queue = originalList.map((s) => idManager.createSong(s)).toList();
+        var currentQueueIndex = 2; // currently playing s2
+        final currentPlayingId = queue[currentQueueIndex]['queueEntryId'];
 
-      // Backup original queue
-      final backupQueue = List<Map>.from(queue);
+        // Backup original queue
+        final backupQueue = List<Map>.from(queue);
 
-      // Enable Shuffle:
-      final currentSong = queue[currentQueueIndex];
-      final remaining = queue.where((s) => s['queueEntryId'] != currentPlayingId).toList();
-      remaining.shuffle();
-      final shuffledQueue = <Map>[currentSong, ...remaining];
-      currentQueueIndex = 0;
+        // Enable Shuffle:
+        final currentSong = queue[currentQueueIndex];
+        final remaining = queue
+            .where((s) => s['queueEntryId'] != currentPlayingId)
+            .toList();
+        remaining.shuffle();
+        final shuffledQueue = <Map>[currentSong, ...remaining];
+        currentQueueIndex = 0;
 
-      expect(shuffledQueue[0]['queueEntryId'], equals(currentPlayingId));
-      expect(shuffledQueue.length, equals(5));
+        expect(shuffledQueue[0]['queueEntryId'], equals(currentPlayingId));
+        expect(shuffledQueue.length, equals(5));
 
-      // Disable Shuffle: restore original queue
-      final restoredQueue = List<Map>.from(backupQueue);
-      final restoredCurrentIndex = restoredQueue.indexWhere(
-        (s) => s['queueEntryId'] == currentPlayingId,
-      );
+        // Disable Shuffle: restore original queue
+        final restoredQueue = List<Map>.from(backupQueue);
+        final restoredCurrentIndex = restoredQueue.indexWhere(
+          (s) => s['queueEntryId'] == currentPlayingId,
+        );
 
-      expect(restoredCurrentIndex, equals(2));
-      expect(restoredQueue[restoredCurrentIndex]['ytid'], equals('s2'));
-      expect(restoredQueue[0]['ytid'], equals('s0'));
-      expect(restoredQueue[4]['ytid'], equals('s4'));
-    });
+        expect(restoredCurrentIndex, equals(2));
+        expect(restoredQueue[restoredCurrentIndex]['ytid'], equals('s2'));
+        expect(restoredQueue[0]['ytid'], equals('s0'));
+        expect(restoredQueue[4]['ytid'], equals('s4'));
+      },
+    );
 
     test('Repeat Mode transition logic', () {
       var repeatMode = AudioServiceRepeatMode.none;
@@ -235,13 +265,15 @@ void main() {
       // Repeat Off: at end of queue, does not wrap
       var queueLength = 3;
       var currentIndex = 2;
-      bool shouldWrap = (currentIndex >= queueLength - 1) &&
+      bool shouldWrap =
+          (currentIndex >= queueLength - 1) &&
           (repeatMode == AudioServiceRepeatMode.all);
       expect(shouldWrap, isFalse);
 
       // Repeat All: at end of queue, wraps to 0
       repeatMode = AudioServiceRepeatMode.all;
-      shouldWrap = (currentIndex >= queueLength - 1) &&
+      shouldWrap =
+          (currentIndex >= queueLength - 1) &&
           (repeatMode == AudioServiceRepeatMode.all);
       expect(shouldWrap, isTrue);
 

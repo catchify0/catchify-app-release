@@ -91,9 +91,7 @@ class CatchifyNavigationDrawer extends StatelessWidget {
 
     final drawerBackground = isOled
         ? Colors.black
-        : (isDark
-            ? colorScheme.surfaceContainerLow
-            : colorScheme.surface);
+        : (isDark ? colorScheme.surfaceContainerLow : colorScheme.surface);
 
     final screenWidth = MediaQuery.sizeOf(context).width;
     final drawerWidth = math.min<double>(300, screenWidth * 0.78);
@@ -106,9 +104,7 @@ class CatchifyNavigationDrawer extends StatelessWidget {
       backgroundColor: drawerBackground,
       surfaceTintColor: Colors.transparent,
       shape: RoundedRectangleBorder(
-        borderRadius: const BorderRadius.horizontal(
-          right: Radius.circular(20),
-        ),
+        borderRadius: const BorderRadius.horizontal(right: Radius.circular(20)),
         side: BorderSide(
           color: colorScheme.outlineVariant.withValues(
             alpha: isDark ? 0.35 : 0.45,
@@ -353,9 +349,7 @@ class CatchifyNavigationDrawer extends StatelessWidget {
 
     final sheetBackground = isOled
         ? AppColors.pureBlackContainer
-        : (isDark
-            ? colorScheme.surfaceContainer
-            : colorScheme.surface);
+        : (isDark ? colorScheme.surfaceContainer : colorScheme.surface);
 
     showModalBottomSheet(
       context: context,
@@ -470,11 +464,7 @@ class CatchifyNavigationDrawer extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
         children: [
-          Icon(
-            icon,
-            size: 18,
-            color: colorScheme.primary,
-          ),
+          Icon(icon, size: 18, color: colorScheme.primary),
           const SizedBox(width: 12),
           Text(
             text,
@@ -548,8 +538,9 @@ class _DrawerItem extends StatelessWidget {
                     style: TextStyle(
                       color: isSelected ? activeColor : inactiveTextColor,
                       fontSize: 15.5,
-                      fontWeight:
-                          isSelected ? FontWeight.w700 : FontWeight.w500,
+                      fontWeight: isSelected
+                          ? FontWeight.w700
+                          : FontWeight.w500,
                       letterSpacing: -0.1,
                     ),
                   ),

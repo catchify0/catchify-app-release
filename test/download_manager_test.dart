@@ -52,17 +52,32 @@ void main() {
   });
 
   group('DownloadStatus & Progress Info Tests', () {
-    test('DownloadStatus fromString parses valid values and falls back safely', () {
-      expect(DownloadStatus.fromString('queued'), DownloadStatus.queued);
-      expect(DownloadStatus.fromString('downloading'), DownloadStatus.downloading);
-      expect(DownloadStatus.fromString('completed'), DownloadStatus.completed);
-      expect(DownloadStatus.fromString('failed'), DownloadStatus.failed);
-      expect(DownloadStatus.fromString('cancelled'), DownloadStatus.cancelled);
-      expect(DownloadStatus.fromString('deleting'), DownloadStatus.deleting);
-      expect(DownloadStatus.fromString('missing'), DownloadStatus.missing);
-      expect(DownloadStatus.fromString('unknown_value'), DownloadStatus.queued);
-      expect(DownloadStatus.fromString(null), DownloadStatus.queued);
-    });
+    test(
+      'DownloadStatus fromString parses valid values and falls back safely',
+      () {
+        expect(DownloadStatus.fromString('queued'), DownloadStatus.queued);
+        expect(
+          DownloadStatus.fromString('downloading'),
+          DownloadStatus.downloading,
+        );
+        expect(
+          DownloadStatus.fromString('completed'),
+          DownloadStatus.completed,
+        );
+        expect(DownloadStatus.fromString('failed'), DownloadStatus.failed);
+        expect(
+          DownloadStatus.fromString('cancelled'),
+          DownloadStatus.cancelled,
+        );
+        expect(DownloadStatus.fromString('deleting'), DownloadStatus.deleting);
+        expect(DownloadStatus.fromString('missing'), DownloadStatus.missing);
+        expect(
+          DownloadStatus.fromString('unknown_value'),
+          DownloadStatus.queued,
+        );
+        expect(DownloadStatus.fromString(null), DownloadStatus.queued);
+      },
+    );
 
     test('DownloadProgressInfo copyWith updates values properly', () {
       final info = DownloadProgressInfo(
@@ -91,107 +106,110 @@ void main() {
   });
 
   group('Canonical Download Metadata Preservation Tests', () {
-    test('buildCanonicalMetadata retains all required canonical and legacy fields', () {
-      final inputSong = {
-        'ytid': 'abc123xyz',
-        'title': 'Illuminati',
-        'artist': 'Sushin Shyam',
-        'artistId': 'artist_sushin',
-        'album': 'Aavesham',
-        'image': 'https://example.com/cover.jpg',
-        'highResImage': 'https://example.com/cover_hq.jpg',
-        'lowResImage': 'https://example.com/cover_lq.jpg',
-        'duration': 214,
-      };
+    test(
+      'buildCanonicalMetadata retains all required canonical and legacy fields',
+      () {
+        final inputSong = {
+          'ytid': 'abc123xyz',
+          'title': 'Illuminati',
+          'artist': 'Sushin Shyam',
+          'artistId': 'artist_sushin',
+          'album': 'Aavesham',
+          'image': 'https://example.com/cover.jpg',
+          'highResImage': 'https://example.com/cover_hq.jpg',
+          'lowResImage': 'https://example.com/cover_lq.jpg',
+          'duration': 214,
+        };
 
-      final canonical = DownloadManager.buildCanonicalMetadata(
-        song: inputSong,
-        ytid: 'abc123xyz',
-        localPath: '/local/path/tracks/abc123xyz.m4a',
-        artworkPath: '/local/path/artworks/abc123xyz.jpg',
-        fileSize: 4194304,
-        duration: 214,
-        status: DownloadStatus.completed,
-      );
+        final canonical = DownloadManager.buildCanonicalMetadata(
+          song: inputSong,
+          ytid: 'abc123xyz',
+          localPath: '/local/path/tracks/abc123xyz.m4a',
+          artworkPath: '/local/path/artworks/abc123xyz.jpg',
+          fileSize: 4194304,
+          duration: 214,
+          status: DownloadStatus.completed,
+        );
 
-      expect(canonical['ytid'], 'abc123xyz');
-      expect(canonical['id'], 'abc123xyz');
-      expect(canonical['title'], 'Illuminati');
-      expect(canonical['artist'], 'Sushin Shyam');
-      expect(canonical['artistId'], 'artist_sushin');
-      expect(canonical['album'], 'Aavesham');
-      expect(canonical['duration'], 214);
-      expect(canonical['localPath'], '/local/path/tracks/abc123xyz.m4a');
-      expect(canonical['audioPath'], '/local/path/tracks/abc123xyz.m4a');
-      expect(canonical['artworkPath'], '/local/path/artworks/abc123xyz.jpg');
-      expect(canonical['fileSize'], 4194304);
-      expect(canonical['status'], 'completed');
-      expect(canonical['isLive'], false);
-      expect(canonical['downloadedAt'], isNotNull);
-      expect(canonical['dateAdded'], isNotNull);
-    });
+        expect(canonical['ytid'], 'abc123xyz');
+        expect(canonical['id'], 'abc123xyz');
+        expect(canonical['title'], 'Illuminati');
+        expect(canonical['artist'], 'Sushin Shyam');
+        expect(canonical['artistId'], 'artist_sushin');
+        expect(canonical['album'], 'Aavesham');
+        expect(canonical['duration'], 214);
+        expect(canonical['localPath'], '/local/path/tracks/abc123xyz.m4a');
+        expect(canonical['audioPath'], '/local/path/tracks/abc123xyz.m4a');
+        expect(canonical['artworkPath'], '/local/path/artworks/abc123xyz.jpg');
+        expect(canonical['fileSize'], 4194304);
+        expect(canonical['status'], 'completed');
+        expect(canonical['isLive'], false);
+        expect(canonical['downloadedAt'], isNotNull);
+        expect(canonical['dateAdded'], isNotNull);
+      },
+    );
   });
 
   group('Storage Integrity & Missing File Reconciliation Tests', () {
-    test('reconcileStorageIntegrity marks missing tracks when files are absent', () async {
-      final validYtid = 'valid_song_1';
-      final validFilePath = FilePaths.getAudioPath(validYtid);
-      final validFile = File(validFilePath);
-      await validFile.writeAsString('mock audio content');
+    test(
+      'reconcileStorageIntegrity marks missing tracks when files are absent',
+      () async {
+        final validYtid = 'valid_song_1';
+        final validFilePath = FilePaths.getAudioPath(validYtid);
+        final validFile = File(validFilePath);
+        await validFile.writeAsString('mock audio content');
 
-      final missingYtid = 'missing_song_2';
+        final missingYtid = 'missing_song_2';
 
-      userOfflineSongs.value = [
-        {
-          'ytid': validYtid,
-          'title': 'Valid Song',
-          'status': 'queued',
-        },
-        {
-          'ytid': missingYtid,
-          'title': 'Missing Song',
-          'status': 'completed',
-        },
-      ];
+        userOfflineSongs.value = [
+          {'ytid': validYtid, 'title': 'Valid Song', 'status': 'queued'},
+          {'ytid': missingYtid, 'title': 'Missing Song', 'status': 'completed'},
+        ];
 
-      await DownloadManager.instance.reconcileStorageIntegrity();
+        await DownloadManager.instance.reconcileStorageIntegrity();
 
-      final result = userOfflineSongs.value;
-      expect(result.length, 2);
+        final result = userOfflineSongs.value;
+        expect(result.length, 2);
 
-      final validResult = result.firstWhere((s) => s['ytid'] == validYtid);
-      expect(validResult['status'], DownloadStatus.completed.name);
-      expect(validResult['fileSize'], greaterThan(0));
+        final validResult = result.firstWhere((s) => s['ytid'] == validYtid);
+        expect(validResult['status'], DownloadStatus.completed.name);
+        expect(validResult['fileSize'], greaterThan(0));
 
-      final missingResult = result.firstWhere((s) => s['ytid'] == missingYtid);
-      expect(missingResult['status'], DownloadStatus.missing.name);
-    });
+        final missingResult = result.firstWhere(
+          (s) => s['ytid'] == missingYtid,
+        );
+        expect(missingResult['status'], DownloadStatus.missing.name);
+      },
+    );
 
-    test('isSongAlreadyOffline verifies actual file existence on disk', () async {
-      final ytid = 'offline_verify_song';
-      final filePath = FilePaths.getAudioPath(ytid);
-      final file = File(filePath);
+    test(
+      'isSongAlreadyOffline verifies actual file existence on disk',
+      () async {
+        final ytid = 'offline_verify_song';
+        final filePath = FilePaths.getAudioPath(ytid);
+        final file = File(filePath);
 
-      userOfflineSongs.value = [
-        {
-          'ytid': ytid,
-          'title': 'Offline Verify Song',
-          'audioPath': filePath,
-          'status': 'completed',
-        },
-      ];
+        userOfflineSongs.value = [
+          {
+            'ytid': ytid,
+            'title': 'Offline Verify Song',
+            'audioPath': filePath,
+            'status': 'completed',
+          },
+        ];
 
-      // File does not exist yet
-      expect(isSongAlreadyOffline(ytid), isFalse);
+        // File does not exist yet
+        expect(isSongAlreadyOffline(ytid), isFalse);
 
-      // Create file on disk
-      await file.writeAsString('audio bytes');
-      expect(isSongAlreadyOffline(ytid), isTrue);
+        // Create file on disk
+        await file.writeAsString('audio bytes');
+        expect(isSongAlreadyOffline(ytid), isTrue);
 
-      // Delete file
-      await file.delete();
-      expect(isSongAlreadyOffline(ytid), isFalse);
-    });
+        // Delete file
+        await file.delete();
+        expect(isSongAlreadyOffline(ytid), isFalse);
+      },
+    );
   });
 
   group('Storage Accounting Tests', () {
@@ -219,10 +237,14 @@ void main() {
     });
 
     test('getStorageAccounting calculates files and bytes from disk', () async {
-      final testAudio = File('${applicationDirPath}/${FilePaths.tracksDir}/test_song.m4a');
+      final testAudio = File(
+        '${applicationDirPath}/${FilePaths.tracksDir}/test_song.m4a',
+      );
       await testAudio.writeAsBytes(List.filled(1024 * 100, 1)); // 100 KB
 
-      final testArtwork = File('${applicationDirPath}/${FilePaths.artworksDir}/test_song.jpg');
+      final testArtwork = File(
+        '${applicationDirPath}/${FilePaths.artworksDir}/test_song.jpg',
+      );
       await testArtwork.writeAsBytes(List.filled(1024 * 20, 2)); // 20 KB
 
       final accounting = await DownloadManager.instance.getStorageAccounting();

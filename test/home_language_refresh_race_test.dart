@@ -52,42 +52,51 @@ void main() {
     } catch (_) {}
   });
 
-  test('Race condition validation: Newer language request protects against stale overwrites', () async {
-    final cacheBox = Hive.box('cache');
-    await cacheBox.clear();
+  test(
+    'Race condition validation: Newer language request protects against stale overwrites',
+    () async {
+      final cacheBox = Hive.box('cache');
+      await cacheBox.clear();
 
-    // Fire Tamil request
-    setContentLanguagePreference('ta');
-    final taFuture = getUnifiedHomeFeed(forceRefresh: true);
+      // Fire Tamil request
+      setContentLanguagePreference('ta');
+      final taFuture = getUnifiedHomeFeed(forceRefresh: true);
 
-    // Immediately switch to Hindi and fire Hindi request
-    setContentLanguagePreference('hi');
-    final hiFuture = getUnifiedHomeFeed(forceRefresh: true);
+      // Immediately switch to Hindi and fire Hindi request
+      setContentLanguagePreference('hi');
+      final hiFuture = getUnifiedHomeFeed(forceRefresh: true);
 
-    // Wait for both to complete
-    final results = await Future.wait([taFuture, hiFuture]);
-    final taFeed = results[0];
-    final hiFeed = results[1];
+      // Wait for both to complete
+      final results = await Future.wait([taFuture, hiFuture]);
+      final taFeed = results[0];
+      final hiFeed = results[1];
 
-    expect(taFeed, isNotEmpty);
-    expect(hiFeed, isNotEmpty);
+      expect(taFeed, isNotEmpty);
+      expect(hiFeed, isNotEmpty);
 
-    // Current preference should be Hindi
-    expect(contentLanguagePreference, equals('hi'));
+      // Current preference should be Hindi
+      expect(contentLanguagePreference, equals('hi'));
 
-    // Fetching again without forceRefresh should yield Hindi feed, NOT Tamil
-    final currentFeed = await getUnifiedHomeFeed(forceRefresh: false);
-    expect(currentFeed, isNotEmpty);
+      // Fetching again without forceRefresh should yield Hindi feed, NOT Tamil
+      final currentFeed = await getUnifiedHomeFeed(forceRefresh: false);
+      expect(currentFeed, isNotEmpty);
 
-    final hiTopItem = hiFeed.first.contents.isNotEmpty ? hiFeed.first.contents.first['id'] : null;
-    final currentTopItem = currentFeed.first.contents.isNotEmpty ? currentFeed.first.contents.first['id'] : null;
+      final hiTopItem = hiFeed.first.contents.isNotEmpty
+          ? hiFeed.first.contents.first['id']
+          : null;
+      final currentTopItem = currentFeed.first.contents.isNotEmpty
+          ? currentFeed.first.contents.first['id']
+          : null;
 
-    if (hiTopItem != null && currentTopItem != null) {
-      expect(
-        currentTopItem,
-        equals(hiTopItem),
-        reason: 'Current cached feed must match Hindi (the latest requested language), not superseded Tamil',
-      );
-    }
-  }, timeout: const Timeout(Duration(seconds: 120)));
+      if (hiTopItem != null && currentTopItem != null) {
+        expect(
+          currentTopItem,
+          equals(hiTopItem),
+          reason:
+              'Current cached feed must match Hindi (the latest requested language), not superseded Tamil',
+        );
+      }
+    },
+    timeout: const Timeout(Duration(seconds: 120)),
+  );
 }

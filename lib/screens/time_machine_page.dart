@@ -29,7 +29,6 @@ import 'package:intl/intl.dart';
 import 'package:catchify/constants/app_constants.dart';
 import 'package:catchify/extensions/l10n.dart';
 import 'package:catchify/main.dart';
-import 'package:catchify/screens/user_songs_page.dart';
 import 'package:catchify/services/listening_stats_service.dart';
 import 'package:catchify/services/settings_manager.dart';
 import 'package:catchify/utilities/app_utils.dart';
@@ -73,21 +72,14 @@ class _TimeMachinePageState extends State<TimeMachinePage> {
   @override
   Widget build(BuildContext context) {
     return ValueListenableBuilder<bool>(
-      valueListenable: offlineMode,
-      builder: (context, isOffline, _) {
-        if (isOffline) return const UserSongsPage(page: 'offline');
-
-        return ValueListenableBuilder<bool>(
-          valueListenable: wrappedEnabled,
-          builder: (context, isEnabled, _) {
-            final showEmpty = !isEnabled || !listeningStatsService.hasStats;
-            return Scaffold(
-              appBar: AppBar(title: Text(context.l10n!.timeMachine)),
-              body: showEmpty
-                  ? _buildEmptyState(context)
-                  : _buildTimeMachine(context),
-            );
-          },
+      valueListenable: wrappedEnabled,
+      builder: (context, isEnabled, _) {
+        final showEmpty = !isEnabled || !listeningStatsService.hasStats;
+        return Scaffold(
+          appBar: AppBar(title: Text(context.l10n!.timeMachine)),
+          body: showEmpty
+              ? _buildEmptyState(context)
+              : _buildTimeMachine(context),
         );
       },
     );
@@ -140,8 +132,7 @@ class _TimeMachinePageState extends State<TimeMachinePage> {
             key: ValueKey('month-${section.monthKey}'),
             child: _buildMonthSection(context, section.monthKey!),
           ),
-          _TimeMachineSectionKind.bottomSpace =>
-            const MiniPlayerBottomSpace(),
+          _TimeMachineSectionKind.bottomSpace => const MiniPlayerBottomSpace(),
         };
       },
     );

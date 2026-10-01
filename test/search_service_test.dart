@@ -34,19 +34,19 @@ void main() {
           'topResultType': 'song',
         },
         songs: [
-          {'id': 's1', 'title': 'Song One', 'artist': 'Artist One'}
+          {'id': 's1', 'title': 'Song One', 'artist': 'Artist One'},
         ],
         albums: [
-          {'id': 'a1', 'title': 'Album One'}
+          {'id': 'a1', 'title': 'Album One'},
         ],
         artists: [
-          {'id': 'art1', 'name': 'Artist One'}
+          {'id': 'art1', 'name': 'Artist One'},
         ],
         playlists: [
-          {'id': 'p1', 'title': 'Playlist One'}
+          {'id': 'p1', 'title': 'Playlist One'},
         ],
         videos: [
-          {'id': 'v1', 'title': 'Video One', 'isVideo': true}
+          {'id': 'v1', 'title': 'Video One', 'isVideo': true},
         ],
         timestamp: DateTime(2026, 9, 17, 12, 0, 0),
       );
@@ -71,10 +71,7 @@ void main() {
     });
 
     test('Empty SearchResultPayload handles checks correctly', () {
-      final empty = SearchResultPayload(
-        query: '',
-        timestamp: DateTime.now(),
-      );
+      final empty = SearchResultPayload(query: '', timestamp: DateTime.now());
 
       expect(empty.isEmpty, isTrue);
       expect(empty.isNotEmpty, isFalse);

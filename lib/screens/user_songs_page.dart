@@ -105,7 +105,6 @@ class _UserSongsPageState extends State<UserSongsPage> {
         leading: (ModalRoute.of(context)?.canPop ?? false)
             ? null
             : const CatchifyMenuButton(),
-        title: offlineMode.value ? Text(title) : null,
         actions: [
           if (isLocalSongs)
             IconButton(

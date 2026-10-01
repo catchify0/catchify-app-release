@@ -70,7 +70,10 @@ void main() {
     );
 
     expect(find.byIcon(Icons.library_music), findsOneWidget);
-    expect(find.text('பரிந்துரைக்கப்பட்ட இசை மற்றும் புதிய வெளியீடுகள்'), findsOneWidget);
+    expect(
+      find.text('பரிந்துரைக்கப்பட்ட இசை மற்றும் புதிய வெளியீடுகள்'),
+      findsOneWidget,
+    );
     expect(tester.takeException(), isNull);
   });
 
@@ -90,9 +93,7 @@ void main() {
     WidgetTester tester,
   ) async {
     await tester.pumpWidget(
-      const MaterialApp(
-        home: Scaffold(body: CatchifyBrandIcon(size: 64)),
-      ),
+      const MaterialApp(home: Scaffold(body: CatchifyBrandIcon(size: 64))),
     );
 
     await tester.pumpAndSettle();

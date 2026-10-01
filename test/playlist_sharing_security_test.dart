@@ -5,7 +5,9 @@ import 'package:catchify/services/playlist_sharing.dart';
 
 void main() {
   test('rejects a non-map shared playlist payload', () async {
-    final encoded = base64Url.encode(utf8.encode(jsonEncode(['not', 'a', 'map'])));
+    final encoded = base64Url.encode(
+      utf8.encode(jsonEncode(['not', 'a', 'map'])),
+    );
 
     expect(
       await PlaylistSharingService.decodeAndExpandPlaylist(encoded),
@@ -34,7 +36,12 @@ void main() {
       utf8.encode(
         jsonEncode({
           'title': 'Invalid',
-          'list': [null, '', 42, <String, String>{'id': 'wrong-field'}],
+          'list': [
+            null,
+            '',
+            42,
+            <String, String>{'id': 'wrong-field'},
+          ],
         }),
       ),
     );

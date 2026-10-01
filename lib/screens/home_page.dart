@@ -307,7 +307,9 @@ class _HomePageState extends State<HomePage> {
                 ),
                 const SizedBox(height: 3),
                 Text(
-                  DateFormat('EEEE, d MMMM').format(DateTime.now()).toUpperCase(),
+                  DateFormat(
+                    'EEEE, d MMMM',
+                  ).format(DateTime.now()).toUpperCase(),
                   style: TextStyle(
                     fontSize: 11.5,
                     fontWeight: FontWeight.w600,

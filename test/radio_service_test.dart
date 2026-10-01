@@ -65,11 +65,12 @@ void main() {
         continuation: 'continuation_token_xyz',
       );
       expect(resultWithContinuation.tracks, isEmpty);
-      expect(resultWithContinuation.continuation, equals('continuation_token_xyz'));
-
-      const resultWithoutContinuation = MusicRadioResult(
-        tracks: [],
+      expect(
+        resultWithContinuation.continuation,
+        equals('continuation_token_xyz'),
       );
+
+      const resultWithoutContinuation = MusicRadioResult(tracks: []);
       expect(resultWithoutContinuation.continuation, isNull);
     });
 
@@ -93,104 +94,110 @@ void main() {
       expect(remaining <= threshold, isTrue);
     });
 
-    test('Autoplay repeat precedence: Repeat One and Repeat All disable autoplay expansion', () {
-      bool shouldTriggerAutoplay({
-        required AudioServiceRepeatMode repeatMode,
-        required bool autoplayEnabled,
-        required int remaining,
-        required int threshold,
-      }) {
-        if (repeatMode == AudioServiceRepeatMode.one ||
-            repeatMode == AudioServiceRepeatMode.all) {
-          return false;
+    test(
+      'Autoplay repeat precedence: Repeat One and Repeat All disable autoplay expansion',
+      () {
+        bool shouldTriggerAutoplay({
+          required AudioServiceRepeatMode repeatMode,
+          required bool autoplayEnabled,
+          required int remaining,
+          required int threshold,
+        }) {
+          if (repeatMode == AudioServiceRepeatMode.one ||
+              repeatMode == AudioServiceRepeatMode.all) {
+            return false;
+          }
+          if (!autoplayEnabled) return false;
+          return remaining <= threshold;
         }
-        if (!autoplayEnabled) return false;
-        return remaining <= threshold;
-      }
 
-      // Repeat One -> false
-      expect(
-        shouldTriggerAutoplay(
-          repeatMode: AudioServiceRepeatMode.one,
-          autoplayEnabled: true,
-          remaining: 2,
-          threshold: 3,
-        ),
-        isFalse,
-      );
+        // Repeat One -> false
+        expect(
+          shouldTriggerAutoplay(
+            repeatMode: AudioServiceRepeatMode.one,
+            autoplayEnabled: true,
+            remaining: 2,
+            threshold: 3,
+          ),
+          isFalse,
+        );
 
-      // Repeat All -> false
-      expect(
-        shouldTriggerAutoplay(
-          repeatMode: AudioServiceRepeatMode.all,
-          autoplayEnabled: true,
-          remaining: 2,
-          threshold: 3,
-        ),
-        isFalse,
-      );
+        // Repeat All -> false
+        expect(
+          shouldTriggerAutoplay(
+            repeatMode: AudioServiceRepeatMode.all,
+            autoplayEnabled: true,
+            remaining: 2,
+            threshold: 3,
+          ),
+          isFalse,
+        );
 
-      // Repeat None + Autoplay OFF -> false
-      expect(
-        shouldTriggerAutoplay(
-          repeatMode: AudioServiceRepeatMode.none,
-          autoplayEnabled: false,
-          remaining: 2,
-          threshold: 3,
-        ),
-        isFalse,
-      );
+        // Repeat None + Autoplay OFF -> false
+        expect(
+          shouldTriggerAutoplay(
+            repeatMode: AudioServiceRepeatMode.none,
+            autoplayEnabled: false,
+            remaining: 2,
+            threshold: 3,
+          ),
+          isFalse,
+        );
 
-      // Repeat None + Autoplay ON + remaining <= threshold -> true
-      expect(
-        shouldTriggerAutoplay(
-          repeatMode: AudioServiceRepeatMode.none,
-          autoplayEnabled: true,
-          remaining: 2,
-          threshold: 3,
-        ),
-        isTrue,
-      );
+        // Repeat None + Autoplay ON + remaining <= threshold -> true
+        expect(
+          shouldTriggerAutoplay(
+            repeatMode: AudioServiceRepeatMode.none,
+            autoplayEnabled: true,
+            remaining: 2,
+            threshold: 3,
+          ),
+          isTrue,
+        );
 
-      // Repeat None + Autoplay ON + remaining > threshold -> false
-      expect(
-        shouldTriggerAutoplay(
-          repeatMode: AudioServiceRepeatMode.none,
-          autoplayEnabled: true,
-          remaining: 5,
-          threshold: 3,
-        ),
-        isFalse,
-      );
-    });
+        // Repeat None + Autoplay ON + remaining > threshold -> false
+        expect(
+          shouldTriggerAutoplay(
+            repeatMode: AudioServiceRepeatMode.none,
+            autoplayEnabled: true,
+            remaining: 5,
+            threshold: 3,
+          ),
+          isFalse,
+        );
+      },
+    );
 
-    test('Deduplication filters out tracks already present in active queue', () {
-      final queueIds = {'song_1', 'song_2', 'song_3'};
-      final candidates = [
-        {'ytid': 'song_2', 'title': 'Duplicate Song'},
-        {'ytid': 'song_4', 'title': 'Fresh Song 1'},
-        {'ytid': 'song_1', 'title': 'Duplicate Seed'},
-        {'ytid': 'song_5', 'title': 'Fresh Song 2'},
-      ];
+    test(
+      'Deduplication filters out tracks already present in active queue',
+      () {
+        final queueIds = {'song_1', 'song_2', 'song_3'};
+        final candidates = [
+          {'ytid': 'song_2', 'title': 'Duplicate Song'},
+          {'ytid': 'song_4', 'title': 'Fresh Song 1'},
+          {'ytid': 'song_1', 'title': 'Duplicate Seed'},
+          {'ytid': 'song_5', 'title': 'Fresh Song 2'},
+        ];
 
-      final filtered = <Map>[];
-      var duplicatesSkipped = 0;
+        final filtered = <Map>[];
+        var duplicatesSkipped = 0;
 
-      for (final candidate in candidates) {
-        final id = candidate['ytid']!;
-        if (queueIds.contains(id)) {
-          duplicatesSkipped++;
-        } else {
-          filtered.add(candidate);
-          queueIds.add(id);
+        for (final candidate in candidates) {
+          final id = candidate['ytid']!;
+          if (queueIds.contains(id)) {
+            duplicatesSkipped++;
+          } else {
+            filtered.add(candidate);
+            queueIds.add(id);
+          }
         }
-      }
 
-      expect(filtered.length, equals(2));
-      expect(filtered[0]['ytid'], equals('song_4'));
-      expect(filtered[1]['ytid'], equals('song_5'));
-      expect(duplicatesSkipped, equals(2));
-    });
+        expect(filtered.length, equals(2));
+        expect(filtered[0]['ytid'], equals('song_4'));
+        expect(filtered[1]['ytid'], equals('song_5'));
+        expect(duplicatesSkipped, equals(2));
+      },
+    );
 
     test('In-flight guard prevents multiple simultaneous fetch requests', () {
       var inFlight = false;

@@ -93,9 +93,21 @@ void main() {
     expect(taFeedCached, isNotEmpty);
 
     // Confirm that returning to Tamil reuses Tamil cached feed
-    final ta1FirstItem = taFeed1.first.contents.isNotEmpty ? (taFeed1.first.contents.first['ytid'] ?? taFeed1.first.contents.first['id'] ?? taFeed1.first.contents.first['title']) : null;
-    final taCachedFirstItem = taFeedCached.first.contents.isNotEmpty ? (taFeedCached.first.contents.first['ytid'] ?? taFeedCached.first.contents.first['id'] ?? taFeedCached.first.contents.first['title']) : null;
-    final hiFirstItem = hiFeed.first.contents.isNotEmpty ? (hiFeed.first.contents.first['ytid'] ?? hiFeed.first.contents.first['id'] ?? hiFeed.first.contents.first['title']) : null;
+    final ta1FirstItem = taFeed1.first.contents.isNotEmpty
+        ? (taFeed1.first.contents.first['ytid'] ??
+              taFeed1.first.contents.first['id'] ??
+              taFeed1.first.contents.first['title'])
+        : null;
+    final taCachedFirstItem = taFeedCached.first.contents.isNotEmpty
+        ? (taFeedCached.first.contents.first['ytid'] ??
+              taFeedCached.first.contents.first['id'] ??
+              taFeedCached.first.contents.first['title'])
+        : null;
+    final hiFirstItem = hiFeed.first.contents.isNotEmpty
+        ? (hiFeed.first.contents.first['ytid'] ??
+              hiFeed.first.contents.first['id'] ??
+              hiFeed.first.contents.first['title'])
+        : null;
 
     print('DEBUG ta1: $ta1FirstItem');
     print('DEBUG taCached: $taCachedFirstItem');

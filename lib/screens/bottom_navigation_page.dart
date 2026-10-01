@@ -85,10 +85,13 @@ class _BottomNavigationPageState extends State<BottomNavigationPage> {
               final bottomItems = _getBottomNavigationItems(isOfflineMode);
               final drawerItems = _getDrawerNavigationItems(isOfflineMode);
 
-              final currentBottomIndex =
-                  _getCurrentIndex(bottomItems, isOfflineMode);
+              final currentBottomIndex = _getCurrentIndex(
+                bottomItems,
+                isOfflineMode,
+              );
 
-              final railIndex = (currentBottomIndex >= 0 &&
+              final railIndex =
+                  (currentBottomIndex >= 0 &&
                       currentBottomIndex < bottomItems.length)
                   ? currentBottomIndex
                   : null;

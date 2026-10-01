@@ -317,172 +317,235 @@ void main() {
       },
     );
 
-    test('Suppresses accidental duplicate shelf titles between language sections and remote shelves', () {
-      final inputShelves = [
-        const HomeSection(
-          title: 'Trending songs for you',
-          type: HomeContentType.songs,
-          contents: [{'id': 'remote_trend_1', 'title': 'Remote Trending'}],
-        ),
-        const HomeSection(
-          title: 'Dancing on your own',
-          type: HomeContentType.playlists,
-          contents: [{'id': 'pl_hero', 'title': 'Hero Playlist'}],
-        ),
-        const HomeSection(
-          title: 'Featured playlists for you',
-          type: HomeContentType.playlists,
-          contents: [{'id': 'remote_feat_1', 'title': 'Remote Featured'}],
-        ),
-        const HomeSection(
-          title: 'Remote Chill',
-          type: HomeContentType.playlists,
-          contents: [{'id': 'pl_chill', 'title': 'Chill'}],
-        ),
-      ];
+    test(
+      'Suppresses accidental duplicate shelf titles between language sections and remote shelves',
+      () {
+        final inputShelves = [
+          const HomeSection(
+            title: 'Trending songs for you',
+            type: HomeContentType.songs,
+            contents: [
+              {'id': 'remote_trend_1', 'title': 'Remote Trending'},
+            ],
+          ),
+          const HomeSection(
+            title: 'Dancing on your own',
+            type: HomeContentType.playlists,
+            contents: [
+              {'id': 'pl_hero', 'title': 'Hero Playlist'},
+            ],
+          ),
+          const HomeSection(
+            title: 'Featured playlists for you',
+            type: HomeContentType.playlists,
+            contents: [
+              {'id': 'remote_feat_1', 'title': 'Remote Featured'},
+            ],
+          ),
+          const HomeSection(
+            title: 'Remote Chill',
+            type: HomeContentType.playlists,
+            contents: [
+              {'id': 'pl_chill', 'title': 'Chill'},
+            ],
+          ),
+        ];
 
-      final languageShelves = [
-        const HomeSection(
-          title: 'Trending songs for you',
-          type: HomeContentType.songs,
-          contents: [{'id': 'ta_trend_1', 'title': 'Tamil Trending'}],
-        ),
-        const HomeSection(
-          title: 'Featured playlists',
-          type: HomeContentType.playlists,
-          contents: [{'id': 'ta_feat_1', 'title': 'Kollywood Hitlist'}],
-        ),
-      ];
+        final languageShelves = [
+          const HomeSection(
+            title: 'Trending songs for you',
+            type: HomeContentType.songs,
+            contents: [
+              {'id': 'ta_trend_1', 'title': 'Tamil Trending'},
+            ],
+          ),
+          const HomeSection(
+            title: 'Featured playlists',
+            type: HomeContentType.playlists,
+            contents: [
+              {'id': 'ta_feat_1', 'title': 'Kollywood Hitlist'},
+            ],
+          ),
+        ];
 
-      final composed = HomeFeedComposer.compose(
-        remoteSections: inputShelves,
-        languageSections: languageShelves,
-      );
+        final composed = HomeFeedComposer.compose(
+          remoteSections: inputShelves,
+          languageSections: languageShelves,
+        );
 
-      final titles = composed.map((s) => s.title).toList();
-      // "Trending songs for you" appears once (from language)
-      expect(titles.where((t) => t.toLowerCase().contains('trending songs')).length, equals(1));
-      // "Featured playlists" appears once (from language)
-      expect(titles.where((t) => t.toLowerCase().contains('featured playlists')).length, equals(1));
-      // Remote's unique shelves are preserved
-      expect(titles, contains('Dancing on your own'));
-      expect(titles, contains('Remote Chill'));
-    });
+        final titles = composed.map((s) => s.title).toList();
+        // "Trending songs for you" appears once (from language)
+        expect(
+          titles
+              .where((t) => t.toLowerCase().contains('trending songs'))
+              .length,
+          equals(1),
+        );
+        // "Featured playlists" appears once (from language)
+        expect(
+          titles
+              .where((t) => t.toLowerCase().contains('featured playlists'))
+              .length,
+          equals(1),
+        );
+        // Remote's unique shelves are preserved
+        expect(titles, contains('Dancing on your own'));
+        expect(titles, contains('Remote Chill'));
+      },
+    );
 
-    test('Properly handles both Featured playlists and Trending community playlists simultaneously', () {
-      final languageShelves = [
-        const HomeSection(
-          title: 'Quick picks',
-          type: HomeContentType.songs,
-          contents: [{'id': 'qp_1', 'title': 'Language Quick Pick'}],
-        ),
-        const HomeSection(
-          title: 'Trending songs for you',
-          type: HomeContentType.songs,
-          contents: [{'id': 'ta_1', 'title': 'Tamil Song'}],
-        ),
-        const HomeSection(
-          title: 'Featured playlists',
-          subtitle: 'CURATED FOR YOU',
-          type: HomeContentType.playlists,
-          contents: [{'id': 'pl_feat_1', 'title': 'Kollywood Hitlist'}],
-        ),
-        const HomeSection(
-          title: 'Trending community playlists',
-          subtitle: 'COMMUNITY PLAYLISTS',
-          type: HomeContentType.playlists,
-          contents: [{'id': 'pl_comm_1', 'title': 'Tamil Workout Vibes'}],
-        ),
-      ];
+    test(
+      'Properly handles both Featured playlists and Trending community playlists simultaneously',
+      () {
+        final languageShelves = [
+          const HomeSection(
+            title: 'Quick picks',
+            type: HomeContentType.songs,
+            contents: [
+              {'id': 'qp_1', 'title': 'Language Quick Pick'},
+            ],
+          ),
+          const HomeSection(
+            title: 'Trending songs for you',
+            type: HomeContentType.songs,
+            contents: [
+              {'id': 'ta_1', 'title': 'Tamil Song'},
+            ],
+          ),
+          const HomeSection(
+            title: 'Featured playlists',
+            subtitle: 'CURATED FOR YOU',
+            type: HomeContentType.playlists,
+            contents: [
+              {'id': 'pl_feat_1', 'title': 'Kollywood Hitlist'},
+            ],
+          ),
+          const HomeSection(
+            title: 'Trending community playlists',
+            subtitle: 'COMMUNITY PLAYLISTS',
+            type: HomeContentType.playlists,
+            contents: [
+              {'id': 'pl_comm_1', 'title': 'Tamil Workout Vibes'},
+            ],
+          ),
+        ];
 
-      final remoteShelves = [
-        const HomeSection(
-          title: 'Quick picks',
-          type: HomeContentType.songs,
-          contents: [{'id': 'rem_qp_1', 'title': 'English Song'}],
-        ),
-        const HomeSection(
-          title: 'Community playlists',
-          type: HomeContentType.playlists,
-          contents: [{'id': 'rem_comm_1', 'title': 'Global Comm'}],
-        ),
-        const HomeSection(
-          title: 'Indie Discoveries',
-          type: HomeContentType.playlists,
-          contents: [{'id': 'pl_indie', 'title': 'Indie Playlist'}],
-        ),
-      ];
+        final remoteShelves = [
+          const HomeSection(
+            title: 'Quick picks',
+            type: HomeContentType.songs,
+            contents: [
+              {'id': 'rem_qp_1', 'title': 'English Song'},
+            ],
+          ),
+          const HomeSection(
+            title: 'Community playlists',
+            type: HomeContentType.playlists,
+            contents: [
+              {'id': 'rem_comm_1', 'title': 'Global Comm'},
+            ],
+          ),
+          const HomeSection(
+            title: 'Indie Discoveries',
+            type: HomeContentType.playlists,
+            contents: [
+              {'id': 'pl_indie', 'title': 'Indie Playlist'},
+            ],
+          ),
+        ];
 
-      final composed = HomeFeedComposer.compose(
-        remoteSections: remoteShelves,
-        languageSections: languageShelves,
-      );
+        final composed = HomeFeedComposer.compose(
+          remoteSections: remoteShelves,
+          languageSections: languageShelves,
+        );
 
-      final titles = composed.map((s) => s.title).toList();
-      // Language Quick picks is present, remote English Quick picks is suppressed
-      expect(titles.where((t) => t.toLowerCase().contains('quick picks')).length, equals(1));
-      expect(composed.first.contents.first['id'], equals('qp_1'));
+        final titles = composed.map((s) => s.title).toList();
+        // Language Quick picks is present, remote English Quick picks is suppressed
+        expect(
+          titles.where((t) => t.toLowerCase().contains('quick picks')).length,
+          equals(1),
+        );
+        expect(composed.first.contents.first['id'], equals('qp_1'));
 
-      // Both Featured playlists and Trending community playlists are present
-      expect(titles, contains('Featured playlists'));
-      expect(titles, contains('Trending community playlists'));
+        // Both Featured playlists and Trending community playlists are present
+        expect(titles, contains('Featured playlists'));
+        expect(titles, contains('Trending community playlists'));
 
-      // Remote duplicate 'Community playlists' is suppressed because Trending community playlists is present
-      expect(titles.where((t) => t.toLowerCase().contains('community playlists')).length, equals(1));
+        // Remote duplicate 'Community playlists' is suppressed because Trending community playlists is present
+        expect(
+          titles
+              .where((t) => t.toLowerCase().contains('community playlists'))
+              .length,
+          equals(1),
+        );
 
-      // Unique remote shelf 'Indie Discoveries' is kept
-      expect(titles, contains('Indie Discoveries'));
-    });
+        // Unique remote shelf 'Indie Discoveries' is kept
+        expect(titles, contains('Indie Discoveries'));
+      },
+    );
 
-    test('Places "Continue listening" (Recently played) at slot 0 as the top section', () {
-      final remoteShelves = [
-        const HomeSection(
-          title: 'Dancing on your own',
-          type: HomeContentType.playlists,
-          contents: [{'id': 'pl_hero'}],
-        ),
-      ];
+    test(
+      'Places "Continue listening" (Recently played) at slot 0 as the top section',
+      () {
+        final remoteShelves = [
+          const HomeSection(
+            title: 'Dancing on your own',
+            type: HomeContentType.playlists,
+            contents: [
+              {'id': 'pl_hero'},
+            ],
+          ),
+        ];
 
-      final languageShelves = [
-        const HomeSection(
-          title: 'Quick picks',
-          type: HomeContentType.songs,
-          contents: [{'id': 'qp_1'}],
-        ),
-        const HomeSection(
-          title: 'Trending songs for you',
-          type: HomeContentType.songs,
-          contents: [{'id': 'ta_1'}],
-        ),
-      ];
+        final languageShelves = [
+          const HomeSection(
+            title: 'Quick picks',
+            type: HomeContentType.songs,
+            contents: [
+              {'id': 'qp_1'},
+            ],
+          ),
+          const HomeSection(
+            title: 'Trending songs for you',
+            type: HomeContentType.songs,
+            contents: [
+              {'id': 'ta_1'},
+            ],
+          ),
+        ];
 
-      final personalizedShelves = [
-        const HomeSection(
-          title: 'Continue listening',
-          subtitle: 'RECENTLY PLAYED',
-          type: HomeContentType.songs,
-          contents: [{'id': 'recent_1'}],
-        ),
-        const HomeSection(
-          title: 'Made for you',
-          type: HomeContentType.songs,
-          contents: [{'id': 'mfy_1'}],
-        ),
-      ];
+        final personalizedShelves = [
+          const HomeSection(
+            title: 'Continue listening',
+            subtitle: 'RECENTLY PLAYED',
+            type: HomeContentType.songs,
+            contents: [
+              {'id': 'recent_1'},
+            ],
+          ),
+          const HomeSection(
+            title: 'Made for you',
+            type: HomeContentType.songs,
+            contents: [
+              {'id': 'mfy_1'},
+            ],
+          ),
+        ];
 
-      final composed = HomeFeedComposer.compose(
-        remoteSections: remoteShelves,
-        languageSections: languageShelves,
-        personalizedSections: personalizedShelves,
-      );
+        final composed = HomeFeedComposer.compose(
+          remoteSections: remoteShelves,
+          languageSections: languageShelves,
+          personalizedSections: personalizedShelves,
+        );
 
-      // Continue listening is placed at slot 0
-      expect(composed[0].title, equals('Continue listening'));
-      expect(composed[0].subtitle, equals('RECENTLY PLAYED'));
-      expect(composed[1].title, equals('Quick picks'));
-      expect(composed[2].title, equals('Trending songs for you'));
-      expect(composed[3].title, equals('Made for you'));
-    });
+        // Continue listening is placed at slot 0
+        expect(composed[0].title, equals('Continue listening'));
+        expect(composed[0].subtitle, equals('RECENTLY PLAYED'));
+        expect(composed[1].title, equals('Quick picks'));
+        expect(composed[2].title, equals('Trending songs for you'));
+        expect(composed[3].title, equals('Made for you'));
+      },
+    );
 
     test('Formats diagnostic home order string correctly', () {
       final sections = [
