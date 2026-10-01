@@ -7,8 +7,10 @@ void main() {
     int selectedIndex = 0,
     bool isOfflineMode = false,
     ValueChanged<int>? onDestinationSelected,
+    ThemeData? theme,
   }) {
     return MaterialApp(
+      theme: theme,
       home: Scaffold(
         key: CatchifyNavigationDrawer.scaffoldKey,
         drawer: CatchifyNavigationDrawer(
@@ -224,5 +226,91 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text("You're on Catchify Premium!"), findsNothing);
+  });
+
+  testWidgets('CatchifyNavigationDrawer renders properly in Light theme mode', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(
+      buildTestScaffold(
+        theme: ThemeData(
+          brightness: Brightness.light,
+          colorScheme: const ColorScheme.light(
+            primary: Color(0xFF9948EF),
+            surface: Color(0xFFF7F8FA),
+          ),
+        ),
+      ),
+    );
+
+    // Open drawer
+    await tester.tap(find.text('Open Menu'));
+    await tester.pumpAndSettle();
+
+    // Verify all core elements are present
+    expect(find.text('Catchify'), findsOneWidget);
+    expect(find.text('Home'), findsOneWidget);
+    expect(find.text('My Music'), findsOneWidget);
+    expect(find.text('Playlists'), findsOneWidget);
+    expect(find.text('Settings'), findsOneWidget);
+    expect(find.text('Go Premium'), findsOneWidget);
+  });
+
+  testWidgets('CatchifyNavigationDrawer renders properly in Dark theme mode', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(
+      buildTestScaffold(
+        theme: ThemeData(
+          brightness: Brightness.dark,
+          colorScheme: const ColorScheme.dark(
+            primary: Color(0xFF9948EF),
+            surface: Color(0xFF0D0D10),
+            surfaceContainerLow: Color(0xFF141418),
+          ),
+        ),
+      ),
+    );
+
+    // Open drawer
+    await tester.tap(find.text('Open Menu'));
+    await tester.pumpAndSettle();
+
+    // Verify all core elements are present
+    expect(find.text('Catchify'), findsOneWidget);
+    expect(find.text('Home'), findsOneWidget);
+    expect(find.text('My Music'), findsOneWidget);
+    expect(find.text('Playlists'), findsOneWidget);
+    expect(find.text('Settings'), findsOneWidget);
+    expect(find.text('Go Premium'), findsOneWidget);
+  });
+
+  testWidgets('CatchifyNavigationDrawer renders properly in OLED Pure Black theme mode', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(
+      buildTestScaffold(
+        theme: ThemeData(
+          brightness: Brightness.dark,
+          colorScheme: const ColorScheme.dark(
+            primary: Color(0xFF1DB954),
+            surface: Colors.black,
+            surfaceContainerLow: Colors.black,
+          ),
+        ),
+      ),
+    );
+
+    // Open drawer
+    await tester.tap(find.text('Open Menu'));
+    await tester.pumpAndSettle();
+
+    // Verify all core elements are present
+    expect(find.text('Catchify'), findsOneWidget);
+    expect(find.text('Home'), findsOneWidget);
+    expect(find.text('My Music'), findsOneWidget);
+    expect(find.text('Playlists'), findsOneWidget);
+    expect(find.text('Settings'), findsOneWidget);
+    expect(find.text('Go Premium'), findsOneWidget);
   });
 }
