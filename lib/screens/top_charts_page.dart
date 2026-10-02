@@ -59,16 +59,18 @@ class _TopChartsPageState extends State<TopChartsPage> {
   void initState() {
     super.initState();
     _loadCharts();
-    contentCountryPreferenceNotifier.addListener(_onCountryChanged);
+    contentCountryPreferenceNotifier.addListener(_onPreferenceChanged);
+    contentLanguagePreferenceNotifier.addListener(_onPreferenceChanged);
   }
 
   @override
   void dispose() {
-    contentCountryPreferenceNotifier.removeListener(_onCountryChanged);
+    contentCountryPreferenceNotifier.removeListener(_onPreferenceChanged);
+    contentLanguagePreferenceNotifier.removeListener(_onPreferenceChanged);
     super.dispose();
   }
 
-  void _onCountryChanged() {
+  void _onPreferenceChanged() {
     if (!mounted) return;
     setState(() {
       _loadCharts(forceRefresh: true);
@@ -116,7 +118,6 @@ class _TopChartsPageState extends State<TopChartsPage> {
     final countryName = currentCountryCode == 'GLOBAL'
         ? 'Global'
         : currentCountry.name;
-    final displayCountryName = countryName;
 
     return Scaffold(
       appBar: AppBar(
@@ -144,33 +145,47 @@ class _TopChartsPageState extends State<TopChartsPage> {
           ],
         ),
         actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 12),
-            child: ActionChip(
-              avatar: Text(
-                currentCountry.flag,
-                style: const TextStyle(fontSize: 14),
-              ),
-              label: Text(
-                displayCountryName,
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: colorScheme.primary,
-                ),
-              ),
-              backgroundColor: colorScheme.primary.withValues(alpha: 0.12),
-              side: BorderSide(
-                color: colorScheme.primary.withValues(alpha: 0.25),
-                width: 0.8,
-              ),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(AppTokens.radiusPill),
-              ),
-              onPressed: () {
-                showRegionSwitcherSheet(context);
-              },
-            ),
+          ValueListenableBuilder<String>(
+            valueListenable: contentCountryPreferenceNotifier,
+            builder: (context, countryCode, _) {
+              final country = getCountryByCode(countryCode);
+              return ValueListenableBuilder<String?>(
+                valueListenable: contentLanguagePreferenceNotifier,
+                builder: (context, langCode, _) {
+                  final lang = getMusicLanguageByCode(langCode ?? 'en');
+                  final regionLabel =
+                      country.code == 'GLOBAL' ? 'Global' : country.code;
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 12),
+                    child: ActionChip(
+                      avatar: Text(
+                        country.flag,
+                        style: const TextStyle(fontSize: 14),
+                      ),
+                      label: Text(
+                        '$regionLabel • ${lang.nativeName}',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: colorScheme.primary,
+                        ),
+                      ),
+                      backgroundColor:
+                          colorScheme.primary.withValues(alpha: 0.12),
+                      side: BorderSide(
+                        color: colorScheme.primary.withValues(alpha: 0.25),
+                        width: 0.8,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius:
+                            BorderRadius.circular(AppTokens.radiusPill),
+                      ),
+                      onPressed: () => showLanguageRegionSetupSheet(context),
+                    ),
+                  );
+                },
+              );
+            },
           ),
         ],
       ),

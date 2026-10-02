@@ -4068,12 +4068,13 @@ Future<List<HomeSection>> _loadUnifiedHomeFeed({
           'gl=$reg browseId=FEmusic_home',
         );
       }
+      final glCode = reg == 'GLOBAL' ? 'US' : reg;
       final remoteFuture = isRegionalLanguage
           ? Future.value(<HomeSection>[])
           : (() {
               final remoteWatch = Stopwatch()..start();
               return ytMusicClient.music
-                  .getHomeFeed(hl: transportHl, gl: reg)
+                  .getHomeFeed(hl: transportHl, gl: glCode)
                   .timeout(const Duration(seconds: 8))
                   .then((res) {
                     remoteMs = remoteWatch.elapsedMilliseconds;
