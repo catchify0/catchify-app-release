@@ -28,43 +28,6 @@ import 'package:catchify/services/settings_manager.dart';
 import 'package:catchify/theme/app_text_styles.dart';
 import 'package:catchify/utilities/language_utils.dart';
 
-class _LanguageOption {
-  const _LanguageOption(this.code, this.native, this.english);
-
-  final String code;
-  final String native;
-  final String english;
-}
-
-const _allLanguages = [
-  _LanguageOption('ta', 'தமிழ்', 'Tamil'),
-  _LanguageOption('hi', 'हिंदी', 'Hindi'),
-  _LanguageOption('te', 'తెలుగు', 'Telugu'),
-  _LanguageOption('en', 'English', 'English'),
-  _LanguageOption('ml', 'മലയാളം', 'Malayalam'),
-  _LanguageOption('kn', 'ಕನ್ನಡ', 'Kannada'),
-  _LanguageOption('pa', 'ਪੰਜਾਬੀ', 'Punjabi'),
-  _LanguageOption('es', 'Español', 'Spanish / Latin'),
-  _LanguageOption('ko', '한국어', 'Korean / K-Pop'),
-  _LanguageOption('ja', '日本語', 'Japanese / J-Pop'),
-  _LanguageOption('fr', 'Français', 'French'),
-  _LanguageOption('de', 'Deutsch', 'German'),
-  _LanguageOption('pt', 'Português', 'Portuguese'),
-  _LanguageOption('id', 'Bahasa Indonesia', 'Indonesian'),
-  _LanguageOption('ar', 'العربية', 'Arabic'),
-  _LanguageOption('mr', 'मराठी', 'Marathi'),
-  _LanguageOption('bn', 'বাংলা', 'Bengali'),
-  _LanguageOption('gu', 'ગુજરાતી', 'Gujarati'),
-  _LanguageOption('ur', 'اردو', 'Urdu'),
-  _LanguageOption('it', 'Italiano', 'Italian'),
-  _LanguageOption('tr', 'Türkçe', 'Turkish'),
-  _LanguageOption('ru', 'Русский', 'Russian'),
-  _LanguageOption('or', 'ଓଡ଼ିଆ', 'Odia'),
-  _LanguageOption('as', 'অসমীয়া', 'Assamese'),
-  _LanguageOption('sa', 'संस्कृतम्', 'Sanskrit'),
-  _LanguageOption('kok', 'कोंकणी', 'Konkani'),
-];
-
 class LanguageOnboardingPage extends StatefulWidget {
   const LanguageOnboardingPage({super.key});
 
@@ -157,16 +120,16 @@ class _LanguageOnboardingPageState extends State<LanguageOnboardingPage> {
     }
   }
 
-  List<_LanguageOption> _getSortedLanguages() {
+  List<MusicLanguageOption> _getSortedLanguages() {
     final country = getCountryByCode(_selectedCountry);
     final primary = country.primaryLanguages;
 
-    if (primary.isEmpty) return _allLanguages;
+    if (primary.isEmpty) return supportedMusicLanguages;
 
-    final priorityList = <_LanguageOption>[];
-    final remainingList = <_LanguageOption>[];
+    final priorityList = <MusicLanguageOption>[];
+    final remainingList = <MusicLanguageOption>[];
 
-    for (final lang in _allLanguages) {
+    for (final lang in supportedMusicLanguages) {
       if (primary.contains(lang.code)) {
         priorityList.add(lang);
       } else {
@@ -491,7 +454,7 @@ class _LanguageCard extends StatelessWidget {
     required this.onTap,
   });
 
-  final _LanguageOption language;
+  final MusicLanguageOption language;
   final bool isSelected;
   final VoidCallback onTap;
 
@@ -532,7 +495,7 @@ class _LanguageCard extends StatelessWidget {
                 children: [
                   Expanded(
                     child: Text(
-                      language.native,
+                      language.nativeName,
                       style: TextStyle(
                         color: isSelected
                             ? colorScheme.onPrimaryContainer
@@ -554,7 +517,7 @@ class _LanguageCard extends StatelessWidget {
                 ],
               ),
               Text(
-                language.english,
+                language.englishName,
                 style: TextStyle(
                   color: isSelected
                       ? colorScheme.onPrimaryContainer.withValues(alpha: 0.8)

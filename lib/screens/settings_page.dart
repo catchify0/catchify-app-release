@@ -22,7 +22,6 @@ import 'package:catchify/constants/app_constants.dart';
 import 'package:catchify/extensions/l10n.dart';
 import 'package:catchify/main.dart';
 import 'package:catchify/services/data_manager.dart';
-import 'package:catchify/services/playlists_manager.dart';
 import 'package:catchify/services/router_service.dart';
 import 'package:catchify/services/settings_manager.dart';
 import 'package:catchify/theme/app_text_styles.dart';
@@ -83,41 +82,13 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   void _showMusicLanguagePicker(BuildContext context) {
-    final languages = artistLanguageCodeToName.entries.toList();
-
-    showCustomBottomSheet(
-      context,
-      ListView.builder(
-        shrinkWrap: true,
-        physics: const BouncingScrollPhysics(),
-        padding: commonListViewBottomPadding,
-        itemCount: languages.length,
-        itemBuilder: (context, index) {
-          final entry = languages[index];
-          final code = entry.key;
-          final name = entry.value;
-          final isSelected =
-              (contentLanguagePreference ?? 'en').toLowerCase() ==
-              code.toLowerCase();
-
-          return BottomSheetBar(
-            name,
-            () {
-              setContentLanguagePreference(code);
-              setState(() {});
-              Navigator.pop(context);
-              showToast(context, context.l10n!.settingChangedMsg);
-            },
-            isSelected,
-            icon: FluentIcons.music_note_2_24_regular,
-          );
-        },
-      ),
-    );
+    showLanguageRegionSetupSheet(context, initialTab: 1).then((_) {
+      if (mounted) setState(() {});
+    });
   }
 
   void _showCountryPicker(BuildContext context) {
-    showRegionSwitcherSheet(context).then((_) {
+    showLanguageRegionSetupSheet(context).then((_) {
       if (mounted) setState(() {});
     });
   }
@@ -162,9 +133,10 @@ class _SettingsPageState extends State<SettingsPage> {
       context,
       languageSetting.languageCode,
     );
+    final currentMusicLangObj =
+        getMusicLanguageByCode(contentLanguagePreference);
     final currentMusicLang =
-        artistLanguageCodeToName[contentLanguagePreference ?? 'en'] ??
-        'English';
+        '${currentMusicLangObj.nativeName} (${currentMusicLangObj.englishName})';
     final currentCountry = getCountryByCode(contentCountryPreference);
 
     return Scaffold(

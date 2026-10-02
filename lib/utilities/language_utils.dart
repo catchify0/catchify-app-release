@@ -57,6 +57,58 @@ const supportedContentLanguageCodes = <String>{
   'ar',
 };
 
+class MusicLanguageOption {
+  const MusicLanguageOption({
+    required this.code,
+    required this.nativeName,
+    required this.englishName,
+  });
+
+  final String code;
+  final String nativeName;
+  final String englishName;
+}
+
+const supportedMusicLanguages = <MusicLanguageOption>[
+  MusicLanguageOption(code: 'ta', nativeName: 'தமிழ்', englishName: 'Tamil'),
+  MusicLanguageOption(code: 'hi', nativeName: 'हिंदी', englishName: 'Hindi'),
+  MusicLanguageOption(code: 'te', nativeName: 'తెలుగు', englishName: 'Telugu'),
+  MusicLanguageOption(code: 'en', nativeName: 'English', englishName: 'English'),
+  MusicLanguageOption(code: 'ml', nativeName: 'മലയാളം', englishName: 'Malayalam'),
+  MusicLanguageOption(code: 'kn', nativeName: 'ಕನ್ನಡ', englishName: 'Kannada'),
+  MusicLanguageOption(code: 'pa', nativeName: 'ਪੰਜਾਬੀ', englishName: 'Punjabi'),
+  MusicLanguageOption(code: 'es', nativeName: 'Español', englishName: 'Spanish / Latin'),
+  MusicLanguageOption(code: 'ko', nativeName: '한국어', englishName: 'Korean / K-Pop'),
+  MusicLanguageOption(code: 'ja', nativeName: '日本語', englishName: 'Japanese / J-Pop'),
+  MusicLanguageOption(code: 'fr', nativeName: 'Français', englishName: 'French'),
+  MusicLanguageOption(code: 'de', nativeName: 'Deutsch', englishName: 'German'),
+  MusicLanguageOption(code: 'pt', nativeName: 'Português', englishName: 'Portuguese'),
+  MusicLanguageOption(code: 'id', nativeName: 'Bahasa Indonesia', englishName: 'Indonesian'),
+  MusicLanguageOption(code: 'ar', nativeName: 'العربية', englishName: 'Arabic'),
+  MusicLanguageOption(code: 'mr', nativeName: 'मराठी', englishName: 'Marathi'),
+  MusicLanguageOption(code: 'bn', nativeName: 'বাংলা', englishName: 'Bengali'),
+  MusicLanguageOption(code: 'gu', nativeName: 'ગુજરાતી', englishName: 'Gujarati'),
+  MusicLanguageOption(code: 'ur', nativeName: 'اردو', englishName: 'Urdu'),
+  MusicLanguageOption(code: 'it', nativeName: 'Italiano', englishName: 'Italian'),
+  MusicLanguageOption(code: 'tr', nativeName: 'Türkçe', englishName: 'Turkish'),
+  MusicLanguageOption(code: 'ru', nativeName: 'Русский', englishName: 'Russian'),
+  MusicLanguageOption(code: 'or', nativeName: 'ଓଡ଼ିଆ', englishName: 'Odia'),
+  MusicLanguageOption(code: 'as', nativeName: 'অসমীয়া', englishName: 'Assamese'),
+  MusicLanguageOption(code: 'sa', nativeName: 'संस्कृतम्', englishName: 'Sanskrit'),
+  MusicLanguageOption(code: 'kok', nativeName: 'कोंकणी', englishName: 'Konkani'),
+];
+
+MusicLanguageOption getMusicLanguageByCode(String? languageCode) {
+  final clean = resolveContentLanguageCode(languageCode);
+  for (final lang in supportedMusicLanguages) {
+    if (lang.code == clean) return lang;
+  }
+  return supportedMusicLanguages.firstWhere(
+    (l) => l.code == 'en',
+    orElse: () => supportedMusicLanguages.first,
+  );
+}
+
 class CountryOption {
   const CountryOption({
     required this.code,
@@ -76,7 +128,7 @@ const supportedCountries = <CountryOption>[
     code: 'GLOBAL',
     name: 'Global / Worldwide',
     flag: '🌐',
-    primaryLanguages: ['en'],
+    primaryLanguages: ['en', 'es', 'ko', 'ja', 'hi', 'ta', 'fr'],
   ),
   CountryOption(
     code: 'IN',

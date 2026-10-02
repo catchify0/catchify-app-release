@@ -299,31 +299,41 @@ class _HomePageState extends State<HomePage> {
             valueListenable: contentCountryPreferenceNotifier,
             builder: (context, countryCode, _) {
               final country = getCountryByCode(countryCode);
-              return Padding(
-                padding: const EdgeInsets.only(right: 12),
-                child: ActionChip(
-                  avatar: Text(
-                    country.flag,
-                    style: const TextStyle(fontSize: 14),
-                  ),
-                  label: Text(
-                    country.code == 'GLOBAL' ? 'Global' : country.code,
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      color: colorScheme.primary,
+              return ValueListenableBuilder<String?>(
+                valueListenable: contentLanguagePreferenceNotifier,
+                builder: (context, langCode, _) {
+                  final lang = getMusicLanguageByCode(langCode ?? 'en');
+                  final regionLabel =
+                      country.code == 'GLOBAL' ? 'Global' : country.code;
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 12),
+                    child: ActionChip(
+                      avatar: Text(
+                        country.flag,
+                        style: const TextStyle(fontSize: 14),
+                      ),
+                      label: Text(
+                        '$regionLabel • ${lang.nativeName}',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: colorScheme.primary,
+                        ),
+                      ),
+                      backgroundColor:
+                          colorScheme.primary.withValues(alpha: 0.12),
+                      side: BorderSide(
+                        color: colorScheme.primary.withValues(alpha: 0.25),
+                        width: 0.8,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius:
+                            BorderRadius.circular(AppTokens.radiusPill),
+                      ),
+                      onPressed: () => showLanguageRegionSetupSheet(context),
                     ),
-                  ),
-                  backgroundColor: colorScheme.primary.withValues(alpha: 0.12),
-                  side: BorderSide(
-                    color: colorScheme.primary.withValues(alpha: 0.25),
-                    width: 0.8,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(AppTokens.radiusPill),
-                  ),
-                  onPressed: () => showRegionSwitcherSheet(context),
-                ),
+                  );
+                },
               );
             },
           ),
