@@ -34,10 +34,11 @@ import 'package:catchify/models/home_section.dart';
 import 'package:catchify/services/listening_stats_service.dart';
 import 'package:catchify/services/playlists_manager.dart';
 import 'package:catchify/services/settings_manager.dart';
+import 'package:catchify/theme/app_text_styles.dart';
 import 'package:catchify/utilities/app_utils.dart';
 import 'package:catchify/utilities/async_loader.dart';
+import 'package:catchify/utilities/language_utils.dart';
 import 'package:catchify/utilities/listening_stats_utils.dart';
-import 'package:catchify/theme/app_text_styles.dart';
 import 'package:catchify/widgets/announcement_box.dart';
 import 'package:catchify/widgets/catchify_menu_button.dart';
 import 'package:catchify/widgets/empty_state.dart';
@@ -46,6 +47,7 @@ import 'package:catchify/widgets/home_section_renderer.dart';
 import 'package:catchify/widgets/listening_recap_card.dart';
 import 'package:catchify/widgets/loading_skeleton.dart';
 import 'package:catchify/widgets/mini_player_bottom_space.dart';
+import 'package:catchify/widgets/region_switcher_sheet.dart';
 import 'package:catchify/widgets/section_header.dart';
 
 class HomePage extends StatefulWidget {
@@ -292,6 +294,40 @@ class _HomePageState extends State<HomePage> {
           ),
         ),
         centerTitle: false,
+        actions: [
+          ValueListenableBuilder<String>(
+            valueListenable: contentCountryPreferenceNotifier,
+            builder: (context, countryCode, _) {
+              final country = getCountryByCode(countryCode);
+              return Padding(
+                padding: const EdgeInsets.only(right: 12),
+                child: ActionChip(
+                  avatar: Text(
+                    country.flag,
+                    style: const TextStyle(fontSize: 14),
+                  ),
+                  label: Text(
+                    country.code == 'GLOBAL' ? 'Global' : country.code,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: colorScheme.primary,
+                    ),
+                  ),
+                  backgroundColor: colorScheme.primary.withValues(alpha: 0.12),
+                  side: BorderSide(
+                    color: colorScheme.primary.withValues(alpha: 0.25),
+                    width: 0.8,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppTokens.radiusPill),
+                  ),
+                  onPressed: () => showRegionSwitcherSheet(context),
+                ),
+              );
+            },
+          ),
+        ],
       ),
 
       body: RefreshIndicator.adaptive(

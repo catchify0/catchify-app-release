@@ -73,6 +73,12 @@ class CountryOption {
 
 const supportedCountries = <CountryOption>[
   CountryOption(
+    code: 'GLOBAL',
+    name: 'Global / Worldwide',
+    flag: '🌐',
+    primaryLanguages: ['en'],
+  ),
+  CountryOption(
     code: 'IN',
     name: 'India',
     flag: '🇮🇳',
@@ -232,6 +238,51 @@ CountryOption getCountryByCode(String? countryCode) {
     if (country.code == code) return country;
   }
   return supportedCountries.first;
+}
+
+/// Returns the authentic top chart query for a given country code to fetch
+/// official regional chart hits.
+String getCountryChartQuery(String? countryCode) {
+  final code = resolveCountryCode(countryCode);
+  switch (code) {
+    case 'GLOBAL':
+      return 'Global Top 50';
+    case 'US':
+      return 'Billboard Hot 100';
+    case 'GB':
+      return 'Official Singles Chart UK';
+    case 'JP':
+      return 'J-Pop Top Hits Japan';
+    case 'KR':
+      return 'K-Pop Top Hits';
+    case 'IN':
+      return 'Trending songs India';
+    case 'CA':
+      return 'Top 50 Canada';
+    case 'AU':
+      return 'Top 50 Australia';
+    case 'DE':
+      return 'Top 50 Germany';
+    case 'FR':
+      return 'Top 50 France';
+    case 'BR':
+      return 'Top 50 Brazil';
+    case 'MX':
+      return 'Top 50 Mexico';
+    case 'ES':
+      return 'Top 50 Spain';
+    case 'IT':
+      return 'Top 50 Italy';
+    case 'RU':
+      return 'Top 50 Russia';
+    case 'TR':
+      return 'Top 50 Turkey';
+    case 'ID':
+      return 'Top 50 Indonesia';
+    default:
+      final name = getCountryByCode(code).name;
+      return 'Trending songs $name';
+  }
 }
 
 /// Resolves a UI language code to a supported music content language code.

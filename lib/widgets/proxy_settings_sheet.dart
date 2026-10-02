@@ -262,12 +262,15 @@ class _ProxySettingsSheetState extends State<ProxySettingsSheet> {
                     _buildModeTile(
                       context: context,
                       mode: ProxyMode.countryMatch,
-                      title: 'Match Region (${currentCountry.code})',
-                      subtitle:
-                          'Routes through proxies in ${currentCountry.name} to match your selected region.',
+                      title: currentCountry.code == 'GLOBAL'
+                          ? 'Match Region (Global)'
+                          : 'Match Region (${currentCountry.code})',
+                      subtitle: currentCountry.code == 'GLOBAL'
+                          ? 'Routes through international proxies to match your selected region.'
+                          : 'Routes through proxies in ${currentCountry.name} to match your selected region.',
                       icon: FluentIcons.globe_24_regular,
                       isSelected: currentMode == ProxyMode.countryMatch,
-                      badge: currentCountry.code,
+                      badge: currentCountry.code == 'GLOBAL' ? 'GLOBAL' : currentCountry.code,
                       badgeColor: colorScheme.primary,
                       onTap: () {
                         setProxyMode(ProxyMode.countryMatch);

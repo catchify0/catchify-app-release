@@ -243,7 +243,8 @@ class ProxyManager {
     }
 
     if (mode == ProxyMode.countryMatch) {
-      final targetCountry = contentCountryPreference;
+      final targetCountry =
+          contentCountryPreference == 'GLOBAL' ? 'US' : contentCountryPreference;
       await _initSharedProxyClient(preferredCountry: targetCountry);
       return;
     }
@@ -727,7 +728,9 @@ class ProxyManager {
 
     final targetCountry =
         preferredCountry ??
-        (mode == ProxyMode.countryMatch ? contentCountryPreference : null);
+        (mode == ProxyMode.countryMatch
+            ? (contentCountryPreference == 'GLOBAL' ? 'US' : contentCountryPreference)
+            : null);
 
     if (DateTime.now().difference(_lastFetched).inMinutes >=
         _proxyRefreshIntervalMinutes) {

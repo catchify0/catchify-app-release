@@ -1050,7 +1050,8 @@ Future<List<Map<String, dynamic>>> getCommunityPlaylists({
   rawLang ??= 'en';
   final prefLang = artistLanguageCodeToName[rawLang] ?? rawLang;
 
-  final cacheKey = 'ytm_home_from_the_community_v4_$prefLang';
+  final country = contentCountryPreference;
+  final cacheKey = 'ytm_home_from_the_community_v5_${prefLang}_$country';
   var livePlaylists = <Map<String, dynamic>>[];
 
   if (!forceRefresh && Hive.isBoxOpen('cache')) {
@@ -1128,6 +1129,32 @@ Future<List<Map<String, dynamic>>> getCommunityPlaylists({
               'source': 'youtube-music-playlist',
             });
           }
+        }
+      } else {
+        // English / Global: fetch authentic country/global hit playlists
+        final countryName = getCountryByCode(country).name;
+        final playlistQuery = country == 'GLOBAL'
+            ? 'Global Top Hits Playlist'
+            : '$countryName Top Hits Playlist';
+        final searchPlaylists = await ytMusicClient.music
+            .searchPlaylists(playlistQuery, limit: limit)
+            .timeout(const Duration(seconds: 5))
+            .catchError((_) => <Map<String, dynamic>>[]);
+
+        for (final pl in searchPlaylists) {
+          final title = pl['title']?.toString() ?? '';
+          if (_isForbiddenVideoPlaylist(title)) continue;
+          final rawThumb = pl['image']?.toString();
+          final highResThumb = rawThumb != null
+              ? formatArtworkResolution(rawThumb, 1080)
+              : rawThumb;
+          livePlaylists.add({
+            ...pl,
+            if (highResThumb != null) 'image': highResThumb,
+            if (highResThumb != null) 'highResImage': highResThumb,
+            'source': 'youtube-music-playlist',
+          });
+          if (livePlaylists.length >= limit) break;
         }
       }
 
@@ -1387,7 +1414,8 @@ Future<List<Map<String, dynamic>>> getSuggestedArtists({
   rawLang ??= 'en';
   final prefLang = artistLanguageCodeToName[rawLang] ?? rawLang;
 
-  final cacheKey = 'dynamic_home_artists_v4_$prefLang';
+  final country = contentCountryPreference;
+  final cacheKey = 'dynamic_home_artists_v5_${prefLang}_$country';
   var liveArtists = <Map<String, dynamic>>[];
 
   if (!forceRefresh && !isOffline && Hive.isBoxOpen('cache')) {
@@ -1446,8 +1474,9 @@ Future<List<Map<String, dynamic>>> getSuggestedArtists({
 
       // 2. Fetch live Top Artists from YouTube Music Charts (strictly filtered to legitimate music artists)
       if (liveArtists.length < limit) {
+        final glCode = country == 'GLOBAL' ? 'US' : country;
         final chartsArtists = await ytMusicClient.music
-            .getChartsArtists()
+            .getChartsArtists(gl: glCode)
             .timeout(const Duration(seconds: 6))
             .catchError((_) => <Map<String, dynamic>>[]);
 
@@ -1497,6 +1526,39 @@ Future<List<Map<String, dynamic>>> getSuggestedArtists({
               'isArtist': true,
               'isVerifiedArtist': true,
             });
+          }
+        } catch (_) {}
+      }
+
+      // 4. For English/Global, search for regional/global top music artists if needed
+      if (liveArtists.length < limit && cleanLang == 'english') {
+        try {
+          final artistQuery = country == 'GLOBAL'
+              ? 'top music artists'
+              : '${getCountryByCode(country).name} top artists';
+          final regionalArtists = await ytMusicClient.music
+              .searchArtists(artistQuery)
+              .timeout(const Duration(seconds: 5))
+              .catchError((_) => <MusicArtist>[]);
+
+          for (final artist in regionalArtists) {
+            if (!_isLegitimateMusicArtist(artist.name)) continue;
+            if (liveArtists.any((a) => a['ytid'] == artist.id)) continue;
+            final rawThumb = artist.thumbnailUrl;
+            final highResThumb = rawThumb != null
+                ? formatArtworkResolution(rawThumb, 512)
+                : rawThumb;
+            liveArtists.add({
+              'ytid': artist.id,
+              'title': artist.name,
+              'image': highResThumb,
+              'lowResImage': rawThumb,
+              'highResImage': highResThumb,
+              'source': 'youtube-artist',
+              'isArtist': true,
+              'isVerifiedArtist': true,
+            });
+            if (liveArtists.length >= limit) break;
           }
         } catch (_) {}
       }
@@ -1887,7 +1949,7 @@ Future<List<Map<String, dynamic>>> getSuggestedNewReleases({
   final prefLang = artistLanguageCodeToName[rawLang] ?? rawLang;
   final country = contentCountryPreference;
 
-  final cacheKey = 'ytm_home_new_releases_v5_${prefLang}_$country';
+  final cacheKey = 'ytm_home_new_releases_v6_${prefLang}_$country';
   var liveSongs = <Map<String, dynamic>>[];
 
   // 1. Try cache if not forcing refresh and cache box is open
@@ -1958,6 +2020,24 @@ Future<List<Map<String, dynamic>>> getSuggestedNewReleases({
               if (isOfficialSquareArtwork(layout['image']?.toString())) {
                 liveSongs.add(layout);
               }
+            }
+          }
+        }
+      } else {
+        // English / Global: fetch authentic regional or worldwide new music
+        final countryName = getCountryByCode(country).name;
+        final releaseQuery = country == 'GLOBAL'
+            ? 'Global new releases'
+            : 'New music $countryName';
+        final regionalReleases = await ytMusicClient.music
+            .searchSongs(releaseQuery, limit: limit)
+            .timeout(const Duration(seconds: 5))
+            .catchError((_) => <Video>[]);
+        for (final (index, song) in regionalReleases.indexed) {
+          if (!liveSongs.any((s) => s['ytid'] == song.id.value)) {
+            final layout = returnSongLayout(liveSongs.length + index, song);
+            if (isOfficialSquareArtwork(layout['image']?.toString())) {
+              liveSongs.add(layout);
             }
           }
         }
@@ -2175,7 +2255,7 @@ Future<List<Map<String, dynamic>>> getTrendingSongsForYou({
   final prefLang = artistLanguageCodeToName[rawLang] ?? rawLang;
   final country = contentCountryPreference;
 
-  final cacheKey = 'ytm_pure_audio_trending_v6_${prefLang}_$country';
+  final cacheKey = 'ytm_pure_audio_trending_v7_${prefLang}_$country';
   var liveSongs = <Map<String, dynamic>>[];
 
   if (!forceRefresh && Hive.isBoxOpen('cache')) {
@@ -2194,9 +2274,7 @@ Future<List<Map<String, dynamic>>> getTrendingSongsForYou({
     try {
       final countryName = getCountryByCode(country).name;
       final query = prefLang.toLowerCase() == 'english'
-          ? (country == 'US'
-                ? 'Trending songs USA'
-                : 'Trending songs $countryName')
+          ? getCountryChartQuery(country)
           : 'Trending $prefLang';
 
       // 1. Primary: YouTube Music Official Trending Songs (dedicated Songs search filter)
@@ -2214,8 +2292,11 @@ Future<List<Map<String, dynamic>>> getTrendingSongsForYou({
 
       // 2. Supplement if needed with $prefLang Trending songs only if few songs loaded
       if (liveSongs.length < 8) {
+        final supplementQuery = prefLang.toLowerCase() == 'english'
+            ? (country == 'GLOBAL' ? 'Global Hits' : '$countryName Top Hits')
+            : '$prefLang Trending';
         final moreTrending = await ytMusicClient.music
-            .searchSongs('$prefLang Trending', limit: limit)
+            .searchSongs(supplementQuery, limit: limit)
             .timeout(const Duration(seconds: 4))
             .catchError((_) => <Video>[]);
 

@@ -39,6 +39,7 @@ import 'package:catchify/widgets/error_state.dart';
 import 'package:catchify/widgets/loading_skeleton.dart';
 import 'package:catchify/widgets/mini_player_bottom_space.dart';
 import 'package:catchify/widgets/playlist_card.dart';
+import 'package:catchify/widgets/region_switcher_sheet.dart';
 import 'package:catchify/widgets/section_header.dart';
 import 'package:catchify/widgets/song_bar.dart';
 
@@ -58,6 +59,20 @@ class _TopChartsPageState extends State<TopChartsPage> {
   void initState() {
     super.initState();
     _loadCharts();
+    contentCountryPreferenceNotifier.addListener(_onCountryChanged);
+  }
+
+  @override
+  void dispose() {
+    contentCountryPreferenceNotifier.removeListener(_onCountryChanged);
+    super.dispose();
+  }
+
+  void _onCountryChanged() {
+    if (!mounted) return;
+    setState(() {
+      _loadCharts(forceRefresh: true);
+    });
   }
 
   void _loadCharts({bool forceRefresh = false}) {
@@ -97,7 +112,11 @@ class _TopChartsPageState extends State<TopChartsPage> {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final currentCountryCode = contentCountryPreference;
-    final countryName = getCountryByCode(currentCountryCode).name;
+    final currentCountry = getCountryByCode(currentCountryCode);
+    final countryName = currentCountryCode == 'GLOBAL'
+        ? 'Global'
+        : currentCountry.name;
+    final displayCountryName = countryName;
 
     return Scaffold(
       appBar: AppBar(
@@ -128,13 +147,12 @@ class _TopChartsPageState extends State<TopChartsPage> {
           Padding(
             padding: const EdgeInsets.only(right: 12),
             child: ActionChip(
-              avatar: Icon(
-                FluentIcons.globe_20_regular,
-                size: 16,
-                color: colorScheme.primary,
+              avatar: Text(
+                currentCountry.flag,
+                style: const TextStyle(fontSize: 14),
               ),
               label: Text(
-                countryName,
+                displayCountryName,
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
@@ -150,7 +168,7 @@ class _TopChartsPageState extends State<TopChartsPage> {
                 borderRadius: BorderRadius.circular(AppTokens.radiusPill),
               ),
               onPressed: () {
-                context.push('/settings');
+                showRegionSwitcherSheet(context);
               },
             ),
           ),

@@ -34,6 +34,7 @@ import 'package:catchify/widgets/bottom_sheet_bar.dart';
 import 'package:catchify/widgets/catchify_menu_button.dart';
 import 'package:catchify/widgets/custom_bar.dart';
 import 'package:catchify/widgets/mini_player_bottom_space.dart';
+import 'package:catchify/widgets/region_switcher_sheet.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -116,31 +117,9 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   void _showCountryPicker(BuildContext context) {
-    showCustomBottomSheet(
-      context,
-      ListView.builder(
-        shrinkWrap: true,
-        physics: const BouncingScrollPhysics(),
-        padding: commonListViewBottomPadding,
-        itemCount: supportedCountries.length,
-        itemBuilder: (context, index) {
-          final country = supportedCountries[index];
-          final isSelected = contentCountryPreference == country.code;
-
-          return BottomSheetBar(
-            '${country.flag}  ${country.name}',
-            () {
-              setContentCountryPreference(country.code);
-              setState(() {});
-              Navigator.pop(context);
-              showToast(context, '${country.flag} ${country.name} selected');
-            },
-            isSelected,
-            icon: FluentIcons.globe_24_regular,
-          );
-        },
-      ),
-    );
+    showRegionSwitcherSheet(context).then((_) {
+      if (mounted) setState(() {});
+    });
   }
 
   Widget _sectionTitle(String title, Color primaryColor) {
@@ -309,7 +288,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    '${currentCountry.flag} ${currentCountry.name}',
+                    '${currentCountry.flag} ${currentCountry.code == 'GLOBAL' ? 'Global' : currentCountry.name}',
                     style: TextStyle(
                       color: primaryColor,
                       fontWeight: FontWeight.w600,
