@@ -312,14 +312,12 @@ class SearchService {
       _safeFetchArtists(query),
       _safeFetchAlbums(query),
       _safeFetchPlaylists(query),
-      _safeFetchVideos(query),
     ]);
 
     var songs = futures[0];
     final artists = futures[1];
     final albums = futures[2];
     final playlists = futures[3];
-    final videos = futures[4];
 
     // If songs are empty but artist matched, fallback query for artist tracks
     if (songs.isEmpty && artists.isNotEmpty) {
@@ -338,7 +336,7 @@ class SearchService {
       songs: songs,
       albums: albums,
       playlists: playlists,
-      videos: videos,
+      videos: const [],
     );
 
     return SearchResultPayload(
@@ -348,7 +346,6 @@ class SearchService {
       artists: artists,
       albums: albums,
       playlists: playlists,
-      videos: videos,
       timestamp: DateTime.now(),
     );
   }

@@ -391,8 +391,11 @@ Future<void> initialisation() async {
   }
 
   applicationDirPath = (await getApplicationDocumentsDirectory()).path;
-  await FilePaths.ensureDirectoriesExist();
-  await DownloadManager.instance.initialize();
+  unawaited(
+    FilePaths.ensureDirectoriesExist().then((_) {
+      return DownloadManager.instance.initialize();
+    }),
+  );
 }
 
 void handleIncomingLink(Uri? uri) async {

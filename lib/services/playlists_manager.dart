@@ -1597,7 +1597,7 @@ Future<Map<String, List<Map<String, dynamic>>>> _loadLanguageCategoryShelves(
   try {
     final shelves = await ytMusicClient.music
         .getCategoryPageShelves(mood: language)
-        .timeout(const Duration(seconds: 8));
+        .timeout(const Duration(seconds: 5));
 
     if ((shelves['songs']?.isNotEmpty ?? false) ||
         (shelves['featuredPlaylists']?.isNotEmpty ?? false) ||
@@ -1930,11 +1930,11 @@ Future<List<Map<String, dynamic>>> getSuggestedNewReleases({
           } catch (_) {}
         }
 
-        // 2. Supplement with latest language audio songs from YouTube Music Songs shelf
-        if (liveSongs.length < limit) {
+        // 2. Supplement with latest language audio songs from YouTube Music Songs shelf only if needed
+        if (liveSongs.length < 8) {
           final latestSongs = await ytMusicClient.music
               .searchSongs('Latest $prefLang songs', limit: limit)
-              .timeout(const Duration(seconds: 6))
+              .timeout(const Duration(seconds: 4))
               .catchError((_) => <Video>[]);
           for (final (index, song) in latestSongs.indexed) {
             if (!liveSongs.any((s) => s['ytid'] == song.id.value)) {
@@ -1946,11 +1946,11 @@ Future<List<Map<String, dynamic>>> getSuggestedNewReleases({
           }
         }
 
-        // 3. Supplement with language new release audio tracks
-        if (liveSongs.length < limit) {
+        // 3. Supplement with language new release audio tracks only if still needed
+        if (liveSongs.length < 8) {
           final releaseSongs = await ytMusicClient.music
               .searchSongs('$prefLang new releases', limit: limit)
-              .timeout(const Duration(seconds: 6))
+              .timeout(const Duration(seconds: 4))
               .catchError((_) => <Video>[]);
           for (final (index, song) in releaseSongs.indexed) {
             if (!liveSongs.any((s) => s['ytid'] == song.id.value)) {
@@ -2202,7 +2202,7 @@ Future<List<Map<String, dynamic>>> getTrendingSongsForYou({
       // 1. Primary: YouTube Music Official Trending Songs (dedicated Songs search filter)
       final ytmTrending = await ytMusicClient.music
           .searchSongs(query, limit: limit)
-          .timeout(const Duration(seconds: 8))
+          .timeout(const Duration(seconds: 5))
           .catchError((_) => <Video>[]);
 
       for (final (index, song) in ytmTrending.indexed) {
@@ -2212,11 +2212,11 @@ Future<List<Map<String, dynamic>>> getTrendingSongsForYou({
         liveSongs.add(songMap);
       }
 
-      // 2. Supplement if needed with $prefLang Trending songs from YouTube Music
-      if (liveSongs.length < limit) {
+      // 2. Supplement if needed with $prefLang Trending songs only if few songs loaded
+      if (liveSongs.length < 8) {
         final moreTrending = await ytMusicClient.music
             .searchSongs('$prefLang Trending', limit: limit)
-            .timeout(const Duration(seconds: 6))
+            .timeout(const Duration(seconds: 4))
             .catchError((_) => <Video>[]);
 
         for (final song in moreTrending) {
@@ -3695,7 +3695,7 @@ final Map<String, Future<List<HomeSection>>> _homeFeedInFlight = {};
 final Map<String, DateTime> _recentHomeFeedRefreshes = {};
 final Map<String, List<HomeSection>> _recentHomeFeedResults = {};
 final Map<String, int> _latestHomeFeedRequestTokens = {};
-const _homeFeedRefreshDeduplicationWindow = Duration(seconds: 60);
+const _homeFeedRefreshDeduplicationWindow = Duration(minutes: 3);
 
 Future<List<HomeSection>> getUnifiedHomeFeed({
   bool forceRefresh = false,
@@ -3714,7 +3714,12 @@ Future<List<HomeSection>> getUnifiedHomeFeed({
     normalizedMood,
   ].join('|');
   var effectiveForceRefresh = forceRefresh;
-  if (forceRefresh && bypassRefreshDeduplication) {
+  if (!effectiveForceRefresh) {
+    final recentResult = _recentHomeFeedResults[cacheRequestKey];
+    if (recentResult != null && recentResult.isNotEmpty) {
+      return Future.value(recentResult);
+    }
+  } else if (forceRefresh && bypassRefreshDeduplication) {
     _recentHomeFeedRefreshes.remove(cacheRequestKey);
     _recentHomeFeedResults.remove(cacheRequestKey);
   } else if (forceRefresh && !bypassRefreshDeduplication) {
@@ -4270,7 +4275,7 @@ Future<List<HomeSection>> _loadUnifiedHomeFeed({
 Future<List<Map<String, dynamic>>> _timedHomeCategory(
   String category,
   Future<List<Map<String, dynamic>>> future, {
-  Duration timeout = const Duration(seconds: 7),
+  Duration timeout = const Duration(seconds: 5),
 }) async {
   final stopwatch = Stopwatch()..start();
   try {
